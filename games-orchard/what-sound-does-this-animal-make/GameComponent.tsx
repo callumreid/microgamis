@@ -33,16 +33,25 @@ function AnimalSoundGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessag
   const [currentAnimal, setCurrentAnimal] = useState<Animal | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize animal only once when component mounts
   useEffect(() => {
     const randomAnimal = animals[Math.floor(Math.random() * animals.length)];
     setCurrentAnimal(randomAnimal);
-    updateMessage(`What sound does this ${randomAnimal.name.toLowerCase()} make?`);
-    
-    if (sendVoiceMessage) {
-      sendVoiceMessage(`What sound does this ${randomAnimal.name} make? Make the sound with your voice!`);
+  }, []);
+
+  // Update message and voice prompt when animal is set
+  useEffect(() => {
+    if (currentAnimal && !isInitialized) {
+      updateMessage(`What sound does this ${currentAnimal.name.toLowerCase()} make?`);
+      setIsInitialized(true);
+      
+      if (sendVoiceMessage) {
+        sendVoiceMessage(`What sound does this ${currentAnimal.name} make? Make the sound with your voice!`);
+      }
     }
-  }, [updateMessage, sendVoiceMessage]);
+  }, [currentAnimal, isInitialized, updateMessage, sendVoiceMessage]);
 
   useEffect(() => {
     if (onVoiceInput && !hasAnswered && currentAnimal) {

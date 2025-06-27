@@ -16,13 +16,24 @@ function AttractTheTurkeyGame({ endGame, updateMessage, onVoiceInput, sendVoiceM
   const [turkeyMood, setTurkeyMood] = useState<'shy' | 'curious' | 'approaching' | 'close'>('shy');
   const [hasAnswered, setHasAnswered] = useState(false);
   const [attempts, setAttempts] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize game once
   useEffect(() => {
-    updateMessage('There\\'s a shy turkey in the distance. Make turkey sounds to attract it!');
-    if (sendVoiceMessage) {
-      sendVoiceMessage('Look! There\\'s a beautiful turkey way over there, but it\\'s very shy. You need to make turkey sounds to get its attention and call it over. Try gobbling, clucking, or making turkey noises!');
+    if (!isInitialized) {
+      setIsInitialized(true);
     }
-  }, [updateMessage, sendVoiceMessage]);
+  }, [isInitialized]);
+
+  // Handle game setup
+  useEffect(() => {
+    if (isInitialized) {
+      updateMessage('There\'s a shy turkey in the distance. Make turkey sounds to attract it!');
+      if (sendVoiceMessage) {
+        sendVoiceMessage('Look! There\'s a beautiful turkey way over there, but it\'s very shy. You need to make turkey sounds to get its attention and call it over. Try gobbling, clucking, or making turkey noises!');
+      }
+    }
+  }, [isInitialized, updateMessage, sendVoiceMessage]);
 
   useEffect(() => {
     if (onVoiceInput && !hasAnswered) {

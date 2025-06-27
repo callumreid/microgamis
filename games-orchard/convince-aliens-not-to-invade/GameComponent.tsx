@@ -30,29 +30,37 @@ function ConvinceAliensGame({ endGame, updateMessage, onVoiceInput, sendVoiceMes
   const [alienReason, setAlienReason] = useState('');
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showAliens, setShowAliens] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize alien messages once on mount
   useEffect(() => {
     const randomMessage = alienMessages[Math.floor(Math.random() * alienMessages.length)];
     const randomReason = alienReasons[Math.floor(Math.random() * alienReasons.length)];
     
     setAlienMessage(randomMessage);
     setAlienReason(randomReason);
-    
-    updateMessage('A UFO is landing...');
-    
-    setTimeout(() => {
-      setShowAliens(true);
-      updateMessage('First contact! Convince them not to invade!');
+  }, []);
+
+  // Handle game sequence when messages are set
+  useEffect(() => {
+    if (alienMessage && alienReason && !isInitialized) {
+      updateMessage('A UFO is landing...');
+      setIsInitialized(true);
       
-      if (sendVoiceMessage) {
-        sendVoiceMessage(`${randomMessage} ${randomReason}`);
-      }
-      
-      if (playSound) {
-        playSound('ufo-landing');
-      }
-    }, 2000);
-  }, [updateMessage, sendVoiceMessage, playSound]);
+      setTimeout(() => {
+        setShowAliens(true);
+        updateMessage('First contact! Convince them not to invade!');
+        
+        if (sendVoiceMessage) {
+          sendVoiceMessage(`${alienMessage} ${alienReason}`);
+        }
+        
+        if (playSound) {
+          playSound('ufo-landing');
+        }
+      }, 2000);
+    }
+  }, [alienMessage, alienReason, isInitialized, updateMessage, sendVoiceMessage, playSound]);
 
   useEffect(() => {
     if (onVoiceInput && !hasAnswered && showAliens) {
@@ -122,8 +130,8 @@ function ConvinceAliensGame({ endGame, updateMessage, onVoiceInput, sendVoiceMes
     <div className="text-center max-w-2xl">
       {!showAliens ? (
         <div className="text-center">
-          <div className="text-8xl animate-bounce">🛸</div>
-          <p className="text-2xl mt-4 animate-pulse">*Spaceship descending*</p>
+          <div className="text-8xl transition-all duration-1000 ease-in-out">🛸</div>
+          <p className="text-2xl mt-4 opacity-80">*Spaceship descending*</p>
           <div className="text-4xl mt-4">👽</div>
         </div>
       ) : (
@@ -146,7 +154,7 @@ function ConvinceAliensGame({ endGame, updateMessage, onVoiceInput, sendVoiceMes
           {hasAnswered && (
             <div className="mt-4 text-yellow-300">
               <p>The aliens are deliberating...</p>
-              <div className="text-4xl animate-spin mt-2">👽</div>
+              <div className="text-4xl mt-2">👽</div>
             </div>
           )}
         </>

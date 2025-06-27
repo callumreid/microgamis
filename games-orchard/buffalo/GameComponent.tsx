@@ -24,18 +24,20 @@ function BuffaloGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, p
   const [showBuffalo, setShowBuffalo] = useState(true);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [gamePhase, setGamePhase] = useState<'showing' | 'counting' | 'answering'>('showing');
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize buffalo fields once on mount
   useEffect(() => {
     // Generate random buffalo counts (3-8 for each field)
     const leftCount = 3 + Math.floor(Math.random() * 6);
     const rightCount = 3 + Math.floor(Math.random() * 6);
     
-    // Generate random positions for buffalo
+    // Generate random positions for buffalo within field boundaries
     const generatePositions = (count: number) => {
       return Array.from({ length: count }, (_, i) => ({
-        x: 10 + Math.random() * 80, // 10-90% of width
-        y: 20 + Math.random() * 60, // 20-80% of height  
-        delay: i * 200 + Math.random() * 500, // Stagger appearance
+        x: 15 + Math.random() * 70, // 15-85% of field width (within fence)
+        y: 25 + Math.random() * 50, // 25-75% of field height (within fence)
+        delay: i * 800 + Math.random() * 1000, // Slower stagger appearance
       }));
     };
 
@@ -55,22 +57,29 @@ function BuffaloGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, p
 
     setLeftField(left);
     setRightField(right);
+  }, []);
 
-    updateMessage('Count the buffalo in each field!');
-    if (sendVoiceMessage) {
-      sendVoiceMessage('Two fields of buffalo are moving around. Count carefully and tell me which field has more buffalo!');
-    }
-
-    // Show buffalo for 6 seconds, then ask for answer
-    setTimeout(() => {
-      setShowBuffalo(false);
-      setGamePhase('answering');
-      updateMessage('Which field has more buffalo? Say "left" or "right"');
+  // Handle messages and timing when fields are initialized
+  useEffect(() => {
+    if (leftField && rightField && !isInitialized) {
+      updateMessage('Count the buffalo in each field!');
+      setIsInitialized(true);
+      
       if (sendVoiceMessage) {
-        sendVoiceMessage('Time to answer! Which field has more buffalo - left or right?');
+        sendVoiceMessage('Two fields of buffalo are moving around. Count carefully and tell me which field has more buffalo!');
       }
-    }, 6000);
-  }, [updateMessage, sendVoiceMessage]);
+
+      // Show buffalo for 6 seconds, then ask for answer
+      setTimeout(() => {
+        setShowBuffalo(false);
+        setGamePhase('answering');
+        updateMessage('Which field has more buffalo? Say "left" or "right"');
+        if (sendVoiceMessage) {
+          sendVoiceMessage('Time to answer! Which field has more buffalo - left or right?');
+        }
+      }, 6000);
+    }
+  }, [leftField, rightField, isInitialized, updateMessage, sendVoiceMessage]);
 
   useEffect(() => {
     if (onVoiceInput && !hasAnswered && gamePhase === 'answering' && leftField && rightField) {
@@ -121,18 +130,27 @@ function BuffaloGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, p
     <div className="w-full h-full relative">
       <div className="flex h-full">
         {/* Left Field */}
-        <div className="flex-1 bg-green-400 bg-opacity-30 border-r-2 border-white relative">
-          <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+        <div className="flex-1 bg-green-400 bg-opacity-30 border-4 border-amber-800 border-r-2 border-white relative">
+          {/* Fence posts */}
+          <div className="absolute top-0 left-0 w-full h-full border-8 border-amber-900 bg-green-300 bg-opacity-20">
+            {/* Fence texture */}
+            <div className="absolute top-0 left-0 w-full h-2 bg-amber-900"></div>
+            <div className="absolute bottom-0 left-0 w-full h-2 bg-amber-900"></div>
+            <div className="absolute top-0 left-0 w-2 h-full bg-amber-900"></div>
+            <div className="absolute top-0 right-0 w-2 h-full bg-amber-900"></div>
+          </div>
+          <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-3 py-2 rounded font-bold z-10">
             Left Field
           </div>
           {showBuffalo && leftField.positions.map((pos, i) => (
             <div
               key={i}
-              className="absolute text-4xl animate-bounce"
+              className="absolute text-3xl transition-all duration-1000 ease-in-out"
               style={{
                 left: `${pos.x}%`,
                 top: `${pos.y}%`,
                 animationDelay: `${pos.delay}ms`,
+                transform: 'translateX(-50%) translateY(-50%)',
               }}
             >
               🐃
@@ -141,18 +159,27 @@ function BuffaloGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, p
         </div>
 
         {/* Right Field */}
-        <div className="flex-1 bg-yellow-400 bg-opacity-30 relative">
-          <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+        <div className="flex-1 bg-yellow-400 bg-opacity-30 border-4 border-amber-800 relative">
+          {/* Fence posts */}
+          <div className="absolute top-0 left-0 w-full h-full border-8 border-amber-900 bg-yellow-300 bg-opacity-20">
+            {/* Fence texture */}
+            <div className="absolute top-0 left-0 w-full h-2 bg-amber-900"></div>
+            <div className="absolute bottom-0 left-0 w-full h-2 bg-amber-900"></div>
+            <div className="absolute top-0 left-0 w-2 h-full bg-amber-900"></div>
+            <div className="absolute top-0 right-0 w-2 h-full bg-amber-900"></div>
+          </div>
+          <div className="absolute top-4 right-4 bg-black bg-opacity-70 text-white px-3 py-2 rounded font-bold z-10">
             Right Field
           </div>
           {showBuffalo && rightField.positions.map((pos, i) => (
             <div
               key={i}
-              className="absolute text-4xl animate-bounce"
+              className="absolute text-3xl transition-all duration-1000 ease-in-out"
               style={{
                 left: `${pos.x}%`,
                 top: `${pos.y}%`,
                 animationDelay: `${pos.delay}ms`,
+                transform: 'translateX(-50%) translateY(-50%)',
               }}
             >
               🐃

@@ -19,6 +19,7 @@ function PitchStartupGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessa
   const [industry, setIndustry] = useState('');
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showMeeting, setShowMeeting] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const randomInvestor = investors[Math.floor(Math.random() * investors.length)];
@@ -26,6 +27,11 @@ function PitchStartupGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessa
     
     setInvestor(randomInvestor);
     setIndustry(randomIndustry);
+    setIsInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isInitialized) return;
     
     updateMessage('You\'re entering the boardroom...');
     
@@ -34,89 +40,89 @@ function PitchStartupGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessa
       updateMessage('Make your pitch count!');
       
       if (sendVoiceMessage) {
-        sendVoiceMessage(`Welcome to ${randomInvestor}. We're looking for the next big thing in ${randomIndustry}. You have one chance to pitch us your startup idea. Make it compelling!`);
+        sendVoiceMessage(`Welcome to ${investor}. We're looking for the next big thing in ${industry}. You have one chance to pitch us your startup idea. Make it compelling!`);
       }
       
       if (playSound) {
         playSound('boardroom-ambiance');
       }
     }, 2000);
-  }, [updateMessage, sendVoiceMessage, playSound]);
+  }, [isInitialized, investor, industry, updateMessage, sendVoiceMessage, playSound]);
 
   useEffect(() => {
-    if (onVoiceInput && !hasAnswered && showMeeting) {
-      const handleVoiceInput = (transcript: string) => {
-        const input = transcript.toLowerCase().trim();
-        
-        if (input.length > 20) { // Substantial pitch
-          setHasAnswered(true);
-          
-          // Pitch evaluation criteria
-          const businessWords = [
-            'market', 'revenue', 'customers', 'problem', 'solution', 'scale',
-            'growth', 'profit', 'business model', 'competitive advantage',
-            'traction', 'users', 'sales', 'monetize', 'disruption'
-          ];
-          
-          const techWords = [
-            'platform', 'app', 'technology', 'innovation', 'algorithm',
-            'data', 'analytics', 'automation', 'efficiency', 'digital'
-          ];
-          
-          const industryWords = [industry.toLowerCase(), 'ai', 'tech', 'software'];
-          
-          const hasBusiness = businessWords.some(word => input.includes(word));
-          const hasTech = techWords.some(word => input.includes(word));
-          const hasIndustry = industryWords.some(word => input.includes(word));
-          const isDetailed = input.length > 100;
-          const hasPassion = input.includes('we') || input.includes('our') || 
-                           input.includes('vision') || input.includes('believe');
-          
-          let score = 20; // Base score
-          if (hasBusiness) score += 30;
-          if (hasTech) score += 20;
-          if (hasIndustry) score += 15;
-          if (isDetailed) score += 20;
-          if (hasPassion) score += 15;
-          
-          if (score >= 90) {
-            updateMessage('Incredible pitch! The investors are writing checks!');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('Outstanding! We\'re prepared to offer you $5 million for 20% equity. When can you start?');
-            }
-            endGame(true, 'FUNDED! You secured a massive investment round!', score);
-          } else if (score >= 70) {
-            updateMessage('Strong pitch! They\'re interested but want more details.');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('Interesting concept. Send us your business plan and we\'ll consider a smaller investment.');
-            }
-            endGame(true, 'Promising! You got their attention for follow-up meetings.', score);
-          } else if (score >= 50) {
-            updateMessage('Decent idea but needs work. They\'re politely passing.');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('Thank you for coming in. We\'ll need to see more traction before investing.');
-            }
-            endGame(false, 'Close but not quite there. Keep refining your pitch.', score);
-          } else {
-            updateMessage('The investors look confused and unimpressed.');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('I\'m sorry, but this doesn\'t align with our investment thesis. Good luck with your venture.');
-            }
-            endGame(false, 'Pitch failed. You need a clearer business model.', score);
-          }
-        }
-      };
+    if (!isInitialized || !onVoiceInput || hasAnswered || !showMeeting) return;
+    
+    const handleVoiceInput = (transcript: string) => {
+      const input = transcript.toLowerCase().trim();
       
-      onVoiceInput(handleVoiceInput);
-    }
-  }, [onVoiceInput, hasAnswered, showMeeting, industry, endGame, updateMessage, sendVoiceMessage]);
+      if (input.length > 20) { // Substantial pitch
+        setHasAnswered(true);
+        
+        // Pitch evaluation criteria
+        const businessWords = [
+          'market', 'revenue', 'customers', 'problem', 'solution', 'scale',
+          'growth', 'profit', 'business model', 'competitive advantage',
+          'traction', 'users', 'sales', 'monetize', 'disruption'
+        ];
+        
+        const techWords = [
+          'platform', 'app', 'technology', 'innovation', 'algorithm',
+          'data', 'analytics', 'automation', 'efficiency', 'digital'
+        ];
+        
+        const industryWords = [industry.toLowerCase(), 'ai', 'tech', 'software'];
+        
+        const hasBusiness = businessWords.some(word => input.includes(word));
+        const hasTech = techWords.some(word => input.includes(word));
+        const hasIndustry = industryWords.some(word => input.includes(word));
+        const isDetailed = input.length > 100;
+        const hasPassion = input.includes('we') || input.includes('our') || 
+                         input.includes('vision') || input.includes('believe');
+        
+        let score = 20; // Base score
+        if (hasBusiness) score += 30;
+        if (hasTech) score += 20;
+        if (hasIndustry) score += 15;
+        if (isDetailed) score += 20;
+        if (hasPassion) score += 15;
+        
+        if (score >= 90) {
+          updateMessage('Incredible pitch! The investors are writing checks!');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('Outstanding! We\'re prepared to offer you $5 million for 20% equity. When can you start?');
+          }
+          endGame(true, 'FUNDED! You secured a massive investment round!', score);
+        } else if (score >= 70) {
+          updateMessage('Strong pitch! They\'re interested but want more details.');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('Interesting concept. Send us your business plan and we\'ll consider a smaller investment.');
+          }
+          endGame(true, 'Promising! You got their attention for follow-up meetings.', score);
+        } else if (score >= 50) {
+          updateMessage('Decent idea but needs work. They\'re politely passing.');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('Thank you for coming in. We\'ll need to see more traction before investing.');
+          }
+          endGame(false, 'Close but not quite there. Keep refining your pitch.', score);
+        } else {
+          updateMessage('The investors look confused and unimpressed.');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('I\'m sorry, but this doesn\'t align with our investment thesis. Good luck with your venture.');
+          }
+          endGame(false, 'Pitch failed. You need a clearer business model.', score);
+        }
+      }
+    };
+    
+    onVoiceInput(handleVoiceInput);
+  }, [isInitialized, onVoiceInput, hasAnswered, showMeeting, industry, endGame, updateMessage, sendVoiceMessage]);
 
   return (
     <div className="text-center max-w-2xl">
       {!showMeeting ? (
         <div className="text-center">
           <div className="text-8xl">🏢</div>
-          <p className="text-2xl mt-4 animate-pulse">*Entering the boardroom*</p>
+          <p className="text-2xl mt-4">*Entering the boardroom*</p>
         </div>
       ) : (
         <>
@@ -142,7 +148,7 @@ function PitchStartupGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessa
           {hasAnswered && (
             <div className="mt-4 text-yellow-300">
               <p>The investors are deliberating...</p>
-              <div className="text-4xl animate-pulse mt-2">💭</div>
+              <div className="text-4xl mt-2">💭</div>
             </div>
           )}
         </>

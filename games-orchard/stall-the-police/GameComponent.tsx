@@ -24,10 +24,16 @@ function StallPoliceGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessag
   const [stallCount, setStallCount] = useState(0);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showPolice, setShowPolice] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const randomLine = policeLines[Math.floor(Math.random() * policeLines.length)];
     setPoliceLine(randomLine);
+    setIsInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isInitialized) return;
     
     updateMessage('Someone is knocking at your door...');
     
@@ -36,63 +42,63 @@ function StallPoliceGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessag
       updateMessage('Stall them until time runs out!');
       
       if (sendVoiceMessage) {
-        sendVoiceMessage(randomLine);
+        sendVoiceMessage(policeLine);
       }
       
       if (playSound) {
         playSound('police-knock');
       }
     }, 2000);
-  }, [updateMessage, sendVoiceMessage, playSound]);
+  }, [isInitialized, policeLine, updateMessage, sendVoiceMessage, playSound]);
 
   useEffect(() => {
-    if (onVoiceInput && showPolice) {
-      const handleVoiceInput = (transcript: string) => {
-        const input = transcript.toLowerCase().trim();
-        
-        if (input.length > 5) { // Any substantial response
-          setStallCount(prev => prev + 1);
-          
-          // Stall tactics
-          const goodStalls = [
-            'just a minute', 'one second', 'getting dressed', 'bathroom',
-            'can you wait', 'hold on', 'coming', 'almost ready', 'sick',
-            'sleeping', 'shower', 'getting the door', 'looking for keys'
-          ];
-          
-          const isGoodStall = goodStalls.some(stall => input.includes(stall));
-          
-          if (gameState.timeRemaining <= 1) {
-            // Time's up - player wins!
-            updateMessage('Time\'s up! You successfully stalled them!');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('We\'ll have to come back later. Have a good day!');
-            }
-            endGame(true, `Great stalling! You kept them busy for ${stallCount} responses.`, stallCount * 20);
-          } else if (isGoodStall) {
-            updateMessage('Good stall! Keep them waiting...');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('Okay, we\'ll wait a moment. Please hurry up though.');
-            }
-          } else {
-            updateMessage('Weak stall. They\'re getting suspicious...');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('That\'s not a good excuse. We\'re coming in now!');
-            }
-            endGame(false, 'Your stalling wasn\'t convincing enough.', stallCount * 10);
-          }
-        }
-      };
+    if (!isInitialized || !onVoiceInput || !showPolice) return;
+    
+    const handleVoiceInput = (transcript: string) => {
+      const input = transcript.toLowerCase().trim();
       
-      onVoiceInput(handleVoiceInput);
-    }
-  }, [onVoiceInput, showPolice, stallCount, gameState.timeRemaining, endGame, updateMessage, sendVoiceMessage]);
+      if (input.length > 5) { // Any substantial response
+        setStallCount(prev => prev + 1);
+        
+        // Stall tactics
+        const goodStalls = [
+          'just a minute', 'one second', 'getting dressed', 'bathroom',
+          'can you wait', 'hold on', 'coming', 'almost ready', 'sick',
+          'sleeping', 'shower', 'getting the door', 'looking for keys'
+        ];
+        
+        const isGoodStall = goodStalls.some(stall => input.includes(stall));
+        
+        if (gameState.timeRemaining <= 1) {
+          // Time's up - player wins!
+          updateMessage('Time\'s up! You successfully stalled them!');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('We\'ll have to come back later. Have a good day!');
+          }
+          endGame(true, `Great stalling! You kept them busy for ${stallCount} responses.`, stallCount * 20);
+        } else if (isGoodStall) {
+          updateMessage('Good stall! Keep them waiting...');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('Okay, we\'ll wait a moment. Please hurry up though.');
+          }
+        } else {
+          updateMessage('Weak stall. They\'re getting suspicious...');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('That\'s not a good excuse. We\'re coming in now!');
+          }
+          endGame(false, 'Your stalling wasn\'t convincing enough.', stallCount * 10);
+        }
+      }
+    };
+    
+    onVoiceInput(handleVoiceInput);
+  }, [isInitialized, onVoiceInput, showPolice, stallCount, gameState.timeRemaining, endGame, updateMessage, sendVoiceMessage]);
 
   return (
     <div className="text-center max-w-2xl">
       {!showPolice ? (
         <div className="text-center">
-          <div className="text-8xl animate-pulse">🚪</div>
+          <div className="text-8xl">🚪</div>
           <p className="text-2xl mt-4">*KNOCK KNOCK KNOCK*</p>
         </div>
       ) : (

@@ -19,18 +19,28 @@ function AimThePenaltyKickGame({ endGame, updateMessage, onVoiceInput, sendVoice
   const [hasKicked, setHasKicked] = useState(false);
   const [shotDirection, setShotDirection] = useState<ShotDirection | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize game data once
   useEffect(() => {
-    // Randomly position the goalie
-    const positions: GoaliePosition[] = ['left', 'center', 'right'];
-    const randomPosition = positions[Math.floor(Math.random() * positions.length)];
-    setGoaliePosition(randomPosition);
-    
-    updateMessage('It\'s penalty time! Where will you aim your shot?');
-    if (sendVoiceMessage) {
-      sendVoiceMessage('It\'s a penalty kick! The crowd is silent, the goalie is waiting. Where will you aim your shot - left, center, or right side of the goal?');
+    if (!isInitialized) {
+      // Randomly position the goalie
+      const positions: GoaliePosition[] = ['left', 'center', 'right'];
+      const randomPosition = positions[Math.floor(Math.random() * positions.length)];
+      setGoaliePosition(randomPosition);
+      setIsInitialized(true);
     }
-  }, [updateMessage, sendVoiceMessage]);
+  }, [isInitialized]);
+
+  // Handle game setup
+  useEffect(() => {
+    if (isInitialized) {
+      updateMessage('It\'s penalty time! Where will you aim your shot?');
+      if (sendVoiceMessage) {
+        sendVoiceMessage('It\'s a penalty kick! The crowd is silent, the goalie is waiting. Where will you aim your shot - left, center, or right side of the goal?');
+      }
+    }
+  }, [isInitialized, updateMessage, sendVoiceMessage]);
 
   useEffect(() => {
     if (onVoiceInput && !hasKicked) {

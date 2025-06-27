@@ -36,39 +36,53 @@ function BetOnRouletteGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
   const [userBet, setUserBet] = useState<BetType | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [wheelPosition, setWheelPosition] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize game once
   useEffect(() => {
-    updateMessage('Place your bet! Red, black, or green?');
-    if (sendVoiceMessage) {
-      sendVoiceMessage('Welcome to the roulette table! The wheel is about to spin. Place your bet now - will it land on red, black, or green? Choose wisely!');
+    if (!isInitialized) {
+      setIsInitialized(true);
     }
+  }, [isInitialized]);
 
-    // Start spinning animation immediately
-    const spinTimer = setInterval(() => {
-      setWheelPosition(prev => (prev + 10) % 360);
-    }, 50);
-
-    // Stop after a few seconds and get result
-    setTimeout(() => {
-      clearInterval(spinTimer);
-      setSpinning(false);
-      
-      const randomResult = rouletteNumbers[Math.floor(Math.random() * rouletteNumbers.length)];
-      setResult(randomResult);
-      
-      if (userBet) {
-        checkResult(randomResult, userBet);
-      } else {
-        updateMessage(`No bet placed! The ball landed on ${randomResult.color} ${randomResult.number}`);
-        if (sendVoiceMessage) {
-          sendVoiceMessage(`Oh no! You didn't place a bet in time! The ball landed on ${randomResult.color} ${randomResult.number}. Better luck next time!`);
-        }
-        endGame(false, 'No bet placed in time!', 0);
+  // Handle game setup and spinning
+  useEffect(() => {
+    if (isInitialized) {
+      updateMessage('Place your bet! Red, black, or green?');
+      if (sendVoiceMessage) {
+        sendVoiceMessage('Welcome to the roulette table! The wheel is about to spin. Place your bet now - will it land on red, black, or green? Choose wisely!');
       }
-    }, 6000);
 
-    return () => clearInterval(spinTimer);
-  }, [updateMessage, sendVoiceMessage]);
+      // Start spinning animation immediately
+      const spinTimer = setInterval(() => {
+        setWheelPosition(prev => (prev + 10) % 360);
+      }, 50);
+
+      // Stop after a few seconds and get result
+      const resultTimer = setTimeout(() => {
+        clearInterval(spinTimer);
+        setSpinning(false);
+        
+        const randomResult = rouletteNumbers[Math.floor(Math.random() * rouletteNumbers.length)];
+        setResult(randomResult);
+        
+        if (userBet) {
+          checkResult(randomResult, userBet);
+        } else {
+          updateMessage(`No bet placed! The ball landed on ${randomResult.color} ${randomResult.number}`);
+          if (sendVoiceMessage) {
+            sendVoiceMessage(`Oh no! You didn't place a bet in time! The ball landed on ${randomResult.color} ${randomResult.number}. Better luck next time!`);
+          }
+          endGame(false, 'No bet placed in time!', 0);
+        }
+      }, 6000);
+
+      return () => {
+        clearInterval(spinTimer);
+        clearTimeout(resultTimer);
+      };
+    }
+  }, [isInitialized, updateMessage, sendVoiceMessage, userBet, endGame]);
 
   const checkResult = (gameResult: RouletteNumber, bet: BetType) => {
     const won = gameResult.color === bet;

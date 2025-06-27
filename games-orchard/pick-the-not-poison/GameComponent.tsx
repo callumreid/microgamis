@@ -19,25 +19,35 @@ function PickTheNotPoisonGame({ endGame, updateMessage, onVoiceInput, sendVoiceM
   const [userChoice, setUserChoice] = useState<CupChoice | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [magicianAnimation, setMagicianAnimation] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize game data once
   useEffect(() => {
-    // Randomly choose which cup has poison
-    const cups: CupChoice[] = ['left', 'right'];
-    const randomPoison = cups[Math.floor(Math.random() * cups.length)];
-    setPoisonCup(randomPoison);
-    
-    updateMessage('A mysterious magician offers you two cups...');
-    if (sendVoiceMessage) {
-      sendVoiceMessage('Welcome, brave soul! I am a mysterious magician, and before you are two identical cups. One contains a delicious potion of victory, the other... deadly poison! Choose wisely - your fate depends on it!');
+    if (!isInitialized) {
+      // Randomly choose which cup has poison
+      const cups: CupChoice[] = ['left', 'right'];
+      const randomPoison = cups[Math.floor(Math.random() * cups.length)];
+      setPoisonCup(randomPoison);
+      setIsInitialized(true);
     }
+  }, [isInitialized]);
 
-    // Magician animation
-    const animationTimer = setInterval(() => {
-      setMagicianAnimation(prev => (prev + 1) % 4);
-    }, 500);
+  // Handle game setup and animation
+  useEffect(() => {
+    if (isInitialized) {
+      updateMessage('A mysterious magician offers you two cups...');
+      if (sendVoiceMessage) {
+        sendVoiceMessage('Welcome, brave soul! I am a mysterious magician, and before you are two identical cups. One contains a delicious potion of victory, the other... deadly poison! Choose wisely - your fate depends on it!');
+      }
 
-    return () => clearInterval(animationTimer);
-  }, [updateMessage, sendVoiceMessage]);
+      // Magician animation
+      const animationTimer = setInterval(() => {
+        setMagicianAnimation(prev => (prev + 1) % 4);
+      }, 500);
+
+      return () => clearInterval(animationTimer);
+    }
+  }, [isInitialized, updateMessage, sendVoiceMessage]);
 
   useEffect(() => {
     if (onVoiceInput && !hasAnswered) {

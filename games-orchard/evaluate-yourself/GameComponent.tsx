@@ -34,10 +34,16 @@ function EvaluateYourselfGame({ endGame, updateMessage, onVoiceInput, sendVoiceM
   const [category, setCategory] = useState('');
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showEvaluation, setShowEvaluation] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const randomCategory = evaluationCategories[Math.floor(Math.random() * evaluationCategories.length)];
     setCategory(randomCategory);
+    setIsInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isInitialized) return;
     
     updateMessage('Your annual review is here...');
     
@@ -46,61 +52,61 @@ function EvaluateYourselfGame({ endGame, updateMessage, onVoiceInput, sendVoiceM
       updateMessage('Rate yourself honestly to win!');
       
       if (sendVoiceMessage) {
-        sendVoiceMessage(`Time for your self-evaluation! How would you rate your ${randomCategory}? Your options are: ${options.join(', ')}`);
+        sendVoiceMessage(`Time for your self-evaluation! How would you rate your ${category}? Your options are: ${options.join(', ')}`);
       }
       
       if (playSound) {
         playSound('evaluation-time');
       }
     }, 2000);
-  }, [updateMessage, sendVoiceMessage, playSound]);
+  }, [isInitialized, category, updateMessage, sendVoiceMessage, playSound]);
 
   useEffect(() => {
-    if (onVoiceInput && !hasAnswered && showEvaluation) {
-      const handleVoiceInput = (transcript: string) => {
-        const input = transcript.toLowerCase().trim();
-        
-        // Check if input contains any of the evaluation options
-        const selectedOption = options.find(option => 
-          input.includes(option.toLowerCase())
-        );
-        
-        if (selectedOption) {
-          setHasAnswered(true);
-          
-          // The trick: only "Meets Expectations" wins!
-          if (selectedOption === "Meets Expectations") {
-            updateMessage('Perfect! Humble and realistic - that\'s what managers love!');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('Excellent self-awareness! That\'s exactly the kind of realistic assessment we like to see.');
-            }
-            endGame(true, 'You understood the corporate game! "Meets Expectations" was the winning choice.', 100);
-          } else if (selectedOption === "Exceeds Expectations" || selectedOption === "Outstanding") {
-            updateMessage('Too confident! Managers don\'t like employees who think too highly of themselves.');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('Hmm, that seems a bit presumptuous. We prefer more modest self-assessments.');
-            }
-            endGame(false, 'Overconfidence penalty! Should have said "Meets Expectations".', 30);
-          } else {
-            updateMessage('Too modest! Why would we want to keep someone who rates themselves so low?');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('That\'s concerning. We need employees who have confidence in their abilities.');
-            }
-            endGame(false, 'Too self-deprecating! "Meets Expectations" was the sweet spot.', 20);
-          }
-        }
-      };
+    if (!isInitialized || !onVoiceInput || hasAnswered || !showEvaluation) return;
+    
+    const handleVoiceInput = (transcript: string) => {
+      const input = transcript.toLowerCase().trim();
       
-      onVoiceInput(handleVoiceInput);
-    }
-  }, [onVoiceInput, hasAnswered, showEvaluation, endGame, updateMessage, sendVoiceMessage]);
+      // Check if input contains any of the evaluation options
+      const selectedOption = options.find(option => 
+        input.includes(option.toLowerCase())
+      );
+      
+      if (selectedOption) {
+        setHasAnswered(true);
+        
+        // The trick: only "Meets Expectations" wins!
+        if (selectedOption === "Meets Expectations") {
+          updateMessage('Perfect! Humble and realistic - that\'s what managers love!');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('Excellent self-awareness! That\'s exactly the kind of realistic assessment we like to see.');
+          }
+          endGame(true, 'You understood the corporate game! "Meets Expectations" was the winning choice.', 100);
+        } else if (selectedOption === "Exceeds Expectations" || selectedOption === "Outstanding") {
+          updateMessage('Too confident! Managers don\'t like employees who think too highly of themselves.');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('Hmm, that seems a bit presumptuous. We prefer more modest self-assessments.');
+          }
+          endGame(false, 'Overconfidence penalty! Should have said "Meets Expectations".', 30);
+        } else {
+          updateMessage('Too modest! Why would we want to keep someone who rates themselves so low?');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('That\'s concerning. We need employees who have confidence in their abilities.');
+          }
+          endGame(false, 'Too self-deprecating! "Meets Expectations" was the sweet spot.', 20);
+        }
+      }
+    };
+    
+    onVoiceInput(handleVoiceInput);
+  }, [isInitialized, onVoiceInput, hasAnswered, showEvaluation, endGame, updateMessage, sendVoiceMessage]);
 
   return (
     <div className="text-center max-w-2xl">
       {!showEvaluation ? (
         <div className="text-center">
           <div className="text-8xl">📋</div>
-          <p className="text-2xl mt-4 animate-pulse">*HR preparing evaluation forms*</p>
+          <p className="text-2xl mt-4">*HR preparing evaluation forms*</p>
         </div>
       ) : (
         <>
@@ -130,7 +136,7 @@ function EvaluateYourselfGame({ endGame, updateMessage, onVoiceInput, sendVoiceM
           {hasAnswered && (
             <div className="mt-4 text-yellow-300">
               <p>HR is reviewing your response...</p>
-              <div className="text-4xl animate-spin mt-2">📊</div>
+              <div className="text-4xl mt-2">📊</div>
             </div>
           )}
         </>

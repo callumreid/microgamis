@@ -34,6 +34,7 @@ function MakeExcuseGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage
   const [phoneRing, setPhoneRing] = useState('');
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showPhone, setShowPhone] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const randomScenario = scenarios[Math.floor(Math.random() * scenarios.length)];
@@ -41,71 +42,76 @@ function MakeExcuseGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage
     
     setScenario(randomScenario);
     setPhoneRing(randomRing);
+    setIsInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isInitialized) return;
     
     updateMessage('Your phone is ringing...');
     
     setTimeout(() => {
       setShowPhone(true);
-      updateMessage(`${randomScenario} Make a convincing excuse!`);
+      updateMessage(`${scenario} Make a convincing excuse!`);
       
       if (sendVoiceMessage) {
-        sendVoiceMessage(randomRing + " " + randomScenario);
+        sendVoiceMessage(phoneRing + " " + scenario);
       }
       
       if (playSound) {
         playSound('phone-ring');
       }
     }, 2000);
-  }, [updateMessage, sendVoiceMessage, playSound]);
+  }, [isInitialized, scenario, phoneRing, updateMessage, sendVoiceMessage, playSound]);
 
   useEffect(() => {
-    if (onVoiceInput && !hasAnswered && showPhone) {
-      const handleVoiceInput = (transcript: string) => {
-        const input = transcript.toLowerCase().trim();
-        
-        if (input.length > 10) { // Substantial response
-          setHasAnswered(true);
-          
-          // AI evaluation criteria for a "good" excuse
-          const goodExcuseKeywords = [
-            'traffic', 'emergency', 'family', 'sick', 'doctor', 'hospital', 
-            'car', 'accident', 'train', 'delayed', 'appointment', 'urgent',
-            'sorry', 'apologize', 'internet', 'power', 'meeting', 'client'
-          ];
-          
-          const hasGoodKeyword = goodExcuseKeywords.some(keyword => 
-            input.includes(keyword)
-          );
-          
-          const isCreative = input.length > 30; // Longer responses get bonus points
-          const isPolite = input.includes('sorry') || input.includes('apologize');
-          
-          const score = (hasGoodKeyword ? 40 : 0) + (isCreative ? 30 : 0) + (isPolite ? 30 : 0);
-          
-          if (score >= 60) {
-            updateMessage('Your boss believes your excuse! Well done.');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('Okay, that sounds reasonable. Just try to be on time next time!');
-            }
-            endGame(true, 'Convincing excuse! Your boss bought it.', score);
-          } else {
-            updateMessage('Your boss is not convinced... Try harder next time!');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('That excuse is pretty weak. I expect better from you.');
-            }
-            endGame(false, 'Your excuse was not convincing enough.', score);
-          }
-        }
-      };
+    if (!isInitialized || !onVoiceInput || hasAnswered || !showPhone) return;
+    
+    const handleVoiceInput = (transcript: string) => {
+      const input = transcript.toLowerCase().trim();
       
-      onVoiceInput(handleVoiceInput);
-    }
-  }, [onVoiceInput, hasAnswered, showPhone, endGame, updateMessage, sendVoiceMessage]);
+      if (input.length > 10) { // Substantial response
+        setHasAnswered(true);
+        
+        // AI evaluation criteria for a "good" excuse
+        const goodExcuseKeywords = [
+          'traffic', 'emergency', 'family', 'sick', 'doctor', 'hospital', 
+          'car', 'accident', 'train', 'delayed', 'appointment', 'urgent',
+          'sorry', 'apologize', 'internet', 'power', 'meeting', 'client'
+        ];
+        
+        const hasGoodKeyword = goodExcuseKeywords.some(keyword => 
+          input.includes(keyword)
+        );
+        
+        const isCreative = input.length > 30; // Longer responses get bonus points
+        const isPolite = input.includes('sorry') || input.includes('apologize');
+        
+        const score = (hasGoodKeyword ? 40 : 0) + (isCreative ? 30 : 0) + (isPolite ? 30 : 0);
+        
+        if (score >= 60) {
+          updateMessage('Your boss believes your excuse! Well done.');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('Okay, that sounds reasonable. Just try to be on time next time!');
+          }
+          endGame(true, 'Convincing excuse! Your boss bought it.', score);
+        } else {
+          updateMessage('Your boss is not convinced... Try harder next time!');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('That excuse is pretty weak. I expect better from you.');
+          }
+          endGame(false, 'Your excuse was not convincing enough.', score);
+        }
+      }
+    };
+    
+    onVoiceInput(handleVoiceInput);
+  }, [isInitialized, onVoiceInput, hasAnswered, showPhone, endGame, updateMessage, sendVoiceMessage]);
 
   return (
     <div className="text-center max-w-2xl">
       {!showPhone ? (
-        <div className="text-6xl animate-pulse">
+        <div className="text-6xl">
           📱
           <p className="text-2xl mt-4">*Ring Ring*</p>
         </div>

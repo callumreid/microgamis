@@ -35,31 +35,43 @@ function IdentifyCriminalGame({ endGame, updateMessage, onVoiceInput, sendVoiceM
   const [lineupSuspects, setLineupSuspects] = useState<typeof suspects>([]);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showLineup, setShowLineup] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize game data once
   useEffect(() => {
-    const randomCrime = crimes[Math.floor(Math.random() * crimes.length)];
-    const randomSuspect = suspects[Math.floor(Math.random() * suspects.length)];
-    
-    // Create lineup with criminal and 2-3 others
-    const otherSuspects = suspects.filter(s => s.id !== randomSuspect.id);
-    const shuffledOthers = otherSuspects.sort(() => Math.random() - 0.5).slice(0, 3);
-    const lineup = [randomSuspect, ...shuffledOthers].sort(() => Math.random() - 0.5);
-    
-    setSuspect(randomSuspect);
-    setCrime(randomCrime);
-    setLineupSuspects(lineup);
-    
-    updateMessage('Witness the crime...');
-    
-    setTimeout(() => {
-      setShowLineup(true);
-      updateMessage('Identify the criminal from the lineup!');
+    if (!isInitialized) {
+      const randomCrime = crimes[Math.floor(Math.random() * crimes.length)];
+      const randomSuspect = suspects[Math.floor(Math.random() * suspects.length)];
       
-      if (sendVoiceMessage) {
-        sendVoiceMessage(`You witnessed someone who ${randomCrime}. Now look at the lineup and tell me which number committed the crime. Say "number 1", "number 2", etc.`);
-      }
-    }, 3000);
-  }, [updateMessage, sendVoiceMessage]);
+      // Create lineup with criminal and 2-3 others
+      const otherSuspects = suspects.filter(s => s.id !== randomSuspect.id);
+      const shuffledOthers = otherSuspects.sort(() => Math.random() - 0.5).slice(0, 3);
+      const lineup = [randomSuspect, ...shuffledOthers].sort(() => Math.random() - 0.5);
+      
+      setSuspect(randomSuspect);
+      setCrime(randomCrime);
+      setLineupSuspects(lineup);
+      setIsInitialized(true);
+    }
+  }, [isInitialized]);
+
+  // Handle game setup and messaging
+  useEffect(() => {
+    if (isInitialized) {
+      updateMessage('Witness the crime...');
+      
+      const timer = setTimeout(() => {
+        setShowLineup(true);
+        updateMessage('Identify the criminal from the lineup!');
+        
+        if (sendVoiceMessage) {
+          sendVoiceMessage(`You witnessed someone who ${crime}. Now look at the lineup and tell me which number committed the crime. Say "number 1", "number 2", etc.`);
+        }
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isInitialized, crime, updateMessage, sendVoiceMessage]);
 
   useEffect(() => {
     if (onVoiceInput && !hasAnswered && showLineup) {

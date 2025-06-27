@@ -24,10 +24,16 @@ function ExplainDeathGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessa
   const [scenario, setScenario] = useState('');
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showChild, setShowChild] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const randomScenario = scenarios[Math.floor(Math.random() * scenarios.length)];
     setScenario(randomScenario);
+    setIsInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isInitialized) return;
     
     updateMessage('Your daughter approaches with tears in her eyes...');
     
@@ -36,78 +42,78 @@ function ExplainDeathGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessa
       updateMessage('Handle this delicate conversation with care.');
       
       if (sendVoiceMessage) {
-        sendVoiceMessage(randomScenario);
+        sendVoiceMessage(scenario);
       }
     }, 2000);
-  }, [updateMessage, sendVoiceMessage]);
+  }, [isInitialized, scenario, updateMessage, sendVoiceMessage]);
 
   useEffect(() => {
-    if (onVoiceInput && !hasAnswered && showChild) {
-      const handleVoiceInput = (transcript: string) => {
-        const input = transcript.toLowerCase().trim();
-        
-        if (input.length > 15) { // Substantial response
-          setHasAnswered(true);
-          
-          // Criteria for a good explanation
-          const comfortingWords = [
-            'love', 'remember', 'memories', 'special', 'heart', 'forever',
-            'care', 'safe', 'okay', 'understand', 'together', 'hug'
-          ];
-          
-          const ageAppropriate = [
-            'sleep', 'peaceful', 'happy', 'heaven', 'star', 'angel',
-            'nature', 'cycle', 'natural', 'part of life'
-          ];
-          
-          const avoidScaryWords = !input.includes('scary') && !input.includes('pain') && 
-                                  !input.includes('hurt') && !input.includes('never');
-          
-          const hasComfort = comfortingWords.some(word => input.includes(word));
-          const isAgeAppropriate = ageAppropriate.some(word => input.includes(word));
-          const isThoughtful = input.length > 50;
-          const acknowledgesEmotions = input.includes('sad') || input.includes('miss') || 
-                                     input.includes('cry') || input.includes('feel');
-          
-          let score = 20; // Base score
-          if (hasComfort) score += 30;
-          if (isAgeAppropriate) score += 25;
-          if (avoidScaryWords) score += 15;
-          if (isThoughtful) score += 20;
-          if (acknowledgesEmotions) score += 10;
-          
-          if (score >= 80) {
-            updateMessage('Beautiful explanation. Your daughter feels comforted and understood.');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('Thank you for explaining it so nicely. I feel better now. Can I have a hug?');
-            }
-            endGame(true, 'Excellent parenting! You handled this with perfect care and sensitivity.', score);
-          } else if (score >= 60) {
-            updateMessage('Good effort. Your daughter is still confused but feels loved.');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('I still don\'t understand everything, but I know you love me.');
-            }
-            endGame(true, 'Decent explanation. Could have been more comforting but showed care.', score);
-          } else {
-            updateMessage('Your daughter is more confused and upset now.');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('I\'m scared now... that doesn\'t make me feel better...');
-            }
-            endGame(false, 'The explanation was too confusing or frightening for a child.', score);
-          }
-        }
-      };
+    if (!isInitialized || !onVoiceInput || hasAnswered || !showChild) return;
+    
+    const handleVoiceInput = (transcript: string) => {
+      const input = transcript.toLowerCase().trim();
       
-      onVoiceInput(handleVoiceInput);
-    }
-  }, [onVoiceInput, hasAnswered, showChild, endGame, updateMessage, sendVoiceMessage]);
+      if (input.length > 15) { // Substantial response
+        setHasAnswered(true);
+        
+        // Criteria for a good explanation
+        const comfortingWords = [
+          'love', 'remember', 'memories', 'special', 'heart', 'forever',
+          'care', 'safe', 'okay', 'understand', 'together', 'hug'
+        ];
+        
+        const ageAppropriate = [
+          'sleep', 'peaceful', 'happy', 'heaven', 'star', 'angel',
+          'nature', 'cycle', 'natural', 'part of life'
+        ];
+        
+        const avoidScaryWords = !input.includes('scary') && !input.includes('pain') && 
+                                !input.includes('hurt') && !input.includes('never');
+        
+        const hasComfort = comfortingWords.some(word => input.includes(word));
+        const isAgeAppropriate = ageAppropriate.some(word => input.includes(word));
+        const isThoughtful = input.length > 50;
+        const acknowledgesEmotions = input.includes('sad') || input.includes('miss') || 
+                                   input.includes('cry') || input.includes('feel');
+        
+        let score = 20; // Base score
+        if (hasComfort) score += 30;
+        if (isAgeAppropriate) score += 25;
+        if (avoidScaryWords) score += 15;
+        if (isThoughtful) score += 20;
+        if (acknowledgesEmotions) score += 10;
+        
+        if (score >= 80) {
+          updateMessage('Beautiful explanation. Your daughter feels comforted and understood.');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('Thank you for explaining it so nicely. I feel better now. Can I have a hug?');
+          }
+          endGame(true, 'Excellent parenting! You handled this with perfect care and sensitivity.', score);
+        } else if (score >= 60) {
+          updateMessage('Good effort. Your daughter is still confused but feels loved.');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('I still don\'t understand everything, but I know you love me.');
+          }
+          endGame(true, 'Decent explanation. Could have been more comforting but showed care.', score);
+        } else {
+          updateMessage('Your daughter is more confused and upset now.');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('I\'m scared now... that doesn\'t make me feel better...');
+          }
+          endGame(false, 'The explanation was too confusing or frightening for a child.', score);
+        }
+      }
+    };
+    
+    onVoiceInput(handleVoiceInput);
+  }, [isInitialized, onVoiceInput, hasAnswered, showChild, endGame, updateMessage, sendVoiceMessage]);
 
   return (
     <div className="text-center max-w-2xl">
       {!showChild ? (
         <div className="text-center">
           <div className="text-8xl">👧</div>
-          <p className="text-2xl mt-4 animate-pulse">*Footsteps approaching*</p>
+          <p className="text-2xl mt-4">*Footsteps approaching*</p>
         </div>
       ) : (
         <>
@@ -130,7 +136,7 @@ function ExplainDeathGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessa
           {hasAnswered && (
             <div className="mt-4 text-yellow-300">
               <p>Your daughter is processing your words...</p>
-              <div className="text-4xl animate-pulse mt-2">💭</div>
+              <div className="text-4xl mt-2">💭</div>
             </div>
           )}
         </>

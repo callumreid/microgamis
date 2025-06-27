@@ -32,26 +32,34 @@ function PwnBullyGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, 
   const [bullyTaunt, setBullyTaunt] = useState('');
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showBully, setShowBully] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize bully taunt once on mount
   useEffect(() => {
     const randomTaunt = bullyTaunts[Math.floor(Math.random() * bullyTaunts.length)];
     setBullyTaunt(randomTaunt);
-    
-    updateMessage('A bully approaches...');
-    
-    setTimeout(() => {
-      setShowBully(true);
-      updateMessage('Quick! Deliver the perfect comeback!');
+  }, []);
+
+  // Handle game sequence when taunt is set
+  useEffect(() => {
+    if (bullyTaunt && !isInitialized) {
+      updateMessage('A bully approaches...');
+      setIsInitialized(true);
       
-      if (sendVoiceMessage) {
-        sendVoiceMessage(randomTaunt);
-      }
-      
-      if (playSound) {
-        playSound('bully-taunt');
-      }
-    }, 2000);
-  }, [updateMessage, sendVoiceMessage, playSound]);
+      setTimeout(() => {
+        setShowBully(true);
+        updateMessage('Quick! Deliver the perfect comeback!');
+        
+        if (sendVoiceMessage) {
+          sendVoiceMessage(bullyTaunt);
+        }
+        
+        if (playSound) {
+          playSound('bully-taunt');
+        }
+      }, 2000);
+    }
+  }, [bullyTaunt, isInitialized, updateMessage, sendVoiceMessage, playSound]);
 
   useEffect(() => {
     if (onVoiceInput && !hasAnswered && showBully) {
@@ -110,7 +118,7 @@ function PwnBullyGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, 
       {!showBully ? (
         <div className="text-center">
           <div className="text-8xl">😠</div>
-          <p className="text-2xl mt-4 animate-pulse">*Bully approaching*</p>
+          <p className="text-2xl mt-4 opacity-80">*Bully approaching*</p>
         </div>
       ) : (
         <>
@@ -133,7 +141,7 @@ function PwnBullyGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, 
           {hasAnswered && (
             <div className="mt-4 text-yellow-300">
               <p>The crowd watches to see who wins...</p>
-              <div className="text-4xl animate-pulse mt-2">👥</div>
+              <div className="text-4xl mt-2">👥</div>
             </div>
           )}
         </>

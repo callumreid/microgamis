@@ -17,51 +17,61 @@ function HowManyGumballsGame({ endGame, updateMessage, onVoiceInput, sendVoiceMe
   const [hasAnswered, setHasAnswered] = useState(false);
   const [gumballs, setGumballs] = useState<{color: string, x: number, y: number}[]>([]);
   const [panPosition, setPanPosition] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize game data once
   useEffect(() => {
-    // Generate random number of gumballs (30-80)
-    const count = 30 + Math.floor(Math.random() * 51);
-    setActualCount(count);
-    
-    // Generate gumball positions
-    const colors = ['🔴', '🟡', '🔵', '🟢', '🟠', '🟣'];
-    const gumballArray = Array.from({ length: count }, (_, i) => ({
-      color: colors[Math.floor(Math.random() * colors.length)],
-      x: (i % 8) * 12.5 + Math.random() * 5, // Arranged in tower formation
-      y: Math.floor(i / 8) * 8 + Math.random() * 3,
-    }));
-    setGumballs(gumballArray);
-    
-    updateMessage('Count the gumballs as the camera pans across!');
-    if (sendVoiceMessage) {
-      sendVoiceMessage('Welcome to the gumball counting challenge! I\\'m going to slowly pan across a tower of colorful gumballs. Count them carefully as they pass by - you need to guess within 10% to win!');
+    if (!isInitialized) {
+      // Generate random number of gumballs (30-80)
+      const count = 30 + Math.floor(Math.random() * 51);
+      setActualCount(count);
+      
+      // Generate gumball positions
+      const colors = ['🔴', '🟡', '🔵', '🟢', '🟠', '🟣'];
+      const gumballArray = Array.from({ length: count }, (_, i) => ({
+        color: colors[Math.floor(Math.random() * colors.length)],
+        x: (i % 8) * 12.5 + Math.random() * 5, // Arranged in tower formation
+        y: Math.floor(i / 8) * 8 + Math.random() * 3,
+      }));
+      setGumballs(gumballArray);
+      setIsInitialized(true);
     }
+  }, [isInitialized]);
 
-    // Slow pan animation
-    const panTimer = setInterval(() => {
-      setPanPosition(prev => {
-        if (prev >= 100) {
-          clearInterval(panTimer);
-          return 100;
-        }
-        return prev + 1;
-      });
-    }, 80); // Slow pan over 8 seconds
-
-    // Hide gumballs after pan completes
-    const hideTimer = setTimeout(() => {
-      setShowingGumballs(false);
-      updateMessage('The camera has panned across the tower. How many gumballs did you count?');
+  // Handle game setup and animation
+  useEffect(() => {
+    if (isInitialized) {
+      updateMessage('Count the gumballs as the camera pans across!');
       if (sendVoiceMessage) {
-        sendVoiceMessage('The pan is complete! Now tell me how many gumballs you counted in that colorful tower. Remember, you need to be within 10% of the actual count to win!');
+        sendVoiceMessage('Welcome to the gumball counting challenge! I\'m going to slowly pan across a tower of colorful gumballs. Count them carefully as they pass by - you need to guess within 10% to win!');
       }
-    }, 8500);
 
-    return () => {
-      clearInterval(panTimer);
-      clearTimeout(hideTimer);
-    };
-  }, [updateMessage, sendVoiceMessage]);
+      // Slow pan animation
+      const panTimer = setInterval(() => {
+        setPanPosition(prev => {
+          if (prev >= 100) {
+            clearInterval(panTimer);
+            return 100;
+          }
+          return prev + 1;
+        });
+      }, 80); // Slow pan over 8 seconds
+
+      // Hide gumballs after pan completes
+      const hideTimer = setTimeout(() => {
+        setShowingGumballs(false);
+        updateMessage('The camera has panned across the tower. How many gumballs did you count?');
+        if (sendVoiceMessage) {
+          sendVoiceMessage('The pan is complete! Now tell me how many gumballs you counted in that colorful tower. Remember, you need to be within 10% of the actual count to win!');
+        }
+      }, 8500);
+
+      return () => {
+        clearInterval(panTimer);
+        clearTimeout(hideTimer);
+      };
+    }
+  }, [isInitialized, updateMessage, sendVoiceMessage]);
 
   useEffect(() => {
     if (onVoiceInput && !hasAnswered && !showingGumballs) {

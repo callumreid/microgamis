@@ -48,7 +48,8 @@ function AssembleTheBurgerGame({ endGame, updateMessage, onVoiceInput, sendVoice
   // Handle game setup and timing
   useEffect(() => {
     if (isInitialized) {
-      updateMessage('Memorize these burger ingredients!');\n      if (sendVoiceMessage) {
+      updateMessage('Memorize these burger ingredients!');
+      if (sendVoiceMessage) {
         sendVoiceMessage('Welcome to Burger Assembly! I\'m going to show you all the ingredients for a perfect burger. Pay attention to what you see, then tell me the correct order to stack them from bottom to top!');
       }
 
@@ -223,4 +224,4 @@ export default function AssembleTheBurgerGameComponent(props: GameProps) {
       <AssembleTheBurgerGame />
     </BaseGame>
   );
-}"
+}

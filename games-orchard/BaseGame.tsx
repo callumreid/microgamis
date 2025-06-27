@@ -63,8 +63,8 @@ export default function BaseGame({
   const startGame = useCallback(() => {
     setGameState(prev => ({
       ...prev,
-      status: 'playing',
-      message: 'Game started! Good luck!'
+      status: 'playing'
+      // Don't set message here - let the game component handle it
     }));
     
     if (sendVoiceMessage) {

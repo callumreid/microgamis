@@ -407,6 +407,42 @@ function App() {
     }
   }, [isAudioPlaybackEnabled]);
 
+  // Handle "M" key for microphone toggle
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only trigger if M key is pressed and we're not typing in an input field
+      if (event.key.toLowerCase() === 'm' && 
+          !(event.target instanceof HTMLInputElement) && 
+          !(event.target instanceof HTMLTextAreaElement)) {
+        event.preventDefault();
+        if (isPTTActive) {
+          // In PTT mode, trigger talk button
+          handleTalkButtonDown();
+        }
+      }
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() === 'm' && 
+          !(event.target instanceof HTMLInputElement) && 
+          !(event.target instanceof HTMLTextAreaElement)) {
+        event.preventDefault();
+        if (isPTTActive) {
+          // In PTT mode, release talk button
+          handleTalkButtonUp();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [isPTTActive, handleTalkButtonDown, handleTalkButtonUp]);
+
   // Ensure mute state is propagated to transport right after we connect or
   // whenever the SDK client reference becomes available.
   useEffect(() => {

@@ -21,21 +21,31 @@ interface GameControlProps {
   updateMessage: (message: string) => void;
   onVoiceInput?: (transcript: string) => void;
   sendVoiceMessage?: (message: string) => void;
+  gameState?: any;
 }
 
-function PointTaskGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage }: GameControlProps) {
+function PointTaskGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, gameState }: GameControlProps) {
   const [currentTask, setCurrentTask] = useState('');
   const [hasAnswered, setHasAnswered] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize task on component mount
   useEffect(() => {
     const randomTask = tasks[Math.floor(Math.random() * tasks.length)];
     setCurrentTask(randomTask);
-    updateMessage(`Point this task using Fibonacci scale: "${randomTask}"`);
-    
-    if (sendVoiceMessage) {
-      sendVoiceMessage(`Point this engineering task: ${randomTask}. Say a number from the Fibonacci scale: 1, 2, 3, 5, 8, 13, or 21.`);
+  }, []);
+
+  // Update message only when game is playing and task is set
+  useEffect(() => {
+    if (gameState?.status === 'playing' && currentTask && !isInitialized) {
+      updateMessage(`Point this task using Fibonacci scale: "${currentTask}"`);
+      setIsInitialized(true);
+      
+      if (sendVoiceMessage) {
+        sendVoiceMessage(`Point this engineering task: ${currentTask}. Say a number from the Fibonacci scale: 1, 2, 3, 5, 8, 13, or 21.`);
+      }
     }
-  }, [updateMessage, sendVoiceMessage]);
+  }, [gameState?.status, currentTask, isInitialized, updateMessage, sendVoiceMessage]);
 
   useEffect(() => {
     if (onVoiceInput && !hasAnswered) {

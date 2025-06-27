@@ -12,6 +12,7 @@ interface GameControlProps {
 }
 
 function VolcanoCasinoGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+  const [isInitialized, setIsInitialized] = useState(false);
   const [playerPosition, setPlayerPosition] = useState(90); // Start far from volcano
   const [volcanoActivity, setVolcanoActivity] = useState(0);
   const [gamePhase, setGamePhase] = useState<'approaching' | 'erupting' | 'ended'>('approaching');
@@ -21,76 +22,79 @@ function VolcanoCasinoGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
   const [hasAnswered, setHasAnswered] = useState(false);
 
   useEffect(() => {
-    // Random eruption time between 5-9 seconds
-    const eruption = 5000 + Math.random() * 4000;
-    setEruptionTime(eruption);
-    
-    updateMessage('Walk towards the volcano! Say "STOP" when you think it\'s about to erupt!');
-    if (sendVoiceMessage) {
-      sendVoiceMessage('Welcome to Volcano Casino! Get as close as you can to the smoking volcano, but don\'t get caught in the eruption! Say STOP when you want to stay put!');
-    }
-
-    // Gradually increase volcano activity
-    const activityTimer = setInterval(() => {
-      setVolcanoActivity(prev => Math.min(prev + 0.05, 1));
-      setWarningLevel(prev => Math.min(prev + 0.03, 1));
-    }, 100);
-
-    // Player automatically approaches
-    const moveTimer = setInterval(() => {
-      setPlayerPosition(prev => {
-        if (prev > 20 && gamePhase === 'approaching' && !hasAnswered) {
-          return prev - 0.5; // Move closer to volcano
-        }
-        return prev;
-      });
-    }, 100);
-
-    // Eruption
-    const eruptionTimer = setTimeout(() => {
-      setGamePhase('erupting');
-      setLavaSpread(100);
+    if (!isInitialized) {
+      // Random eruption time between 5-9 seconds
+      const eruption = 5000 + Math.random() * 4000;
+      setEruptionTime(eruption);
       
-      if (playSound) {
-        playSound('volcano-eruption');
-      }
-      
-      updateMessage('🌋 ERUPTION! 🌋');
+      updateMessage('Walk towards the volcano! Say "STOP" when you think it\'s about to erupt!');
       if (sendVoiceMessage) {
-        sendVoiceMessage('KABOOM! The volcano erupts with massive force!');
+        sendVoiceMessage('Welcome to Volcano Casino! Get as close as you can to the smoking volcano, but don\'t get caught in the eruption! Say STOP when you want to stay put!');
       }
-      
-      // Determine if player survived
-      setTimeout(() => {
-        const safeDistance = 50; // Minimum safe distance
-        const survived = playerPosition >= safeDistance;
-        const score = Math.max(0, 100 - Math.floor(playerPosition));
-        
-        if (survived) {
-          updateMessage(`Safe! You were ${Math.floor(playerPosition)}% away from the volcano!`);
-          if (sendVoiceMessage) {
-            sendVoiceMessage(`Congratulations! You kept a safe distance and survived the eruption! You scored ${score} points for your daring approach!`);
-          }
-          endGame(true, `Survived at ${Math.floor(playerPosition)}% distance!`, score);
-        } else {
-          updateMessage('💀 You got too close! Melted by lava! 💀');
-          if (sendVoiceMessage) {
-            sendVoiceMessage('Oh no! You got too close to the volcano and were caught in the lava flow! Better luck next time!');
-          }
-          endGame(false, 'Melted by the eruption!', 0);
-        }
-      }, 2000);
-    }, eruption);
 
-    return () => {
-      clearInterval(activityTimer);
-      clearInterval(moveTimer);
-      clearTimeout(eruptionTimer);
-    };
-  }, [updateMessage, sendVoiceMessage, playSound, endGame, gamePhase, hasAnswered, playerPosition]);
+      // Gradually increase volcano activity
+      const activityTimer = setInterval(() => {
+        setVolcanoActivity(prev => Math.min(prev + 0.05, 1));
+        setWarningLevel(prev => Math.min(prev + 0.03, 1));
+      }, 100);
+
+      // Player automatically approaches
+      const moveTimer = setInterval(() => {
+        setPlayerPosition(prev => {
+          if (prev > 20 && gamePhase === 'approaching' && !hasAnswered) {
+            return prev - 0.5; // Move closer to volcano
+          }
+          return prev;
+        });
+      }, 100);
+
+      // Eruption
+      const eruptionTimer = setTimeout(() => {
+        setGamePhase('erupting');
+        setLavaSpread(100);
+        
+        if (playSound) {
+          playSound('volcano-eruption');
+        }
+        
+        updateMessage('🌋 ERUPTION! 🌋');
+        if (sendVoiceMessage) {
+          sendVoiceMessage('KABOOM! The volcano erupts with massive force!');
+        }
+        
+        // Determine if player survived
+        setTimeout(() => {
+          const safeDistance = 50; // Minimum safe distance
+          const survived = playerPosition >= safeDistance;
+          const score = Math.max(0, 100 - Math.floor(playerPosition));
+          
+          if (survived) {
+            updateMessage(`Safe! You were ${Math.floor(playerPosition)}% away from the volcano!`);
+            if (sendVoiceMessage) {
+              sendVoiceMessage(`Congratulations! You kept a safe distance and survived the eruption! You scored ${score} points for your daring approach!`);
+            }
+            endGame(true, `Survived at ${Math.floor(playerPosition)}% distance!`, score);
+          } else {
+            updateMessage('💀 You got too close! Melted by lava! 💀');
+            if (sendVoiceMessage) {
+              sendVoiceMessage('Oh no! You got too close to the volcano and were caught in the lava flow! Better luck next time!');
+            }
+            endGame(false, 'Melted by the eruption!', 0);
+          }
+        }, 2000);
+      }, eruption);
+
+      setIsInitialized(true);
+      return () => {
+        clearInterval(activityTimer);
+        clearInterval(moveTimer);
+        clearTimeout(eruptionTimer);
+      };
+    }
+  }, [isInitialized, updateMessage, sendVoiceMessage, playSound]);
 
   useEffect(() => {
-    if (onVoiceInput && !hasAnswered && gamePhase === 'approaching') {
+    if (onVoiceInput && !hasAnswered && gamePhase === 'approaching' && isInitialized) {
       const handleVoiceInput = (transcript: string) => {
         const input = transcript.toLowerCase().trim();
         
@@ -105,7 +109,7 @@ function VolcanoCasinoGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
       
       onVoiceInput(handleVoiceInput);
     }
-  }, [onVoiceInput, hasAnswered, gamePhase, sendVoiceMessage, updateMessage]);
+  }, [onVoiceInput, hasAnswered, gamePhase, isInitialized]);
 
   const getVolcanoEmoji = () => {
     if (gamePhase === 'erupting') return '🌋';
@@ -207,7 +211,7 @@ function VolcanoCasinoGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
           ))}
         </div>
         {warningLevel > 0.8 && (
-          <div className="text-red-400 text-xs mt-1 animate-pulse font-bold">
+          <div className="text-red-400 text-xs mt-1 font-bold">
             CRITICAL!
           </div>
         )}
@@ -215,11 +219,11 @@ function VolcanoCasinoGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
 
       {/* Eruption overlay */}
       {gamePhase === 'erupting' && (
-        <div className="absolute inset-0 bg-red-600 bg-opacity-30 animate-pulse">
+        <div className="absolute inset-0 bg-red-600 bg-opacity-30">
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <div className="text-8xl animate-bounce">🌋</div>
-              <div className="text-4xl font-bold text-white drop-shadow-lg animate-pulse">
+              <div className="text-8xl">🌋</div>
+              <div className="text-4xl font-bold text-white drop-shadow-lg">
                 ERUPTION!
               </div>
             </div>

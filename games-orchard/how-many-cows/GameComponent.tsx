@@ -12,40 +12,44 @@ interface GameControlProps {
 }
 
 function HowManyCowsGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+  const [isInitialized, setIsInitialized] = useState(false);
   const [actualCowCount, setActualCowCount] = useState(0);
   const [cowsVisible, setCowsVisible] = useState(true);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [stampeding, setStampeding] = useState(true);
 
   useEffect(() => {
-    // Generate random number of cows (8-20)
-    const count = 8 + Math.floor(Math.random() * 13);
-    setActualCowCount(count);
-    
-    updateMessage('Count the cows in the stampede!');
-    if (sendVoiceMessage) {
-      sendVoiceMessage(`Yeehaw! There's a cattle stampede coming through! Count how many cows you see running past, then tell me the number when they're gone!`);
-    }
-
-    if (playSound) {
-      playSound('cow-stampede');
-    }
-
-    // Hide cows after 6 seconds
-    const hideTimer = setTimeout(() => {
-      setCowsVisible(false);
-      setStampeding(false);
-      updateMessage('The stampede has passed! How many cows did you count?');
+    if (!isInitialized) {
+      // Generate random number of cows (8-20)
+      const count = 8 + Math.floor(Math.random() * 13);
+      setActualCowCount(count);
+      
+      updateMessage('Count the cows in the stampede!');
       if (sendVoiceMessage) {
-        sendVoiceMessage('The dust has settled! How many cows did you count in that stampede? Tell me the number!');
+        sendVoiceMessage(`Yeehaw! There's a cattle stampede coming through! Count how many cows you see running past, then tell me the number when they're gone!`);
       }
-    }, 6000);
 
-    return () => clearTimeout(hideTimer);
-  }, [updateMessage, sendVoiceMessage, playSound]);
+      if (playSound) {
+        playSound('cow-stampede');
+      }
+
+      // Hide cows after 6 seconds
+      const hideTimer = setTimeout(() => {
+        setCowsVisible(false);
+        setStampeding(false);
+        updateMessage('The stampede has passed! How many cows did you count?');
+        if (sendVoiceMessage) {
+          sendVoiceMessage('The dust has settled! How many cows did you count in that stampede? Tell me the number!');
+        }
+      }, 6000);
+
+      setIsInitialized(true);
+      return () => clearTimeout(hideTimer);
+    }
+  }, [isInitialized, updateMessage, sendVoiceMessage, playSound]);
 
   useEffect(() => {
-    if (onVoiceInput && !hasAnswered && !cowsVisible) {
+    if (onVoiceInput && !hasAnswered && !cowsVisible && isInitialized) {
       const handleVoiceInput = (transcript: string) => {
         const input = transcript.toLowerCase().trim();
         
@@ -88,7 +92,7 @@ function HowManyCowsGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessag
       
       onVoiceInput(handleVoiceInput);
     }
-  }, [onVoiceInput, hasAnswered, cowsVisible, actualCowCount, endGame, updateMessage, sendVoiceMessage]);
+  }, [onVoiceInput, hasAnswered, cowsVisible, actualCowCount, isInitialized]);
 
   return (
     <div className="w-full h-full relative bg-gradient-to-b from-amber-200 to-green-300 overflow-hidden">
@@ -180,7 +184,7 @@ function HowManyCowsGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessag
       )}
 
       {/* Ranch decorations */}
-      <div className="absolute bottom-8 right-8 text-3xl animate-bounce">🏠</div>
+      <div className="absolute bottom-8 right-8 text-3xl">🏠</div>
       <div className="absolute bottom-12 left-8 text-2xl">🌾</div>
 
       <style jsx>{`

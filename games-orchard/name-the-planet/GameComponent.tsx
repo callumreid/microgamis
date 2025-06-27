@@ -33,43 +33,47 @@ const planets: Planet[] = [
 ];
 
 function NameThePlanetGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+  const [isInitialized, setIsInitialized] = useState(false);
   const [currentPlanet, setCurrentPlanet] = useState<Planet | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [rotation, setRotation] = useState(0);
 
   useEffect(() => {
-    // Select random planet
-    const randomPlanet = planets[Math.floor(Math.random() * planets.length)];
-    setCurrentPlanet(randomPlanet);
-    
-    updateMessage('Which planet is this?');
-    if (sendVoiceMessage) {
-      sendVoiceMessage(`Welcome to space exploration! I'm showing you a planet from our solar system. Study its appearance carefully and tell me which planet this is!`);
-    }
-
-    // Planet rotation animation
-    const rotationTimer = setInterval(() => {
-      setRotation(prev => (prev + 1) % 360);
-    }, 50);
-
-    // Show hint after 5 seconds
-    const hintTimer = setTimeout(() => {
-      setShowHint(true);
-      updateMessage(`Hint: ${randomPlanet.hint}`);
+    if (!isInitialized) {
+      // Select random planet
+      const randomPlanet = planets[Math.floor(Math.random() * planets.length)];
+      setCurrentPlanet(randomPlanet);
+      
+      updateMessage('Which planet is this?');
       if (sendVoiceMessage) {
-        sendVoiceMessage(`Here's a hint to help you: ${randomPlanet.hint}`);
+        sendVoiceMessage(`Welcome to space exploration! I'm showing you a planet from our solar system. Study its appearance carefully and tell me which planet this is!`);
       }
-    }, 5000);
 
-    return () => {
-      clearInterval(rotationTimer);
-      clearTimeout(hintTimer);
-    };
-  }, [updateMessage, sendVoiceMessage]);
+      // Planet rotation animation
+      const rotationTimer = setInterval(() => {
+        setRotation(prev => (prev + 1) % 360);
+      }, 50);
+
+      // Show hint after 5 seconds
+      const hintTimer = setTimeout(() => {
+        setShowHint(true);
+        updateMessage(`Hint: ${randomPlanet.hint}`);
+        if (sendVoiceMessage) {
+          sendVoiceMessage(`Here's a hint to help you: ${randomPlanet.hint}`);
+        }
+      }, 5000);
+
+      setIsInitialized(true);
+      return () => {
+        clearInterval(rotationTimer);
+        clearTimeout(hintTimer);
+      };
+    }
+  }, [isInitialized, updateMessage, sendVoiceMessage]);
 
   useEffect(() => {
-    if (onVoiceInput && !hasAnswered && currentPlanet) {
+    if (onVoiceInput && !hasAnswered && currentPlanet && isInitialized) {
       const handleVoiceInput = (transcript: string) => {
         const input = transcript.toLowerCase().trim();
         const correctPlanet = currentPlanet.name.toLowerCase();
@@ -114,7 +118,7 @@ function NameThePlanetGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
       
       onVoiceInput(handleVoiceInput);
     }
-  }, [onVoiceInput, hasAnswered, currentPlanet, showHint, endGame, updateMessage, sendVoiceMessage, playSound]);
+  }, [onVoiceInput, hasAnswered, currentPlanet, showHint, isInitialized]);
 
   if (!currentPlanet) {
     return <div>Loading solar system...</div>;
@@ -185,7 +189,7 @@ function NameThePlanetGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
           </p>
           {hasAnswered && (
             <div className="mt-4 text-purple-300">
-              <div className="animate-spin text-2xl mb-2">🪐</div>
+              <div className="text-2xl mb-2">🪐</div>
               <p>Analyzing your answer...</p>
             </div>
           )}

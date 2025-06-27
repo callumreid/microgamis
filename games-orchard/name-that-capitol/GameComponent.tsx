@@ -39,34 +39,38 @@ const countries: Country[] = [
 ];
 
 function NameThatCapitolGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+  const [isInitialized, setIsInitialized] = useState(false);
   const [currentCountry, setCurrentCountry] = useState<Country | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showHint, setShowHint] = useState(false);
 
   useEffect(() => {
-    // Select random country
-    const randomCountry = countries[Math.floor(Math.random() * countries.length)];
-    setCurrentCountry(randomCountry);
-    
-    updateMessage(`What is the capital of ${randomCountry.name}?`);
-    if (sendVoiceMessage) {
-      sendVoiceMessage(`Geography time! I'm showing you the flag and shape of ${randomCountry.name}. What is the capital city of this country? Take your time and speak clearly!`);
-    }
-
-    // Show hint after 5 seconds
-    const hintTimer = setTimeout(() => {
-      setShowHint(true);
-      updateMessage(`Hint: ${randomCountry.hint}`);
+    if (!isInitialized) {
+      // Select random country
+      const randomCountry = countries[Math.floor(Math.random() * countries.length)];
+      setCurrentCountry(randomCountry);
+      
+      updateMessage(`What is the capital of ${randomCountry.name}?`);
       if (sendVoiceMessage) {
-        sendVoiceMessage(`Here's a hint: ${randomCountry.hint}`);
+        sendVoiceMessage(`Geography time! I'm showing you the flag and shape of ${randomCountry.name}. What is the capital city of this country? Take your time and speak clearly!`);
       }
-    }, 5000);
 
-    return () => clearTimeout(hintTimer);
-  }, [updateMessage, sendVoiceMessage]);
+      // Show hint after 5 seconds
+      const hintTimer = setTimeout(() => {
+        setShowHint(true);
+        updateMessage(`Hint: ${randomCountry.hint}`);
+        if (sendVoiceMessage) {
+          sendVoiceMessage(`Here's a hint: ${randomCountry.hint}`);
+        }
+      }, 5000);
+
+      setIsInitialized(true);
+      return () => clearTimeout(hintTimer);
+    }
+  }, [isInitialized, updateMessage, sendVoiceMessage]);
 
   useEffect(() => {
-    if (onVoiceInput && !hasAnswered && currentCountry) {
+    if (onVoiceInput && !hasAnswered && currentCountry && isInitialized) {
       const handleVoiceInput = (transcript: string) => {
         const input = transcript.toLowerCase().trim();
         const correctCapital = currentCountry.capital.toLowerCase();
@@ -115,7 +119,7 @@ function NameThatCapitolGame({ endGame, updateMessage, onVoiceInput, sendVoiceMe
       
       onVoiceInput(handleVoiceInput);
     }
-  }, [onVoiceInput, hasAnswered, currentCountry, showHint, endGame, updateMessage, sendVoiceMessage, playSound]);
+  }, [onVoiceInput, hasAnswered, currentCountry, showHint, isInitialized]);
 
   if (!currentCountry) {
     return <div>Loading geography challenge...</div>;
@@ -150,7 +154,7 @@ function NameThatCapitolGame({ endGame, updateMessage, onVoiceInput, sendVoiceMe
           </p>
           {hasAnswered && (
             <div className="mt-4 text-blue-600">
-              <div className="animate-spin text-2xl mb-2">🌐</div>
+              <div className="text-2xl mb-2">🌐</div>
               <p>Checking your answer...</p>
             </div>
           )}
@@ -159,9 +163,9 @@ function NameThatCapitolGame({ endGame, updateMessage, onVoiceInput, sendVoiceMe
 
       {/* Decorative elements */}
       <div className="flex justify-center space-x-4 text-3xl opacity-50">
-        <span className="animate-bounce">🗺️</span>
-        <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>📍</span>
-        <span className="animate-bounce" style={{ animationDelay: '0.4s' }}>🌆</span>
+        <span>🗺️</span>
+        <span>📍</span>
+        <span>🌆</span>
       </div>
     </div>
   );

@@ -22,31 +22,35 @@ function SteerShipGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage,
   const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
-    const position = icebergPositions[Math.floor(Math.random() * icebergPositions.length)];
-    setIcebergPosition(position);
-    
-    // Determine correct steering
-    let correct = '';
-    if (position === 'left') correct = 'starboard'; // Steer right to avoid left iceberg
-    else if (position === 'right') correct = 'port'; // Steer left to avoid right iceberg  
-    else correct = directions[Math.floor(Math.random() * directions.length)]; // Center - either works
-    
-    setCorrectDirection(correct);
-    updateMessage('Captain! Iceberg ahead!');
-    
-    setTimeout(() => {
-      setShowIceberg(true);
-      updateMessage('ICEBERG SPOTTED! Quick - steer the ship!');
+    if (!isInitialized) {
+      const position = icebergPositions[Math.floor(Math.random() * icebergPositions.length)];
+      setIcebergPosition(position);
       
-      if (sendVoiceMessage) {
-        sendVoiceMessage(`ICEBERG DEAD AHEAD! Captain, we need to steer ${correct === 'port' ? 'to port' : 'to starboard'} immediately! Say "port" or "starboard"!`);
-      }
+      // Determine correct steering
+      let correct = '';
+      if (position === 'left') correct = 'starboard'; // Steer right to avoid left iceberg
+      else if (position === 'right') correct = 'port'; // Steer left to avoid right iceberg  
+      else correct = directions[Math.floor(Math.random() * directions.length)]; // Center - either works
       
-      if (playSound) {
-        playSound('ship-horn');
-      }
-    }, 2000);
-  }, [updateMessage, sendVoiceMessage, playSound]);
+      setCorrectDirection(correct);
+      updateMessage('Captain! Iceberg ahead!');
+      
+      setTimeout(() => {
+        setShowIceberg(true);
+        updateMessage('ICEBERG SPOTTED! Quick - steer the ship!');
+        
+        if (sendVoiceMessage) {
+          sendVoiceMessage(`ICEBERG DEAD AHEAD! Captain, we need to steer ${correct === 'port' ? 'to port' : 'to starboard'} immediately! Say "port" or "starboard"!`);
+        }
+        
+        if (playSound) {
+          playSound('ship-horn');
+        }
+      }, 2000);
+      
+      setIsInitialized(true);
+    }
+  }, [isInitialized, updateMessage, sendVoiceMessage, playSound]);
 
   useEffect(() => {
     if (showIceberg && countdown > 0) {
@@ -64,7 +68,7 @@ function SteerShipGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage,
   }, [showIceberg, countdown, hasAnswered, updateMessage, sendVoiceMessage, endGame]);
 
   useEffect(() => {
-    if (onVoiceInput && !hasAnswered && showIceberg) {
+    if (onVoiceInput && !hasAnswered && showIceberg && isInitialized) {
       const handleVoiceInput = (transcript: string) => {
         const input = transcript.toLowerCase().trim();
         
@@ -91,14 +95,14 @@ function SteerShipGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage,
       
       onVoiceInput(handleVoiceInput);
     }
-  }, [onVoiceInput, hasAnswered, showIceberg, correctDirection, icebergPosition, endGame, updateMessage, sendVoiceMessage]);
+  }, [onVoiceInput, hasAnswered, showIceberg, correctDirection, icebergPosition, isInitialized]);
 
   return (
     <div className="text-center max-w-2xl">
       {!showIceberg ? (
         <div className="text-center">
           <div className="text-8xl">🚢</div>
-          <p className="text-2xl mt-4 animate-pulse">*Sailing through icy waters*</p>
+          <p className="text-2xl mt-4">*Sailing through icy waters*</p>
           <div className="text-4xl mt-4">🌊</div>
         </div>
       ) : (
@@ -130,7 +134,7 @@ function SteerShipGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage,
           {hasAnswered && (
             <div className="mt-4 text-yellow-300">
               <p>The ship responds to your command...</p>
-              <div className="text-4xl animate-spin mt-2">⚓</div>
+              <div className="text-4xl mt-2">⚓</div>
             </div>
           )}
         </>

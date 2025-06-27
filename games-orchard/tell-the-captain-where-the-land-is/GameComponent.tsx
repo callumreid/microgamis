@@ -21,31 +21,35 @@ const directionInfo = {
 };
 
 function TellTheCaptainGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+  const [isInitialized, setIsInitialized] = useState(false);
   const [landDirection, setLandDirection] = useState<Direction>('port');
   const [hasAnswered, setHasAnswered] = useState(false);
   const [waveAnimation, setWaveAnimation] = useState(0);
 
   useEffect(() => {
-    // Randomly choose where land appears
-    const directions: Direction[] = ['port', 'starboard', 'bow', 'stern'];
-    const randomDirection = directions[Math.floor(Math.random() * directions.length)];
-    setLandDirection(randomDirection);
-    
-    updateMessage('Ahoy! Look for land and tell the captain where it is!');
-    if (sendVoiceMessage) {
-      sendVoiceMessage('Ahoy there, sailor! You\'re the lookout on this ship. Scan the horizon and when you spot land, tell the captain which direction it\'s in - port, starboard, bow, or stern!');
+    if (!isInitialized) {
+      // Randomly choose where land appears
+      const directions: Direction[] = ['port', 'starboard', 'bow', 'stern'];
+      const randomDirection = directions[Math.floor(Math.random() * directions.length)];
+      setLandDirection(randomDirection);
+      
+      updateMessage('Ahoy! Look for land and tell the captain where it is!');
+      if (sendVoiceMessage) {
+        sendVoiceMessage('Ahoy there, sailor! You\'re the lookout on this ship. Scan the horizon and when you spot land, tell the captain which direction it\'s in - port, starboard, bow, or stern!');
+      }
+
+      // Wave animation
+      const waveTimer = setInterval(() => {
+        setWaveAnimation(prev => (prev + 1) % 100);
+      }, 100);
+
+      setIsInitialized(true);
+      return () => clearInterval(waveTimer);
     }
-
-    // Wave animation
-    const waveTimer = setInterval(() => {
-      setWaveAnimation(prev => (prev + 1) % 100);
-    }, 100);
-
-    return () => clearInterval(waveTimer);
-  }, [updateMessage, sendVoiceMessage]);
+  }, [isInitialized, updateMessage, sendVoiceMessage]);
 
   useEffect(() => {
-    if (onVoiceInput && !hasAnswered) {
+    if (onVoiceInput && !hasAnswered && isInitialized) {
       const handleVoiceInput = (transcript: string) => {
         const input = transcript.toLowerCase().trim();
         
@@ -95,7 +99,7 @@ function TellTheCaptainGame({ endGame, updateMessage, onVoiceInput, sendVoiceMes
       
       onVoiceInput(handleVoiceInput);
     }
-  }, [onVoiceInput, hasAnswered, landDirection, endGame, updateMessage, sendVoiceMessage, playSound]);
+  }, [onVoiceInput, hasAnswered, landDirection, isInitialized]);
 
   return (
     <div className="w-full h-full relative bg-gradient-to-b from-sky-300 to-blue-600 overflow-hidden">
@@ -152,7 +156,7 @@ function TellTheCaptainGame({ endGame, updateMessage, onVoiceInput, sendVoiceMes
                       landDirection === 'starboard' ? 'right-4 top-1/2 transform -translate-y-1/2' :
                       landDirection === 'bow' ? 'top-4 left-1/2 transform -translate-x-1/2' :
                       'bottom-16 left-1/2 transform -translate-x-1/2'}`}>
-        <div className="text-4xl animate-pulse">🏝️</div>
+        <div className="text-4xl">🏝️</div>
         <div className="text-xs text-white font-bold bg-green-600 bg-opacity-70 rounded px-2 py-1 mt-1">
           LAND HO!
         </div>

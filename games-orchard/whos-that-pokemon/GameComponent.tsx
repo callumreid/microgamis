@@ -36,39 +36,43 @@ const pokemon: Pokemon[] = [
 ];
 
 function WhosThatPokemonGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+  const [isInitialized, setIsInitialized] = useState(false);
   const [currentPokemon, setCurrentPokemon] = useState<Pokemon | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
-    // Select random Pokemon
-    const randomPokemon = pokemon[Math.floor(Math.random() * pokemon.length)];
-    setCurrentPokemon(randomPokemon);
-    
-    updateMessage('Who\'s that Pokemon?');
-    if (sendVoiceMessage) {
-      sendVoiceMessage('Who\'s that Pokemon? Look at the silhouette and tell me which Pokemon this is! Gotta catch \'em all!');
-    }
-    
-    if (playSound) {
-      playSound('pokemon-theme');
-    }
-
-    // Show hint after 5 seconds
-    const hintTimer = setTimeout(() => {
-      setShowHint(true);
-      updateMessage(`Hint: ${randomPokemon.hint} (${randomPokemon.type} type)`);
+    if (!isInitialized) {
+      // Select random Pokemon
+      const randomPokemon = pokemon[Math.floor(Math.random() * pokemon.length)];
+      setCurrentPokemon(randomPokemon);
+      
+      updateMessage('Who\'s that Pokemon?');
       if (sendVoiceMessage) {
-        sendVoiceMessage(`Here's a hint: This is a ${randomPokemon.type} type Pokemon. ${randomPokemon.hint}`);
+        sendVoiceMessage('Who\'s that Pokemon? Look at the silhouette and tell me which Pokemon this is! Gotta catch \'em all!');
       }
-    }, 5000);
+      
+      if (playSound) {
+        playSound('pokemon-theme');
+      }
 
-    return () => clearTimeout(hintTimer);
-  }, [updateMessage, sendVoiceMessage, playSound]);
+      // Show hint after 5 seconds
+      const hintTimer = setTimeout(() => {
+        setShowHint(true);
+        updateMessage(`Hint: ${randomPokemon.hint} (${randomPokemon.type} type)`);
+        if (sendVoiceMessage) {
+          sendVoiceMessage(`Here's a hint: This is a ${randomPokemon.type} type Pokemon. ${randomPokemon.hint}`);
+        }
+      }, 5000);
+
+      setIsInitialized(true);
+      return () => clearTimeout(hintTimer);
+    }
+  }, [isInitialized, updateMessage, sendVoiceMessage, playSound]);
 
   useEffect(() => {
-    if (onVoiceInput && !hasAnswered && currentPokemon) {
+    if (onVoiceInput && !hasAnswered && currentPokemon && isInitialized) {
       const handleVoiceInput = (transcript: string) => {
         const input = transcript.toLowerCase().trim();
         const correctName = currentPokemon.name.toLowerCase();
@@ -121,7 +125,7 @@ function WhosThatPokemonGame({ endGame, updateMessage, onVoiceInput, sendVoiceMe
       
       onVoiceInput(handleVoiceInput);
     }
-  }, [onVoiceInput, hasAnswered, currentPokemon, showHint, endGame, updateMessage, sendVoiceMessage, playSound]);
+  }, [onVoiceInput, hasAnswered, currentPokemon, showHint, isInitialized]);
 
   if (!currentPokemon) {
     return <div>Loading Pokemon...</div>;
@@ -153,7 +157,7 @@ function WhosThatPokemonGame({ endGame, updateMessage, onVoiceInput, sendVoiceMe
                 <div className="text-6xl absolute inset-0 flex items-center justify-center opacity-20">
                   {currentPokemon.silhouette}
                 </div>
-                <div className="text-2xl font-bold text-gray-800 animate-pulse">
+                <div className="text-2xl font-bold text-gray-800">
                   🤔 Mystery Pokemon 🤔
                 </div>
               </div>
@@ -196,7 +200,7 @@ function WhosThatPokemonGame({ endGame, updateMessage, onVoiceInput, sendVoiceMe
             </p>
             {hasAnswered && (
               <div className="mt-4 text-red-600">
-                <div className="animate-spin text-2xl mb-2">⚪</div>
+                <div className="text-2xl mb-2">⚪</div>
                 <p>Checking Pokedex...</p>
               </div>
             )}
@@ -206,9 +210,9 @@ function WhosThatPokemonGame({ endGame, updateMessage, onVoiceInput, sendVoiceMe
 
       {/* Pokemon trainer elements */}
       <div className="flex justify-center space-x-4 text-2xl opacity-60">
-        <span className="animate-bounce">⚪</span>
-        <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>🔴</span>
-        <span className="animate-bounce" style={{ animationDelay: '0.4s' }}>⚪</span>
+        <span>⚪</span>
+        <span>🔴</span>
+        <span>⚪</span>
       </div>
 
       <style jsx>{`

@@ -12,27 +12,31 @@ interface GameControlProps {
 }
 
 function JumpOffBridgeGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+  const [isInitialized, setIsInitialized] = useState(false);
   const [peopleJumping, setPeopleJumping] = useState(0);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [crowdPressure, setCrowdPressure] = useState(0);
 
   useEffect(() => {
-    updateMessage('Everyone is jumping off this bridge! What do you do?');
-    if (sendVoiceMessage) {
-      sendVoiceMessage('You find yourself at a bridge where everyone seems to be jumping off! There\'s a crowd gathering and peer pressure mounting. What\'s your choice - will you jump or not jump?');
+    if (!isInitialized) {
+      updateMessage('Everyone is jumping off this bridge! What do you do?');
+      if (sendVoiceMessage) {
+        sendVoiceMessage('You find yourself at a bridge where everyone seems to be jumping off! There\'s a crowd gathering and peer pressure mounting. What\'s your choice - will you jump or not jump?');
+      }
+
+      // Gradually increase people jumping and pressure
+      const pressureTimer = setInterval(() => {
+        setPeopleJumping(prev => Math.min(prev + 1, 15));
+        setCrowdPressure(prev => Math.min(prev + 1, 100));
+      }, 300);
+
+      setIsInitialized(true);
+      return () => clearInterval(pressureTimer);
     }
-
-    // Gradually increase people jumping and pressure
-    const pressureTimer = setInterval(() => {
-      setPeopleJumping(prev => Math.min(prev + 1, 15));
-      setCrowdPressure(prev => Math.min(prev + 1, 100));
-    }, 300);
-
-    return () => clearInterval(pressureTimer);
-  }, [updateMessage, sendVoiceMessage]);
+  }, [isInitialized, updateMessage, sendVoiceMessage]);
 
   useEffect(() => {
-    if (onVoiceInput && !hasAnswered) {
+    if (onVoiceInput && !hasAnswered && isInitialized) {
       const handleVoiceInput = (transcript: string) => {
         const input = transcript.toLowerCase().trim();
         
@@ -69,7 +73,7 @@ function JumpOffBridgeGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
       
       onVoiceInput(handleVoiceInput);
     }
-  }, [onVoiceInput, hasAnswered, endGame, updateMessage, sendVoiceMessage]);
+  }, [onVoiceInput, hasAnswered, isInitialized]);
 
   return (
     <div className="w-full h-full relative bg-gradient-to-b from-blue-300 to-green-400">
@@ -109,7 +113,7 @@ function JumpOffBridgeGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
       {/* Crowd on bridge */}
       <div className="absolute top-1/4 left-0 right-0 flex justify-center">
         {Array.from({ length: Math.max(0, 8 - peopleJumping) }).map((_, i) => (
-          <div key={i} className="text-3xl mx-1 animate-bounce" style={{ animationDelay: `${i * 0.1}s` }}>
+          <div key={i} className="text-3xl mx-1">
             🧍‍♂️
           </div>
         ))}
@@ -117,7 +121,7 @@ function JumpOffBridgeGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
 
       {/* You (the player) */}
       <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2">
-        <div className="text-4xl animate-pulse">🫵</div>
+        <div className="text-4xl">🫵</div>
         <div className="text-xs text-center bg-yellow-400 text-black rounded px-2 py-1 mt-1 font-bold">
           YOU
         </div>
@@ -140,7 +144,7 @@ function JumpOffBridgeGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
       {/* Crowd chanting */}
       <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white p-3 rounded max-w-xs">
         <div className="text-sm font-bold mb-2">💬 The Crowd Says:</div>
-        <div className="text-xs animate-pulse">
+        <div className="text-xs">
           {crowdPressure < 25 ? '"Come on, everyone\'s doing it!"' :
            crowdPressure < 50 ? '"Don\'t be a chicken!"' :
            crowdPressure < 75 ? '"Just jump already!"' :

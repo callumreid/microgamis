@@ -27,6 +27,7 @@ const fishTypes: Fish[] = [
 ];
 
 function GoneFishingGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+  const [isInitialized, setIsInitialized] = useState(false);
   const [bobberMovement, setBobberMovement] = useState(0);
   const [bites, setBites] = useState<Fish[]>([]);
   const [currentFish, setCurrentFish] = useState<Fish | null>(null);
@@ -35,78 +36,81 @@ function GoneFishingGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessag
   const [waterRipples, setWaterRipples] = useState(0);
 
   useEffect(() => {
-    updateMessage('Cast your line! Watch the bobber for bites!');
-    if (sendVoiceMessage) {
-      sendVoiceMessage('Welcome to the fishing hole! Watch your bobber carefully - when it moves, a fish is biting. The bigger the movement, the bigger the fish!');
-    }
-
-    // Generate random fish bites over 8 seconds
-    const biteIntervals: NodeJS.Timeout[] = [];
-    const biteTimes = [2000, 4500, 6000, 7500]; // 4 potential bites
-
-    biteTimes.forEach((time, index) => {
-      const timer = setTimeout(() => {
-        const fish = fishTypes[Math.floor(Math.random() * fishTypes.length)];
-        setBites(prev => [...prev, fish]);
-        setCurrentFish(fish);
-        
-        // Bobber movement intensity based on fish size
-        const movement = fish.weight * 0.3 + Math.random() * 0.2;
-        setBobberMovement(movement);
-        setWaterRipples(prev => prev + 1);
-        
-        if (playSound) {
-          playSound('fishing-bite');
-        }
-        
-        updateMessage(`Bite detected! ${fish.size.toUpperCase()} movement detected!`);
-        
-        // Reset bobber after 1 second
-        setTimeout(() => {
-          setBobberMovement(0);
-          setCurrentFish(null);
-        }, 1000);
-      }, time);
-      
-      biteIntervals.push(timer);
-    });
-
-    // End fishing phase after 8 seconds
-    const endTimer = setTimeout(() => {
-      setGamePhase('caught');
-      if (bites.length > 0) {
-        const biggestFish = bites.reduce((prev, current) => 
-          prev.weight > current.weight ? prev : current
-        );
-        
-        updateMessage(`Time to see what you caught! Biggest fish: ${biggestFish.size} ${biggestFish.emoji}`);
-        if (sendVoiceMessage) {
-          sendVoiceMessage(`Fishing time is up! Let's see what you caught. Your biggest fish was a ${biggestFish.size} ${biggestFish.id} weighing ${biggestFish.weight} pounds!`);
-        }
-        
-        // Success based on biggest fish caught
-        const score = biggestFish.weight * 10;
-        const success = biggestFish.weight >= 8; // Large or huge fish
-        
-        setTimeout(() => {
-          endGame(success, `You caught a ${biggestFish.size} ${biggestFish.id}! (${biggestFish.weight}lbs)`, score);
-        }, 2000);
-      } else {
-        updateMessage('No fish caught today...');
-        if (sendVoiceMessage) {
-          sendVoiceMessage('Unfortunately, no fish took the bait today. Better luck next time!');
-        }
-        setTimeout(() => {
-          endGame(false, 'The fish weren\'t biting today!', 0);
-        }, 2000);
+    if (!isInitialized) {
+      updateMessage('Cast your line! Watch the bobber for bites!');
+      if (sendVoiceMessage) {
+        sendVoiceMessage('Welcome to the fishing hole! Watch your bobber carefully - when it moves, a fish is biting. The bigger the movement, the bigger the fish!');
       }
-    }, 8000);
 
-    return () => {
-      biteIntervals.forEach(clearTimeout);
-      clearTimeout(endTimer);
-    };
-  }, [updateMessage, sendVoiceMessage, playSound, endGame, bites]);
+      // Generate random fish bites over 8 seconds
+      const biteIntervals: NodeJS.Timeout[] = [];
+      const biteTimes = [2000, 4500, 6000, 7500]; // 4 potential bites
+
+      biteTimes.forEach((time, index) => {
+        const timer = setTimeout(() => {
+          const fish = fishTypes[Math.floor(Math.random() * fishTypes.length)];
+          setBites(prev => [...prev, fish]);
+          setCurrentFish(fish);
+          
+          // Bobber movement intensity based on fish size
+          const movement = fish.weight * 0.3 + Math.random() * 0.2;
+          setBobberMovement(movement);
+          setWaterRipples(prev => prev + 1);
+          
+          if (playSound) {
+            playSound('fishing-bite');
+          }
+          
+          updateMessage(`Bite detected! ${fish.size.toUpperCase()} movement detected!`);
+          
+          // Reset bobber after 1 second
+          setTimeout(() => {
+            setBobberMovement(0);
+            setCurrentFish(null);
+          }, 1000);
+        }, time);
+        
+        biteIntervals.push(timer);
+      });
+
+      // End fishing phase after 8 seconds
+      const endTimer = setTimeout(() => {
+        setGamePhase('caught');
+        if (bites.length > 0) {
+          const biggestFish = bites.reduce((prev, current) => 
+            prev.weight > current.weight ? prev : current
+          );
+          
+          updateMessage(`Time to see what you caught! Biggest fish: ${biggestFish.size} ${biggestFish.emoji}`);
+          if (sendVoiceMessage) {
+            sendVoiceMessage(`Fishing time is up! Let's see what you caught. Your biggest fish was a ${biggestFish.size} ${biggestFish.id} weighing ${biggestFish.weight} pounds!`);
+          }
+          
+          // Success based on biggest fish caught
+          const score = biggestFish.weight * 10;
+          const success = biggestFish.weight >= 8; // Large or huge fish
+          
+          setTimeout(() => {
+            endGame(success, `You caught a ${biggestFish.size} ${biggestFish.id}! (${biggestFish.weight}lbs)`, score);
+          }, 2000);
+        } else {
+          updateMessage('No fish caught today...');
+          if (sendVoiceMessage) {
+            sendVoiceMessage('Unfortunately, no fish took the bait today. Better luck next time!');
+          }
+          setTimeout(() => {
+            endGame(false, 'The fish weren\'t biting today!', 0);
+          }, 2000);
+        }
+      }, 8000);
+
+      setIsInitialized(true);
+      return () => {
+        biteIntervals.forEach(clearTimeout);
+        clearTimeout(endTimer);
+      };
+    }
+  }, [isInitialized, updateMessage, sendVoiceMessage, playSound]);
 
   return (
     <div className="w-full h-full relative bg-gradient-to-b from-sky-300 to-blue-600">
@@ -158,7 +162,7 @@ function GoneFishingGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessag
         {/* Bite indicator */}
         {currentFish && (
           <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <div className="text-6xl animate-bounce">{currentFish.emoji}</div>
+            <div className="text-6xl">{currentFish.emoji}</div>
             <div className="text-center text-white font-bold bg-black bg-opacity-50 rounded px-2 py-1 mt-2">
               {currentFish.size.toUpperCase()} BITE!
             </div>

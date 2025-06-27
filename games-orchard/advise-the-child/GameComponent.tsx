@@ -64,22 +64,26 @@ const scenarios: ChildScenario[] = [
 ];
 
 function AdviseTheChildGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+  const [isInitialized, setIsInitialized] = useState(false);
   const [currentScenario, setCurrentScenario] = useState<ChildScenario | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
 
   useEffect(() => {
-    // Select random scenario
-    const randomScenario = scenarios[Math.floor(Math.random() * scenarios.length)];
-    setCurrentScenario(randomScenario);
-    
-    updateMessage('A child needs your advice...');
-    if (sendVoiceMessage) {
-      sendVoiceMessage(`A child comes to you with a problem and needs your wise advice. Listen carefully to what they have to say, then give them the best guidance you can. Here's what they say: ${randomScenario.childQuote}`);
+    if (!isInitialized) {
+      // Select random scenario
+      const randomScenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+      setCurrentScenario(randomScenario);
+      
+      updateMessage('A child needs your advice...');
+      if (sendVoiceMessage) {
+        sendVoiceMessage(`A child comes to you with a problem and needs your wise advice. Listen carefully to what they have to say, then give them the best guidance you can. Here's what they say: ${randomScenario.childQuote}`);
+      }
+      setIsInitialized(true);
     }
-  }, [updateMessage, sendVoiceMessage]);
+  }, [isInitialized, updateMessage, sendVoiceMessage]);
 
   useEffect(() => {
-    if (onVoiceInput && !hasAnswered && currentScenario) {
+    if (onVoiceInput && !hasAnswered && currentScenario && isInitialized) {
       const handleVoiceInput = (transcript: string) => {
         const input = transcript.toLowerCase().trim();
         
@@ -135,7 +139,7 @@ function AdviseTheChildGame({ endGame, updateMessage, onVoiceInput, sendVoiceMes
       
       onVoiceInput(handleVoiceInput);
     }
-  }, [onVoiceInput, hasAnswered, currentScenario, endGame, updateMessage, sendVoiceMessage]);
+  }, [onVoiceInput, hasAnswered, currentScenario, isInitialized]);
 
   if (!currentScenario) {
     return <div>A child is approaching...</div>;
@@ -172,7 +176,7 @@ function AdviseTheChildGame({ endGame, updateMessage, onVoiceInput, sendVoiceMes
           
           {hasAnswered && (
             <div className="mt-4 text-blue-600">
-              <div className="animate-spin text-2xl mb-2">💭</div>
+              <div className="text-2xl mb-2">💭</div>
               <p>Considering your advice...</p>
             </div>
           )}
@@ -181,10 +185,10 @@ function AdviseTheChildGame({ endGame, updateMessage, onVoiceInput, sendVoiceMes
 
       {/* Parenting tips */}
       <div className="flex justify-center space-x-4 text-2xl opacity-50">
-        <span className="animate-bounce">❤️</span>
-        <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>🤗</span>
-        <span className="animate-bounce" style={{ animationDelay: '0.4s' }}>💪</span>
-        <span className="animate-bounce" style={{ animationDelay: '0.6s' }}>🌟</span>
+        <span>❤️</span>
+        <span>🤗</span>
+        <span>💪</span>
+        <span>🌟</span>
       </div>
     </div>
   );

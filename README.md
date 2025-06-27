@@ -1,6 +1,6 @@
-# Realtime API Agents Demo
+# Microgamis
 
-This is a demonstration of more advanced patterns for voice agents, using the OpenAI Realtime API and the OpenAI Agents SDK. 
+An AI agent platform built with the OpenAI Realtime API and the OpenAI Agents SDK. 
 
 ## About the OpenAI Agents SDK
 
@@ -13,7 +13,7 @@ This project uses the [OpenAI Agents SDK](https://github.com/openai/openai-agent
 
 For full documentation, guides, and API references, see the official [OpenAI Agents SDK Documentation](https://github.com/openai/openai-agents-js#readme).
 
-**NOTE:** For a version that does not use the OpenAI Agents SDK, see the [branch without-agents-sdk](https://github.com/openai/openai-realtime-agents/tree/without-agents-sdk).
+**NOTE:** This project is based on OpenAI's realtime-agents demo.
 
 There are two main patterns demonstrated:
 1. **Chat-Supervisor:** A realtime-based chat agent interacts with the user and handles basic tasks, while a more intelligent, text-based supervisor model (e.g., `gpt-4.1`) is used extensively for tool calls and more complex responses. This approach provides an easy onramp and high-quality answers, with a small increase in latency.
@@ -118,7 +118,7 @@ export default [greeterAgent, haikuWriterAgent];
 
 This is a more complex, representative implementation that illustrates a customer service flow, with the following features:
 - A more complex agent graph with agents for user authentication, returns, sales, and a placeholder human agent for escalations.
-- An escalation by the [returns](https://github.com/openai/openai-realtime-agents/blob/60f4effc50a539b19b2f1fa4c38846086b58c295/src/app/agentConfigs/customerServiceRetail/returns.ts#L233) agent to `o4-mini` to validate and initiate a return, as an example high-stakes decision, using a similar pattern to the above.
+- An escalation by the returns agent to `o4-mini` to validate and initiate a return, as an example high-stakes decision, using a similar pattern to the above.
 - Prompting models to follow a state machine, for example to accurately collect things like names and phone numbers with confirmation character by character to authenticate a user.
   - To test this flow, say that you'd like to return your snowboard and go through the necessary prompts!
 

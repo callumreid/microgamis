@@ -9,6 +9,7 @@ import Image from "next/image";
 import Transcript from "./components/Transcript";
 import Events from "./components/Events";
 import BottomToolbar from "./components/BottomToolbar";
+import Games from "./components/Games";
 
 // Types
 import { SessionStatus } from "@/app/types";
@@ -117,6 +118,7 @@ function App() {
       return stored ? stored === 'true' : true;
     },
   );
+  const [showGames, setShowGames] = useState<boolean>(false);
 
   // Initialize the recording hook.
   const { startRecording, stopRecording, downloadRecording } =
@@ -432,6 +434,11 @@ function App() {
 
   const agentSetKey = searchParams.get("agentConfig") || "default";
 
+  // Show games interface if games button is clicked
+  if (showGames) {
+    return <Games />;
+  }
+
   return (
     <div className="text-base flex flex-col h-screen bg-gray-100 text-gray-800 relative">
       <div className="p-5 text-lg font-semibold flex justify-between items-center">
@@ -453,6 +460,12 @@ function App() {
           </div>
         </div>
         <div className="flex items-center">
+          <button
+            onClick={() => setShowGames(!showGames)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium mr-6 transition-colors"
+          >
+            Games
+          </button>
           <label className="flex items-center text-base gap-1 mr-2 font-medium">
             Scenario
           </label>

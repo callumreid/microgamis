@@ -1,0 +1,146 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import { allPlannedGames, getGameById, isGameImplemented } from "../../../games-orchard";
+import { GameMetadata } from "../../../games-orchard/types";
+
+export default function Games() {
+  const [gameState, setGameState] = useState<"splash" | "spinning" | "playing">("splash");
+  const [selectedGame, setSelectedGame] = useState<GameMetadata | null>(null);
+  const [GameComponent, setGameComponent] = useState<React.ComponentType<any> | null>(null);
+  const [spinRotation, setSpinRotation] = useState(0);
+  const [isSpinning, setIsSpinning] = useState(false);
+
+  const handleSpinToPlay = () => {
+    setGameState("spinning");
+    setIsSpinning(true);
+    
+    // Simulate spinning for 3 seconds
+    const spinDuration = 3000;
+    const finalRotation = 360 * 5 + Math.random() * 360; // 5 full rotations plus random
+    
+    setSpinRotation(finalRotation);
+    
+    setTimeout(() => {
+      setIsSpinning(false);
+      // Select random game from all planned games
+      const randomGame = allPlannedGames[Math.floor(Math.random() * allPlannedGames.length)];
+      setSelectedGame(randomGame);
+      
+      // Load component if implemented
+      if (isGameImplemented(randomGame.id)) {
+        const component = getGameById(randomGame.id);
+        setGameComponent(() => component);
+      } else {
+        setGameComponent(null);
+      }
+      
+      setGameState("playing");
+    }, spinDuration);
+  };
+
+  const handleBackToSplash = () => {
+    setGameState("splash");
+    setSelectedGame(null);
+    setGameComponent(null);
+    setSpinRotation(0);
+  };
+
+  const handleGameEnd = (result: any) => {
+    // Show result briefly then return to splash
+    setTimeout(() => {
+      handleBackToSplash();
+    }, 3000);
+  };
+
+  const renderSplashScreen = () => (
+    <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-purple-600 to-blue-600 text-white">
+      <h1 className="text-8xl font-bold mb-8 text-center">
+        microgamis!
+      </h1>
+      <button
+        onClick={handleSpinToPlay}
+        className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-bold text-2xl transition-colors transform hover:scale-105"
+      >
+        spin to play
+      </button>
+    </div>
+  );
+
+  const renderSpinner = () => (
+    <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-green-600 to-teal-600 text-white">
+      <h2 className="text-4xl font-bold mb-8">Spinning...</h2>
+      <div className="relative">
+        <div 
+          className="w-80 h-80 border-8 border-white rounded-full flex items-center justify-center"
+          style={{
+            transform: `rotate(${spinRotation}deg)`,
+            transition: isSpinning ? 'transform 3s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
+          }}
+        >
+          <div className="text-lg font-bold text-center">
+            Game<br />Spinner
+          </div>
+        </div>
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2">
+          <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-transparent border-b-red-500"></div>
+        </div>
+      </div>
+      {isSpinning && (
+        <div className="mt-8 text-xl">
+          🎵 *gameshow music intensifies* 🎵
+        </div>
+      )}
+    </div>
+  );
+
+  const renderGamePlay = () => (
+    <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-red-600 to-pink-600 text-white p-8">
+      <button
+        onClick={handleBackToSplash}
+        className="absolute top-4 left-4 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg font-medium transition-colors"
+      >
+        ← Back to Games
+      </button>
+      
+      {selectedGame && (
+        <div className="w-full h-full">
+          {GameComponent ? (
+            <GameComponent onGameEnd={handleGameEnd} />
+          ) : (
+            <div className="text-center max-w-2xl mx-auto flex flex-col justify-center h-full">
+              <h2 className="text-5xl font-bold mb-4">{selectedGame.name}</h2>
+              <p className="text-xl mb-8">{selectedGame.description}</p>
+              
+              <div className="bg-white bg-opacity-20 rounded-lg p-8 mb-8">
+                <h3 className="text-2xl font-bold mb-4">Game Coming Soon!</h3>
+                <p className="text-lg">
+                  This game is currently under development. Each game will be a 10-second 
+                  voice-interactive experience using the realtime AI capabilities.
+                </p>
+                <p className="text-sm mt-4 opacity-75">
+                  Category: {selectedGame.category} | Difficulty: {selectedGame.difficulty}/5
+                  {selectedGame.requiresVoice && ' | Voice Required'}
+                </p>
+              </div>
+              
+              <button
+                onClick={handleBackToSplash}
+                className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-3 rounded-lg font-bold text-xl transition-colors"
+              >
+                Play Another Game
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="h-screen">
+      {gameState === "splash" && renderSplashScreen()}
+      {gameState === "spinning" && renderSpinner()}
+      {gameState === "playing" && renderGamePlay()}
+    </div>
+  );
+}

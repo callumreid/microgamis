@@ -7,6 +7,8 @@
 - This changelog to track all modifications for AI agent context
 - Games navigation system with "Games" button in main UI header
 - Games splash screen with "microgamis!" branding and "spin to play" button
+- **NEW: "Visit the Orchard" button** - Direct access to browse all games in grid layout
+- **NEW: Games Orchard View** - Comprehensive game browser with visual cards showing all 31 games
 - Game spinner with visual rotation animation and random game selection
 - Games orchard directory structure for modular game organization
 - Base game framework with consistent UI, timer, and voice integration
@@ -76,12 +78,16 @@
 - Audio utilities and codec handling
 - Guardrails system for agent behavior
 
-### Planned Microgamis Features
-- Games navigation system
-- Game spinner with random selection
-- 30+ micro games (10-second duration each)
+### Games User Experience Features
+- **Two Play Modes**: Random spinner for surprise gameplay OR direct game selection via orchard view
+- **Games Orchard Browser**: Visual grid layout displaying all 31 games with:
+  - Game name, description, and category
+  - Difficulty rating (1-5 stars)
+  - Implementation status (Ready to Play vs Coming Soon)
+  - Voice requirement indicators
+  - Hover effects and responsive design
+- **Seamless Navigation**: Easy transitions between splash screen, orchard view, and individual games
 - Voice-based gameplay leveraging existing realtime capabilities
-- Games orchard directory structure for modular game organization
 
 ### Technical Notes for AI Agents
 - Main entry point: `src/app/page.tsx`

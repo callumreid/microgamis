@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
+
+export const dynamic = "force-static";
 
 // Proxy endpoint for the OpenAI Responses API
 export async function POST(req: NextRequest) {
@@ -7,7 +9,7 @@ export async function POST(req: NextRequest) {
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-  if (body.text?.format?.type === 'json_schema') {
+  if (body.text?.format?.type === "json_schema") {
     return await structuredResponse(openai, body);
   } else {
     return await textResponse(openai, body);
@@ -23,8 +25,8 @@ async function structuredResponse(openai: OpenAI, body: any) {
 
     return NextResponse.json(response);
   } catch (err: any) {
-    console.error('responses proxy error', err);
-    return NextResponse.json({ error: 'failed' }, { status: 500 }); 
+    console.error("responses proxy error", err);
+    return NextResponse.json({ error: "failed" }, { status: 500 });
   }
 }
 
@@ -37,8 +39,7 @@ async function textResponse(openai: OpenAI, body: any) {
 
     return NextResponse.json(response);
   } catch (err: any) {
-    console.error('responses proxy error', err);
-    return NextResponse.json({ error: 'failed' }, { status: 500 });
+    console.error("responses proxy error", err);
+    return NextResponse.json({ error: "failed" }, { status: 500 });
   }
 }
-  

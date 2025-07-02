@@ -68,6 +68,8 @@ function App() {
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   // Ref to identify whether the latest agent switch came from an automatic handoff
   const handoffTriggeredRef = useRef(false);
+  // Ref to track if M key is currently being pressed to prevent repeat events
+  const mKeyPressedRef = useRef(false);
 
   const sdkAudioElement = React.useMemo(() => {
     if (typeof window === "undefined") return undefined;
@@ -173,7 +175,11 @@ function App() {
 
   const fetchEphemeralKey = async (): Promise<string | null> => {
     logClientEvent({ url: "/session" }, "fetch_session_token_request");
-    const tokenResponse = await fetch("/api/session");
+    const fetchUrl = process.env.NEXT_PUBLIC_API_URL
+      ? `http://${process.env.NEXT_PUBLIC_API_URL}/api/session/`
+      : "/api/session/";
+    console.log("fetchUrl", fetchUrl);
+    const tokenResponse = await fetch(fetchUrl);
     const data = await tokenResponse.json();
     logServerEvent(data, "fetch_session_token_response");
 
@@ -412,7 +418,14 @@ function App() {
         !(event.target instanceof HTMLInputElement) &&
         !(event.target instanceof HTMLTextAreaElement)
       ) {
+        // Prevent multiple calls when key is held down
+        if (mKeyPressedRef.current) {
+          return;
+        }
+
         event.preventDefault();
+        mKeyPressedRef.current = true;
+
         if (isPTTActive) {
           // In PTT mode, trigger talk button
           handleTalkButtonDown();
@@ -427,6 +440,8 @@ function App() {
         !(event.target instanceof HTMLTextAreaElement)
       ) {
         event.preventDefault();
+        mKeyPressedRef.current = false;
+
         if (isPTTActive) {
           // In PTT mode, release talk button
           handleTalkButtonUp();
@@ -492,7 +507,7 @@ function App() {
             />
           </div>
           <div>
-            Realtime API <span className="text-gray-500">Agents</span>
+            HUUUB <span className="text-gray-500">Agents</span>
           </div>
         </div>
         <div className="flex items-center">

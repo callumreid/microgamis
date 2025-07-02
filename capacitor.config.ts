@@ -5,7 +5,8 @@ const config: CapacitorConfig = {
   appName: "microgamis",
   webDir: "out",
   server: {
-    androidScheme: "https",
+    androidScheme: "http",
+    cleartext: true,
   },
   plugins: {
     SplashScreen: {

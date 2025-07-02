@@ -3,6 +3,20 @@ import OpenAI from "openai";
 
 export const dynamic = "force-static";
 
+// CORS headers
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: corsHeaders,
+  });
+}
+
 // Proxy endpoint for the OpenAI Responses API
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -23,10 +37,13 @@ async function structuredResponse(openai: OpenAI, body: any) {
       stream: false,
     });
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, { headers: corsHeaders });
   } catch (err: any) {
     console.error("responses proxy error", err);
-    return NextResponse.json({ error: "failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "failed" },
+      { status: 500, headers: corsHeaders }
+    );
   }
 }
 
@@ -37,9 +54,12 @@ async function textResponse(openai: OpenAI, body: any) {
       stream: false,
     });
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, { headers: corsHeaders });
   } catch (err: any) {
     console.error("responses proxy error", err);
-    return NextResponse.json({ error: "failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "failed" },
+      { status: 500, headers: corsHeaders }
+    );
   }
 }

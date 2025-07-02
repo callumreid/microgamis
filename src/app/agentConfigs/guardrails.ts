@@ -32,19 +32,24 @@ export async function runGuardrailClassifier(
     },
   ];
 
-  const response = await fetch("/api/responses", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      input: messages,
-      text: {
-        format: zodTextFormat(GuardrailOutputZod, "output_format"),
+  const response = await fetch(
+    process.env.NEXT_PUBLIC_API_URL
+      ? `http://${process.env.NEXT_PUBLIC_API_URL}/api/responses/`
+      : "/api/responses/",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    }),
-  });
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        input: messages,
+        text: {
+          format: zodTextFormat(GuardrailOutputZod, "output_format"),
+        },
+      }),
+    }
+  );
 
   if (!response.ok) {
     console.warn("Server returned an error:", response);

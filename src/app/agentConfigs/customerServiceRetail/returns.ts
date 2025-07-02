@@ -280,13 +280,18 @@ true/false/need_more_information
         const model = "o4-mini";
         console.log(`checking order eligibility with model=${model}`);
 
-        const response = await fetch("/api/responses", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ model, input: messages }),
-        });
+        const response = await fetch(
+          process.env.NEXT_PUBLIC_API_URL
+            ? `http://${process.env.NEXT_PUBLIC_API_URL}/api/responses/`
+            : "/api/responses/",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ model, input: messages }),
+          }
+        );
 
         if (!response.ok) {
           console.warn("Server returned an error:", response);

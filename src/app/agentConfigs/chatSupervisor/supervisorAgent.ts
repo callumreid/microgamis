@@ -147,14 +147,19 @@ export const supervisorAgentTools = [
 ];
 
 async function fetchResponsesMessage(body: any) {
-  const response = await fetch("/api/responses", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    // Preserve the previous behaviour of forcing sequential tool calls.
-    body: JSON.stringify({ ...body, parallel_tool_calls: false }),
-  });
+  const response = await fetch(
+    process.env.NEXT_PUBLIC_API_URL
+      ? `http://${process.env.NEXT_PUBLIC_API_URL}/api/responses/`
+      : "/api/responses/",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // Preserve the previous behaviour of forcing sequential tool calls.
+      body: JSON.stringify({ ...body, parallel_tool_calls: false }),
+    }
+  );
 
   if (!response.ok) {
     console.warn("Server returned an error:", response);

@@ -454,57 +454,6 @@ function App() {
     }
   }, [isAudioPlaybackEnabled]);
 
-  // Handle "M" key for microphone toggle
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Only trigger if M key is pressed and we're not typing in an input field
-      if (
-        (event.key.toLowerCase() === "m" ||
-          [84, 319, 322].includes(event.keyCode)) &&
-        !(event.target instanceof HTMLInputElement) &&
-        !(event.target instanceof HTMLTextAreaElement)
-      ) {
-        // Prevent multiple calls when key is held down
-        if (mKeyPressedRef.current) {
-          return;
-        }
-
-        event.preventDefault();
-        mKeyPressedRef.current = true;
-
-        if (isPTTActive) {
-          // In PTT mode, trigger talk button
-          handleTalkButtonDown();
-        }
-      }
-    };
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (
-        (event.key.toLowerCase() === "m" ||
-          [84, 319, 322].includes(event.keyCode)) &&
-        !(event.target instanceof HTMLInputElement) &&
-        !(event.target instanceof HTMLTextAreaElement)
-      ) {
-        event.preventDefault();
-        mKeyPressedRef.current = false;
-
-        if (isPTTActive) {
-          // In PTT mode, release talk button
-          handleTalkButtonUp();
-        }
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("keyup", handleKeyUp);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("keyup", handleKeyUp);
-    };
-  }, [isPTTActive, handleTalkButtonDown, handleTalkButtonUp]);
-
   // Handle native Fire TV mic key events
   useEffect(() => {
     if (!MicKey) return; // Only run on native platforms

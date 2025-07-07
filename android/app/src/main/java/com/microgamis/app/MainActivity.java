@@ -17,9 +17,11 @@ public class MainActivity extends BridgeActivity {
     private static final int MIC_KEY_LEGACY = 84; // Pre-P
     private static final int MIC_KEY_FIRE_OS_6 = 319; // Fire OS 6 (Android 7)
     private static final int MIC_KEY_FIRE_OS_7_PLUS = 322; // Fire OS 7+ (Android 9+)
+    private static final int SPACE_KEY = 62;
 
     private boolean isMicKey(int keyCode) {
-        return keyCode == MIC_KEY_LEGACY || keyCode == MIC_KEY_FIRE_OS_6 || keyCode == MIC_KEY_FIRE_OS_7_PLUS;
+        return keyCode == MIC_KEY_LEGACY || keyCode == MIC_KEY_FIRE_OS_6 || keyCode == MIC_KEY_FIRE_OS_7_PLUS
+                || keyCode == SPACE_KEY;
     }
 
     @Override

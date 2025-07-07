@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 
 import Image from "next/image";
 
@@ -38,6 +39,11 @@ const sdkScenarioMap: Record<string, RealtimeAgent[]> = {
 
 import useAudioDownload from "./hooks/useAudioDownload";
 import { useHandleSessionHistory } from "./hooks/useHandleSessionHistory";
+
+// Fire TV mic key plugin
+const MicKey = Capacitor.isNativePlatform()
+  ? registerPlugin<any>("MicKey")
+  : undefined;
 
 function App() {
   const searchParams = useSearchParams()!;
@@ -87,14 +93,23 @@ function App() {
     }
   }, [sdkAudioElement]);
 
-  const { connect, disconnect, sendUserText, sendEvent, interrupt, mute } =
-    useRealtimeSession({
-      onConnectionChange: (s) => setSessionStatus(s as SessionStatus),
-      onAgentHandoff: (agentName: string) => {
-        handoffTriggeredRef.current = true;
-        setSelectedAgentName(agentName);
-      },
-    });
+  const {
+    connect,
+    disconnect,
+    sendUserText,
+    sendEvent,
+    interrupt,
+    mute,
+    pushToTalkStartNative,
+    pushToTalkStopNative,
+    isNativeAudioAvailable,
+  } = useRealtimeSession({
+    onConnectionChange: (s) => setSessionStatus(s as SessionStatus),
+    onAgentHandoff: (agentName: string) => {
+      handoffTriggeredRef.current = true;
+      setSelectedAgentName(agentName);
+    },
+  });
 
   const [sessionStatus, setSessionStatus] =
     useState<SessionStatus>("DISCONNECTED");
@@ -149,7 +164,7 @@ function App() {
     if (selectedAgentName && sessionStatus === "DISCONNECTED") {
       connectToRealtime();
     }
-  }, [selectedAgentName]);
+  }, [selectedAgentName, sessionStatus]);
 
   useEffect(() => {
     if (
@@ -304,20 +319,48 @@ function App() {
 
   const handleTalkButtonDown = () => {
     if (sessionStatus !== "CONNECTED") return;
+
+    // Prevent multiple simultaneous PTT sessions
+    if (isPTTUserSpeaking) {
+      console.log("[PTT] Already speaking, ignoring additional keydown");
+      return;
+    }
+
     interrupt();
 
     setIsPTTUserSpeaking(true);
-    sendClientEvent({ type: "input_audio_buffer.clear" }, "clear PTT buffer");
 
-    // No placeholder; we'll rely on server transcript once ready.
+    // Use native audio if available (Fire TV), otherwise fall back to WebRTC
+    if (isNativeAudioAvailable) {
+      console.log("[PTT] Using native audio input");
+      pushToTalkStartNative().then((success) => {
+        if (!success) {
+          console.error("[PTT] Failed to start native audio recording");
+          setIsPTTUserSpeaking(false);
+        } else {
+          console.log("[PTT] Native audio recording started");
+        }
+      });
+    } else {
+      console.log("[PTT] Using WebRTC audio input");
+      sendClientEvent({ type: "input_audio_buffer.clear" }, "clear PTT buffer");
+    }
   };
 
   const handleTalkButtonUp = () => {
     if (sessionStatus !== "CONNECTED" || !isPTTUserSpeaking) return;
 
     setIsPTTUserSpeaking(false);
-    sendClientEvent({ type: "input_audio_buffer.commit" }, "commit PTT");
-    sendClientEvent({ type: "response.create" }, "trigger response PTT");
+
+    // Use native audio if available (Fire TV), otherwise fall back to WebRTC
+    if (isNativeAudioAvailable) {
+      console.log("[PTT] Stopping native audio input");
+      pushToTalkStopNative();
+    } else {
+      console.log("[PTT] Stopping WebRTC audio input");
+      sendClientEvent({ type: "input_audio_buffer.commit" }, "commit PTT");
+      sendClientEvent({ type: "response.create" }, "trigger response PTT");
+    }
   };
 
   const onToggleConnection = () => {
@@ -414,7 +457,8 @@ function App() {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Only trigger if M key is pressed and we're not typing in an input field
       if (
-        event.key.toLowerCase() === "m" &&
+        (event.key.toLowerCase() === "m" ||
+          [84, 319, 322].includes(event.keyCode)) &&
         !(event.target instanceof HTMLInputElement) &&
         !(event.target instanceof HTMLTextAreaElement)
       ) {
@@ -435,7 +479,8 @@ function App() {
 
     const handleKeyUp = (event: KeyboardEvent) => {
       if (
-        event.key.toLowerCase() === "m" &&
+        (event.key.toLowerCase() === "m" ||
+          [84, 319, 322].includes(event.keyCode)) &&
         !(event.target instanceof HTMLInputElement) &&
         !(event.target instanceof HTMLTextAreaElement)
       ) {
@@ -457,6 +502,50 @@ function App() {
       document.removeEventListener("keyup", handleKeyUp);
     };
   }, [isPTTActive, handleTalkButtonDown, handleTalkButtonUp]);
+
+  // Handle native Fire TV mic key events
+  useEffect(() => {
+    if (!MicKey) return; // Only run on native platforms
+
+    const handleNativeMicKey = (event: { type: string }) => {
+      console.log(
+        `[NativeMicKey] Event: ${event.type}, mKeyPressed: ${mKeyPressedRef.current}, isPTTUserSpeaking: ${isPTTUserSpeaking}`
+      );
+
+      if (event.type === "down") {
+        // Prevent multiple calls when key is held down
+        if (mKeyPressedRef.current) {
+          console.log("[NativeMicKey] Key already pressed, ignoring repeat");
+          return;
+        }
+
+        mKeyPressedRef.current = true;
+
+        if (isPTTActive) {
+          // In PTT mode, trigger talk button
+          handleTalkButtonDown();
+        }
+      } else if (event.type === "up") {
+        mKeyPressedRef.current = false;
+
+        if (isPTTActive) {
+          // In PTT mode, release talk button
+          handleTalkButtonUp();
+        }
+      }
+    };
+
+    const listener = MicKey.addListener("micKey", handleNativeMicKey);
+
+    return () => {
+      listener?.remove();
+    };
+  }, [
+    isPTTActive,
+    isPTTUserSpeaking,
+    handleTalkButtonDown,
+    handleTalkButtonUp,
+  ]);
 
   // Ensure mute state is propagated to transport right after we connect or
   // whenever the SDK client reference becomes available.

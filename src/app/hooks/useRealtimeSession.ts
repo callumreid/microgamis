@@ -9,6 +9,7 @@ import { audioFormatForCodec, applyCodecPreferences } from "../lib/codecUtils";
 import { useEvent } from "../contexts/EventContext";
 import { useHandleSessionHistory } from "./useHandleSessionHistory";
 import { usePermissions } from "./usePermissions";
+import { useNativeAudioInput } from "./useNativeAudioInput";
 import { SessionStatus } from "../types";
 
 export interface RealtimeSessionCallbacks {
@@ -29,6 +30,7 @@ export function useRealtimeSession(callbacks: RealtimeSessionCallbacks = {}) {
   const [status, setStatus] = useState<SessionStatus>("DISCONNECTED");
   const { logClientEvent } = useEvent();
   const { requestMicrophonePermission, checkSecureContext } = usePermissions();
+  const nativeAudioInput = useNativeAudioInput();
 
   const updateStatus = useCallback(
     (s: SessionStatus) => {
@@ -141,11 +143,18 @@ export function useRealtimeSession(callbacks: RealtimeSessionCallbacks = {}) {
       }
 
       // Request microphone permission before establishing WebRTC connection
-      const hasPermission = await requestMicrophonePermission();
-      if (!hasPermission) {
-        console.error("Cannot connect: microphone permission denied");
-        updateStatus("DISCONNECTED");
-        return;
+      // Skip microphone permission check if native audio is available
+      if (!nativeAudioInput.isAvailable) {
+        const hasPermission = await requestMicrophonePermission();
+        if (!hasPermission) {
+          console.error("Cannot connect: microphone permission denied");
+          updateStatus("DISCONNECTED");
+          return;
+        }
+      } else {
+        console.log(
+          "[RealtimeSession] Using native audio, skipping WebRTC microphone permission"
+        );
       }
 
       updateStatus("CONNECTING");
@@ -157,6 +166,9 @@ export function useRealtimeSession(callbacks: RealtimeSessionCallbacks = {}) {
       //  simulate how the voice agent sounds over a PSTN/SIP phone call.
       const codecParam = codecParamRef.current;
       const audioFormat = audioFormatForCodec(codecParam);
+      console.log(
+        `[RealtimeSession] Using codec: ${codecParam}, audio format: ${audioFormat}`
+      );
 
       sessionRef.current = new RealtimeSession(rootAgent, {
         transport: new OpenAIRealtimeWebRTC({
@@ -164,6 +176,24 @@ export function useRealtimeSession(callbacks: RealtimeSessionCallbacks = {}) {
           // Set preferred codec before offer creation
           changePeerConnection: async (pc: RTCPeerConnection) => {
             applyCodec(pc);
+
+            // If native audio is available, disable WebRTC microphone to avoid conflicts
+            if (nativeAudioInput.isAvailable) {
+              console.log(
+                "[RealtimeSession] Disabling WebRTC microphone - using native audio"
+              );
+              // Remove audio tracks from the connection to prevent microphone conflicts
+              pc.getTransceivers().forEach((transceiver) => {
+                if (
+                  transceiver.sender &&
+                  transceiver.sender.track?.kind === "audio"
+                ) {
+                  transceiver.sender.replaceTrack(null);
+                  transceiver.direction = "recvonly"; // Only receive audio, don't send
+                }
+              });
+            }
+
             return pc;
           },
         }),
@@ -229,6 +259,68 @@ export function useRealtimeSession(callbacks: RealtimeSessionCallbacks = {}) {
     sessionRef.current.transport.sendEvent({ type: "response.create" } as any);
   }, []);
 
+  // Native audio push-to-talk methods
+  const pushToTalkStartNative = useCallback(async () => {
+    if (!sessionRef.current) return false;
+
+    // Clear the audio buffer first
+    sessionRef.current.transport.sendEvent({
+      type: "input_audio_buffer.clear",
+    } as any);
+
+    // Start native audio recording at 24kHz (OpenAI Realtime API expects 24kHz for PCM16)
+    console.log(
+      "[NativeAudio] Starting recording at 24kHz for OpenAI Realtime API"
+    );
+    const success = await nativeAudioInput.startRecording(
+      24000,
+      (audioData: ArrayBuffer) => {
+        if (sessionRef.current) {
+          // Convert ArrayBuffer to base64 string (required by OpenAI Realtime API)
+          const uint8Array = new Uint8Array(audioData);
+
+          // Debug: Check if audio data contains actual sound (not silence)
+          const samples = new Int16Array(audioData);
+          const maxAmplitude = Math.max(...Array.from(samples).map(Math.abs));
+          const hasSound = maxAmplitude > 100; // Threshold for detecting sound
+
+          console.log(
+            `[NativeAudio] Chunk: ${samples.length} samples, max amplitude: ${maxAmplitude}, has sound: ${hasSound}`
+          );
+
+          const base64Audio = btoa(
+            String.fromCharCode.apply(null, Array.from(uint8Array))
+          );
+
+          // Send base64-encoded PCM16 audio to OpenAI
+          sessionRef.current.transport.sendEvent({
+            type: "input_audio_buffer.append",
+            audio: base64Audio,
+          } as any);
+
+          console.log(
+            `[NativeAudio] Sent ${base64Audio.length} chars of base64 audio to OpenAI`
+          );
+        }
+      }
+    );
+
+    return success;
+  }, [nativeAudioInput]);
+
+  const pushToTalkStopNative = useCallback(async () => {
+    if (!sessionRef.current) return;
+
+    // Stop native audio recording
+    await nativeAudioInput.stopRecording();
+
+    // Commit the audio buffer and create response
+    sessionRef.current.transport.sendEvent({
+      type: "input_audio_buffer.commit",
+    } as any);
+    sessionRef.current.transport.sendEvent({ type: "response.create" } as any);
+  }, [nativeAudioInput]);
+
   return {
     status,
     connect,
@@ -238,6 +330,9 @@ export function useRealtimeSession(callbacks: RealtimeSessionCallbacks = {}) {
     mute,
     pushToTalkStart,
     pushToTalkStop,
+    pushToTalkStartNative,
+    pushToTalkStopNative,
+    isNativeAudioAvailable: nativeAudioInput.isAvailable,
     interrupt,
   } as const;
 }

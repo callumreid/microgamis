@@ -1,25 +1,21 @@
 import { GameMetadata } from "./types";
+import AdviseTheChildGame, { metadata } from "./advise-the-child";
 
 // Minimal export for build - no actual games imported
 
 // Game registry mapping
-export const implementedGames = {};
+export const implementedGames = {
+  "advise-the-child": AdviseTheChildGame,
+};
 
 // Implemented game metadata
-export const implementedGameMetadata: GameMetadata[] = [];
+export const implementedGameMetadata: GameMetadata[] = [metadata];
 
 // Complete list of all planned games (implemented + planned)
 export const allPlannedGames: GameMetadata[] = [
-  {
-    id: "sample-game",
-    name: "Sample Game",
-    description: "A sample game for testing",
-    category: "action",
-    difficulty: 1,
-    requiresVoice: false,
-    requiresAudio: false,
-    estimatedDuration: 10,
-  },
+  // Include all implemented games
+  ...implementedGameMetadata,
+  // Add any additional planned games here
 ];
 
 // Helper functions

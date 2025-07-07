@@ -11,7 +11,7 @@ interface GameControlProps {
   playSound?: (soundId: string) => void;
 }
 
-function AttractTheTurkeyGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+function AttractTheTurkeyGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: Partial<GameControlProps>) {
   const [turkeyPosition, setTurkeyPosition] = useState(80); // Start far away
   const [turkeyMood, setTurkeyMood] = useState<'shy' | 'curious' | 'approaching' | 'close'>('shy');
   const [hasAnswered, setHasAnswered] = useState(false);
@@ -28,91 +28,32 @@ function AttractTheTurkeyGame({ endGame, updateMessage, onVoiceInput, sendVoiceM
   // Handle game setup
   useEffect(() => {
     if (isInitialized) {
-      updateMessage('There\'s a shy turkey in the distance. Make turkey sounds to attract it!');
+      updateMessage?.('There\'s a shy turkey in the distance. Make turkey sounds to attract it!');
       if (sendVoiceMessage) {
         sendVoiceMessage('Look! There\'s a beautiful turkey way over there, but it\'s very shy. You need to make turkey sounds to get its attention and call it over. Try gobbling, clucking, or making turkey noises!');
       }
     }
   }, [isInitialized, updateMessage, sendVoiceMessage]);
 
-  useEffect(() => {
-    if (onVoiceInput && !hasAnswered) {
-      const handleVoiceInput = (transcript: string) => {
-        const input = transcript.toLowerCase().trim();
-        
-        // Turkey sound keywords
-        const turkeyKeywords = [
-          'gobble', 'gobbl', 'turkey', 'cluck', 'clucking', 
-          'purr', 'yelp', 'chirp', 'peep', 'trill'
-        ];
-        
-        // Check for turkey sounds
-        const hasTurkeySounds = turkeyKeywords.some(keyword => input.includes(keyword));
-        
-        // Check for enthusiasm (repeated sounds, exclamation)
-        const isEnthusiastic = input.includes('!') || input.length > 20 || 
-                              input.includes(' ') && input.split(' ').length > 3;
-        
-        setAttempts(prev => prev + 1);
-        
-        if (hasTurkeySounds) {
-          const newPosition = Math.max(10, turkeyPosition - (isEnthusiastic ? 25 : 15));
-          setTurkeyPosition(newPosition);
-          
-          if (newPosition <= 20) {
-            setTurkeyMood('close');
-            setHasAnswered(true);
-            updateMessage('Success! The turkey came right up to you!');
-            
-            if (playSound) {
-              playSound('turkey-gobble');
-            }
-            
-            if (sendVoiceMessage) {
-              sendVoiceMessage('Wonderful! Your turkey sounds were so convincing that the turkey came right over! It\'s now gobbling happily beside you!');
-            }
-            
-            const score = 100 - (attempts * 10);
-            endGame(true, 'Turkey whisperer! You attracted the turkey!', Math.max(20, score));
-          } else if (newPosition <= 40) {
-            setTurkeyMood('approaching');
-            updateMessage('Great! The turkey is getting closer! Keep making turkey sounds!');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('Excellent! The turkey is definitely interested and moving closer. Keep up those turkey calls!');
-            }
-          } else {
-            setTurkeyMood('curious');
-            updateMessage('The turkey heard you! It\'s looking this way. Try more turkey sounds!');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('Good start! The turkey lifted its head and is looking in your direction. Make more turkey sounds to get it to come over!');
-            }
-          }
-        } else {
-          // Non-turkey sounds might scare it away
-          const newPosition = Math.min(90, turkeyPosition + 10);
-          setTurkeyPosition(newPosition);
-          setTurkeyMood('shy');
-          
-          updateMessage('That doesn\'t sound like a turkey! It\'s moving away. Try gobbling!');
-          if (sendVoiceMessage) {
-            sendVoiceMessage('Oh no! That sound confused the turkey and it stepped back. Remember, you need to make turkey sounds - try gobbling or clucking!');
-          }
-        }
-        
-        // End game if too many attempts or turkey too far
-        if (attempts >= 5 || turkeyPosition > 95) {
-          setHasAnswered(true);
-          updateMessage('The turkey got spooked and ran away!');
-          if (sendVoiceMessage) {
-            sendVoiceMessage('Oh dear! The turkey got too confused or scared by all the commotion and decided to run away into the woods. Better luck next time!');
-          }
-          endGame(false, 'The turkey flew away! Practice your turkey calls.', 0);
-        }
-      };
-      
-      onVoiceInput(handleVoiceInput);
+  const handleTurkeyCall = () => {
+    if (hasAnswered) return;
+    
+    setHasAnswered(true);
+    setTurkeyMood('close');
+    
+    updateMessage?.('Success! The turkey came right up to you!');
+    
+    if (playSound) {
+      playSound('turkey-gobble');
     }
-  }, [onVoiceInput, hasAnswered, turkeyPosition, attempts, endGame, updateMessage, sendVoiceMessage, playSound]);
+    
+    if (sendVoiceMessage) {
+      sendVoiceMessage('Wonderful! Your turkey sounds were so convincing that the turkey came right over! It\'s now gobbling happily beside you!');
+    }
+    
+    const score = 85; // Default good score
+    endGame?.(true, 'Turkey whisperer! You attracted the turkey!', score);
+  };
 
   const getTurkeyEmoji = () => {
     switch (turkeyMood) {
@@ -195,9 +136,14 @@ function AttractTheTurkeyGame({ endGame, updateMessage, onVoiceInput, sendVoiceM
       {/* Instructions */}
       {!hasAnswered && (
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white p-4 rounded-lg text-center max-w-md">
-          <p className="text-lg font-bold">🎤 Make turkey sounds!</p>
-          <p className="text-sm">Say "gobble gobble" or make clucking noises</p>
-          <p className="text-xs mt-2 opacity-75">Attempts: {attempts}/5</p>
+          <p className="text-lg font-bold">🦃 Make turkey sounds!</p>
+          <p className="text-sm">Click to call the turkey over</p>
+          <button 
+            onClick={handleTurkeyCall}
+            className="mt-3 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded font-bold"
+          >
+            Gobble Gobble!
+          </button>
         </div>
       )}
 

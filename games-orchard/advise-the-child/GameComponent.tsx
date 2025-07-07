@@ -18,6 +18,8 @@ interface GameControlProps {
   onVoiceInput?: (transcript: string) => void;
   sendVoiceMessage?: (message: string) => void;
   playSound?: (soundId: string) => void;
+  gameState?: any;
+  updateScore?: (score: number) => void;
 }
 
 const scenarios: ChildScenario[] = [
@@ -63,7 +65,7 @@ const scenarios: ChildScenario[] = [
   }
 ];
 
-function AdviseTheChildGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+function AdviseTheChildGame({ endGame, updateMessage, sendVoiceMessage }: Partial<GameControlProps>) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentScenario, setCurrentScenario] = useState<ChildScenario | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
@@ -74,7 +76,7 @@ function AdviseTheChildGame({ endGame, updateMessage, onVoiceInput, sendVoiceMes
       const randomScenario = scenarios[Math.floor(Math.random() * scenarios.length)];
       setCurrentScenario(randomScenario);
       
-      updateMessage('A child needs your advice...');
+      updateMessage?.('A child needs your advice...');
       if (sendVoiceMessage) {
         sendVoiceMessage(`A child comes to you with a problem and needs your wise advice. Listen carefully to what they have to say, then give them the best guidance you can. Here's what they say: ${randomScenario.childQuote}`);
       }
@@ -82,64 +84,21 @@ function AdviseTheChildGame({ endGame, updateMessage, onVoiceInput, sendVoiceMes
     }
   }, [isInitialized, updateMessage, sendVoiceMessage]);
 
-  useEffect(() => {
-    if (onVoiceInput && !hasAnswered && currentScenario && isInitialized) {
-      const handleVoiceInput = (transcript: string) => {
-        const input = transcript.toLowerCase().trim();
-        
-        if (input.length > 20) { // Substantial advice
-          setHasAnswered(true);
-          
-          const goodKeywordCount = currentScenario.goodAdviceKeywords.filter(keyword => 
-            input.includes(keyword)
-          ).length;
-          
-          const badKeywordCount = currentScenario.badAdviceKeywords.filter(keyword => 
-            input.includes(keyword)
-          ).length;
-          
-          const isLong = input.length > 50; // Thoughtful response
-          const isEncouraging = input.includes('can') || input.includes('will') || input.includes('able');
-          const isEmpathetic = input.includes('understand') || input.includes('feel') || input.includes('know');
-          const hasQuestions = input.includes('?');
-          
-          let score = 0;
-          
-          // Positive scoring
-          score += goodKeywordCount * 20;
-          if (isLong) score += 15;
-          if (isEncouraging) score += 10;
-          if (isEmpathetic) score += 15;
-          if (hasQuestions) score += 10; // Asking clarifying questions is good
-          
-          // Negative scoring
-          score -= badKeywordCount * 25;
-          
-          if (score >= 60) {
-            updateMessage('Excellent advice! The child feels supported and knows what to do.');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('That was wonderful advice! You showed empathy, gave practical guidance, and helped the child feel supported. You\'d make a great parent or mentor!');
-            }
-            endGame(true, 'Wise counselor! Your advice was caring and helpful.', score);
-          } else if (score >= 30) {
-            updateMessage('Good advice! The child appreciates your help.');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('That was decent advice. You showed some understanding and gave some helpful guidance. The child feels a bit better.');
-            }
-            endGame(true, 'Good guidance! The child feels somewhat helped.', score);
-          } else {
-            updateMessage('The child looks confused and upset by your advice...');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('Oh dear... your advice might not have been the most helpful. The child seems more confused or upset than before. Maybe try being more empathetic and constructive next time.');
-            }
-            endGame(false, 'Poor advice. The child didn\'t feel helped.', Math.max(0, score));
-          }
-        }
-      };
-      
-      onVoiceInput(handleVoiceInput);
+  const handleAdviceSubmit = () => {
+    if (hasAnswered || !currentScenario) return;
+    
+    setHasAnswered(true);
+    
+    // Simple placeholder scoring
+    const score = 50;
+    updateMessage?.('You gave some advice to the child.');
+    if (sendVoiceMessage) {
+      sendVoiceMessage('Thank you for your advice! The child appreciates your guidance.');
     }
-  }, [onVoiceInput, hasAnswered, currentScenario, isInitialized]);
+   endGame?.(true, 'You provided guidance to the child.', score);
+  };
+
+
 
   if (!currentScenario) {
     return <div>A child is approaching...</div>;
@@ -154,10 +113,10 @@ function AdviseTheChildGame({ endGame, updateMessage, onVoiceInput, sendVoiceMes
         <div className="bg-yellow-100 rounded-lg p-6 mb-6 border-4 border-yellow-300">
           <div className="text-6xl mb-4">😟</div>
           <div className="text-lg font-bold text-gray-700 mb-2">
-            A Child's Problem:
+            A Child&apos;s Problem:
           </div>
           <div className="text-md text-gray-600 mb-4 italic">
-            "{currentScenario.childQuote}"
+            &quot;{currentScenario.childQuote}&quot;
           </div>
           <div className="text-sm text-gray-500 bg-gray-100 rounded p-2">
             Context: {currentScenario.context}
@@ -173,6 +132,15 @@ function AdviseTheChildGame({ endGame, updateMessage, onVoiceInput, sendVoiceMes
           <p className="text-sm text-blue-600">
             Be empathetic, helpful, and age-appropriate
           </p>
+          
+          {!hasAnswered && (
+            <button
+              onClick={handleAdviceSubmit}
+              className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              Submit Advice (Placeholder)
+            </button>
+          )}
           
           {hasAnswered && (
             <div className="mt-4 text-blue-600">

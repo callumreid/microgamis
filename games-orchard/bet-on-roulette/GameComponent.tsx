@@ -30,7 +30,7 @@ const rouletteNumbers: RouletteNumber[] = [
   { number: 33, color: 'black' }, { number: 34, color: 'red' }, { number: 35, color: 'black' }, { number: 36, color: 'red' },
 ];
 
-function BetOnRouletteGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+function BetOnRouletteGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: Partial<GameControlProps>) {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<RouletteNumber | null>(null);
   const [userBet, setUserBet] = useState<BetType | null>(null);
@@ -48,7 +48,7 @@ function BetOnRouletteGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
   // Handle game setup and spinning
   useEffect(() => {
     if (isInitialized) {
-      updateMessage('Place your bet! Red, black, or green?');
+      updateMessage?.('Place your bet! Red, black, or green?');
       if (sendVoiceMessage) {
         sendVoiceMessage('Welcome to the roulette table! The wheel is about to spin. Place your bet now - will it land on red, black, or green? Choose wisely!');
       }
@@ -69,11 +69,11 @@ function BetOnRouletteGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
         if (userBet) {
           checkResult(randomResult, userBet);
         } else {
-          updateMessage(`No bet placed! The ball landed on ${randomResult.color} ${randomResult.number}`);
+          updateMessage?.(`No bet placed! The ball landed on ${randomResult.color} ${randomResult.number}`);
           if (sendVoiceMessage) {
             sendVoiceMessage(`Oh no! You didn't place a bet in time! The ball landed on ${randomResult.color} ${randomResult.number}. Better luck next time!`);
           }
-          endGame(false, 'No bet placed in time!', 0);
+          endGame?.(false, 'No bet placed in time!', 0);
         }
       }, 6000);
 
@@ -89,7 +89,7 @@ function BetOnRouletteGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
     const payout = bet === 'green' ? 35 : 2; // Green pays more but is rarer
     
     if (won) {
-      updateMessage(`Winner! ${gameResult.color.toUpperCase()} ${gameResult.number}! You won!`);
+      updateMessage?.(`Winner! ${gameResult.color.toUpperCase()} ${gameResult.number}! You won!`);
       if (sendVoiceMessage) {
         sendVoiceMessage(`Congratulations! The ball landed on ${gameResult.color} ${gameResult.number} and you bet on ${bet}! You're a winner!`);
       }
@@ -99,44 +99,26 @@ function BetOnRouletteGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
       }
       
       const score = bet === 'green' ? 100 : 75; // Higher score for riskier green bet
-      endGame(true, `Lucky winner! Ball landed on ${gameResult.color}!`, score);
+      endGame?.(true, `Lucky winner! Ball landed on ${gameResult.color}!`, score);
     } else {
-      updateMessage(`House wins! ${gameResult.color.toUpperCase()} ${gameResult.number}. You bet ${bet}.`);
+      updateMessage?.(`House wins! ${gameResult.color.toUpperCase()} ${gameResult.number}. You bet ${bet}.`);
       if (sendVoiceMessage) {
         sendVoiceMessage(`Sorry! The ball landed on ${gameResult.color} ${gameResult.number}, but you bet on ${bet}. The house always wins... eventually!`);
       }
-      endGame(false, `Lost the bet! Ball was ${gameResult.color}, you bet ${bet}`, 0);
+      endGame?.(false, `Lost the bet! Ball was ${gameResult.color}, you bet ${bet}`, 0);
     }
   };
 
-  useEffect(() => {
-    if (onVoiceInput && !hasAnswered && !result) {
-      const handleVoiceInput = (transcript: string) => {
-        const input = transcript.toLowerCase().trim();
-        
-        let bet: BetType | null = null;
-        
-        if (input.includes('red')) {
-          bet = 'red';
-        } else if (input.includes('black')) {
-          bet = 'black';
-        } else if (input.includes('green')) {
-          bet = 'green';
-        }
-        
-        if (bet && !userBet) {
-          setUserBet(bet);
-          setHasAnswered(true);
-          updateMessage(`Bet placed on ${bet.toUpperCase()}! Wheel is spinning...`);
-          if (sendVoiceMessage) {
-            sendVoiceMessage(`Your bet is on ${bet}! The wheel is spinning, the ball is bouncing... let's see where it lands!`);
-          }
-        }
-      };
-      
-      onVoiceInput(handleVoiceInput);
+  const handleBet = (bet: BetType) => {
+    if (hasAnswered || result || userBet) return;
+    
+    setUserBet(bet);
+    setHasAnswered(true);
+    updateMessage?.(`Bet placed on ${bet.toUpperCase()}! Wheel is spinning...`);
+    if (sendVoiceMessage) {
+      sendVoiceMessage(`Your bet is on ${bet}! The wheel is spinning, the ball is bouncing... let's see where it lands!`);
     }
-  }, [onVoiceInput, hasAnswered, result, userBet, sendVoiceMessage, updateMessage]);
+  };
 
   return (
     <div className="w-full h-full relative bg-gradient-to-br from-green-800 via-green-600 to-green-900 flex items-center justify-center">
@@ -169,26 +151,38 @@ function BetOnRouletteGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
 
         {/* Betting area */}
         <div className="grid grid-cols-3 gap-2 mb-6">
-          <div className={`bg-red-500 text-white p-4 rounded text-center font-bold cursor-pointer ${userBet === 'red' ? 'ring-4 ring-yellow-400' : ''}`}>
+          <button 
+            onClick={() => handleBet('red')}
+            disabled={hasAnswered || !!result || !!userBet}
+            className={`bg-red-500 text-white p-4 rounded text-center font-bold cursor-pointer hover:bg-red-600 disabled:opacity-50 ${userBet === 'red' ? 'ring-4 ring-yellow-400' : ''}`}
+          >
             RED
             <div className="text-xs mt-1">Pays 2:1</div>
-          </div>
-          <div className={`bg-black text-white p-4 rounded text-center font-bold cursor-pointer ${userBet === 'black' ? 'ring-4 ring-yellow-400' : ''}`}>
+          </button>
+          <button 
+            onClick={() => handleBet('black')}
+            disabled={hasAnswered || !!result || !!userBet}
+            className={`bg-black text-white p-4 rounded text-center font-bold cursor-pointer hover:bg-gray-800 disabled:opacity-50 ${userBet === 'black' ? 'ring-4 ring-yellow-400' : ''}`}
+          >
             BLACK
             <div className="text-xs mt-1">Pays 2:1</div>
-          </div>
-          <div className={`bg-green-500 text-white p-4 rounded text-center font-bold cursor-pointer ${userBet === 'green' ? 'ring-4 ring-yellow-400' : ''}`}>
+          </button>
+          <button 
+            onClick={() => handleBet('green')}
+            disabled={hasAnswered || !!result || !!userBet}
+            className={`bg-green-500 text-white p-4 rounded text-center font-bold cursor-pointer hover:bg-green-600 disabled:opacity-50 ${userBet === 'green' ? 'ring-4 ring-yellow-400' : ''}`}
+          >
             GREEN
             <div className="text-xs mt-1">Pays 35:1</div>
-          </div>
+          </button>
         </div>
 
         {/* Voice instructions */}
         {!hasAnswered && !result && (
           <div className="bg-yellow-100 border border-yellow-400 rounded p-3 text-center">
-            <div className="text-2xl mb-2">🎤</div>
+            <div className="text-2xl mb-2">🎰</div>
             <p className="text-sm font-semibold text-yellow-800">
-              Say "red", "black", or "green" to place your bet!
+              Click on a color to place your bet!
             </p>
           </div>
         )}

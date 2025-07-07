@@ -11,7 +11,7 @@ interface GameControlProps {
   playSound?: (soundId: string) => void;
 }
 
-function HowManyGumballsGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+function HowManyGumballsGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: Partial<GameControlProps>) {
   const [actualCount, setActualCount] = useState(0);
   const [showingGumballs, setShowingGumballs] = useState(true);
   const [hasAnswered, setHasAnswered] = useState(false);
@@ -41,7 +41,7 @@ function HowManyGumballsGame({ endGame, updateMessage, onVoiceInput, sendVoiceMe
   // Handle game setup and animation
   useEffect(() => {
     if (isInitialized) {
-      updateMessage('Count the gumballs as the camera pans across!');
+      updateMessage?.('Count the gumballs as the camera pans across!');
       if (sendVoiceMessage) {
         sendVoiceMessage('Welcome to the gumball counting challenge! I\'m going to slowly pan across a tower of colorful gumballs. Count them carefully as they pass by - you need to guess within 10% to win!');
       }
@@ -60,7 +60,7 @@ function HowManyGumballsGame({ endGame, updateMessage, onVoiceInput, sendVoiceMe
       // Hide gumballs after pan completes
       const hideTimer = setTimeout(() => {
         setShowingGumballs(false);
-        updateMessage('The camera has panned across the tower. How many gumballs did you count?');
+        updateMessage?.('The camera has panned across the tower. How many gumballs did you count?');
         if (sendVoiceMessage) {
           sendVoiceMessage('The pan is complete! Now tell me how many gumballs you counted in that colorful tower. Remember, you need to be within 10% of the actual count to win!');
         }
@@ -73,54 +73,41 @@ function HowManyGumballsGame({ endGame, updateMessage, onVoiceInput, sendVoiceMe
     }
   }, [isInitialized, updateMessage, sendVoiceMessage]);
 
-  useEffect(() => {
-    if (onVoiceInput && !hasAnswered && !showingGumballs) {
-      const handleVoiceInput = (transcript: string) => {
-        const input = transcript.toLowerCase().trim();
-        
-        // Extract number from speech
-        const numbers = input.match(/\d+/g);
-        if (numbers && numbers.length > 0) {
-          const guessedCount = parseInt(numbers[0]);
-          setHasAnswered(true);
-          
-          const difference = Math.abs(guessedCount - actualCount);
-          const percentageOff = (difference / actualCount) * 100;
-          const isWithin10Percent = percentageOff <= 10;
-          
-          if (percentageOff === 0) {
-            updateMessage(`Perfect! Exactly ${actualCount} gumballs!`);
-            if (sendVoiceMessage) {
-              sendVoiceMessage(`Incredible! You counted exactly right - there were ${actualCount} gumballs! You have the eyes of a master counter!`);
-            }
-            endGame(true, `Perfect count! Exactly ${actualCount} gumballs!`, 100);
-          } else if (isWithin10Percent) {
-            updateMessage(`Excellent! Very close! There were ${actualCount} gumballs, you guessed ${guessedCount}.`);
-            if (sendVoiceMessage) {
-              sendVoiceMessage(`Outstanding! You were within 10% of the correct count! There were ${actualCount} gumballs and you guessed ${guessedCount}. That's fantastic counting!`);
-            }
-            const score = Math.max(70, 100 - Math.floor(percentageOff * 3));
-            endGame(true, `Great counting! Within 10% accuracy!`, score);
-          } else if (percentageOff <= 25) {
-            updateMessage(`Not bad! There were ${actualCount} gumballs, you guessed ${guessedCount}.`);
-            if (sendVoiceMessage) {
-              sendVoiceMessage(`Decent attempt! You were a bit off - there were ${actualCount} gumballs and you guessed ${guessedCount}. Keep practicing your counting skills!`);
-            }
-            const score = Math.max(30, 70 - Math.floor(percentageOff * 2));
-            endGame(false, `Outside the 10% range, but not too bad!`, score);
-          } else {
-            updateMessage(`Way off! There were ${actualCount} gumballs, you guessed ${guessedCount}.`);
-            if (sendVoiceMessage) {
-              sendVoiceMessage(`Quite far off! There were ${actualCount} gumballs but you guessed ${guessedCount}. That colorful tower was tricky to count!`);
-            }
-            endGame(false, `Too far off! Difference of ${difference}`, Math.max(10, 50 - Math.floor(percentageOff)));
-          }
-        }
-      };
-      
-      onVoiceInput(handleVoiceInput);
+  const handleGuess = (guessedCount: number) => {
+    setHasAnswered(true);
+    
+    const difference = Math.abs(guessedCount - actualCount);
+    const percentageOff = (difference / actualCount) * 100;
+    const isWithin10Percent = percentageOff <= 10;
+    
+    if (percentageOff === 0) {
+      updateMessage?.(`Perfect! Exactly ${actualCount} gumballs!`);
+      if (sendVoiceMessage) {
+        sendVoiceMessage(`Incredible! You counted exactly right - there were ${actualCount} gumballs! You have the eyes of a master counter!`);
+      }
+      endGame?.(true, `Perfect count! Exactly ${actualCount} gumballs!`, 100);
+    } else if (isWithin10Percent) {
+      updateMessage?.(`Excellent! Very close! There were ${actualCount} gumballs, you guessed ${guessedCount}.`);
+      if (sendVoiceMessage) {
+        sendVoiceMessage(`Outstanding! You were within 10% of the correct count! There were ${actualCount} gumballs and you guessed ${guessedCount}. That's fantastic counting!`);
+      }
+      const score = Math.max(70, 100 - Math.floor(percentageOff * 3));
+      endGame?.(true, `Great counting! Within 10% accuracy!`, score);
+    } else if (percentageOff <= 25) {
+      updateMessage?.(`Not bad! There were ${actualCount} gumballs, you guessed ${guessedCount}.`);
+      if (sendVoiceMessage) {
+        sendVoiceMessage(`Decent attempt! You were a bit off - there were ${actualCount} gumballs and you guessed ${guessedCount}. Keep practicing your counting skills!`);
+      }
+      const score = Math.max(30, 70 - Math.floor(percentageOff * 2));
+      endGame?.(false, `Outside the 10% range, but not too bad!`, score);
+    } else {
+      updateMessage?.(`Way off! There were ${actualCount} gumballs, you guessed ${guessedCount}.`);
+      if (sendVoiceMessage) {
+        sendVoiceMessage(`Quite far off! There were ${actualCount} gumballs but you guessed ${guessedCount}. That colorful tower was tricky to count!`);
+      }
+      endGame?.(false, `Too far off! Difference of ${difference}`, Math.max(10, 50 - Math.floor(percentageOff)));
     }
-  }, [onVoiceInput, hasAnswered, showingGumballs, actualCount, endGame, updateMessage, sendVoiceMessage]);
+  };
 
   return (
     <div className="w-full h-full relative bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 overflow-hidden">
@@ -201,9 +188,36 @@ function HowManyGumballsGame({ endGame, updateMessage, onVoiceInput, sendVoiceMe
               How many gumballs did you count?
             </p>
             <div className="bg-green-100 border border-green-300 rounded p-3">
-              <p className="text-md font-semibold text-green-800">
-                🎤 Say the number you counted!
+              <p className="text-md font-semibold text-green-800 mb-3">
+                Enter your guess:
               </p>
+              <div className="flex flex-col items-center space-y-2">
+                <input 
+                  type="number" 
+                  placeholder="Number of gumballs"
+                  className="px-3 py-2 border border-gray-300 rounded text-center"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      const value = parseInt((e.target as HTMLInputElement).value);
+                      if (!isNaN(value) && value > 0) {
+                        handleGuess(value);
+                      }
+                    }
+                  }}
+                />
+                <button 
+                  onClick={() => {
+                    const input = document.querySelector('input[type="number"]') as HTMLInputElement;
+                    const value = parseInt(input.value);
+                    if (!isNaN(value) && value > 0) {
+                      handleGuess(value);
+                    }
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Submit Guess
+                </button>
+              </div>
               <p className="text-xs text-green-600 mt-1">
                 (Within 10% to win)
               </p>

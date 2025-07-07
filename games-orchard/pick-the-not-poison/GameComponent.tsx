@@ -13,7 +13,7 @@ interface GameControlProps {
 
 type CupChoice = 'left' | 'right';
 
-function PickTheNotPoisonGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+function PickTheNotPoisonGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: Partial<GameControlProps>) {
   const [poisonCup, setPoisonCup] = useState<CupChoice>('left');
   const [hasAnswered, setHasAnswered] = useState(false);
   const [userChoice, setUserChoice] = useState<CupChoice | null>(null);
@@ -35,7 +35,7 @@ function PickTheNotPoisonGame({ endGame, updateMessage, onVoiceInput, sendVoiceM
   // Handle game setup and animation
   useEffect(() => {
     if (isInitialized) {
-      updateMessage('A mysterious magician offers you two cups...');
+      updateMessage?.('A mysterious magician offers you two cups...');
       if (sendVoiceMessage) {
         sendVoiceMessage('Welcome, brave soul! I am a mysterious magician, and before you are two identical cups. One contains a delicious potion of victory, the other... deadly poison! Choose wisely - your fate depends on it!');
       }
@@ -49,66 +49,50 @@ function PickTheNotPoisonGame({ endGame, updateMessage, onVoiceInput, sendVoiceM
     }
   }, [isInitialized, updateMessage, sendVoiceMessage]);
 
-  useEffect(() => {
-    if (onVoiceInput && !hasAnswered) {
-      const handleVoiceInput = (transcript: string) => {
-        const input = transcript.toLowerCase().trim();
-        
-        let choice: CupChoice | null = null;
-        
-        if (input.includes('left')) {
-          choice = 'left';
-        } else if (input.includes('right')) {
-          choice = 'right';
-        }
-        
-        if (choice) {
-          setHasAnswered(true);
-          setUserChoice(choice);
-          
-          updateMessage('You reach for the cup...');
-          if (sendVoiceMessage) {
-            sendVoiceMessage(`Ah, you have chosen the ${choice} cup! Let us see if fate smiles upon you...`);
-          }
-          
-          // Dramatic pause before revealing result
-          setTimeout(() => {
-            setRevealed(true);
-            
-            if (choice === poisonCup) {
-              updateMessage('💀 POISON! You chose poorly! 💀');
-              if (sendVoiceMessage) {
-                sendVoiceMessage('OH NO! You have chosen... POORLY! The cup contained deadly poison! Your adventure ends here, but fear not - in the world of magic, death is but an illusion!');
-              }
-              
-              if (playSound) {
-                playSound('poison-death');
-              }
-              
-              setTimeout(() => {
-                endGame(false, 'You picked the poisoned cup! Choose more carefully next time.', 0);
-              }, 2000);
-            } else {
-              updateMessage('🏆 VICTORY! You chose the safe cup! 🏆');
-              if (sendVoiceMessage) {
-                sendVoiceMessage('EXCELLENT CHOICE! You have chosen wisely! The cup contains the sweet nectar of victory! You have outwitted the magician and live to tell the tale!');
-              }
-              
-              if (playSound) {
-                playSound('magic-success');
-              }
-              
-              setTimeout(() => {
-                endGame(true, 'Wise choice! You avoided the poison and found victory!', 100);
-              }, 2000);
-            }
-          }, 2000);
-        }
-      };
-      
-      onVoiceInput(handleVoiceInput);
+  const handleCupChoice = (choice: CupChoice) => {
+    if (hasAnswered) return;
+    
+    setHasAnswered(true);
+    setUserChoice(choice);
+    
+    updateMessage?.('You reach for the cup...');
+    if (sendVoiceMessage) {
+      sendVoiceMessage(`Ah, you have chosen the ${choice} cup! Let us see if fate smiles upon you...`);
     }
-  }, [onVoiceInput, hasAnswered, poisonCup, endGame, updateMessage, sendVoiceMessage, playSound]);
+    
+    // Dramatic pause before revealing result
+    setTimeout(() => {
+      setRevealed(true);
+      
+      if (choice === poisonCup) {
+        updateMessage?.('💀 POISON! You chose poorly! 💀');
+        if (sendVoiceMessage) {
+          sendVoiceMessage('OH NO! You have chosen... POORLY! The cup contained deadly poison! Your adventure ends here, but fear not - in the world of magic, death is but an illusion!');
+        }
+        
+        if (playSound) {
+          playSound('poison-death');
+        }
+        
+        setTimeout(() => {
+          endGame?.(false, 'You picked the poisoned cup! Choose more carefully next time.', 0);
+        }, 2000);
+      } else {
+        updateMessage?.('🏆 VICTORY! You chose the safe cup! 🏆');
+        if (sendVoiceMessage) {
+          sendVoiceMessage('EXCELLENT CHOICE! You have chosen wisely! The cup contains the sweet nectar of victory! You have outwitted the magician and live to tell the tale!');
+        }
+        
+        if (playSound) {
+          playSound('magic-success');
+        }
+        
+        setTimeout(() => {
+          endGame?.(true, 'Wise choice! You avoided the poison and found victory!', 100);
+        }, 2000);
+      }
+    }, 2000);
+  };
 
   const getMagicianEmoji = () => {
     const animations = ['🧙‍♂️', '✨🧙‍♂️', '🧙‍♂️✨', '✨🧙‍♂️✨'];
@@ -161,7 +145,11 @@ function PickTheNotPoisonGame({ endGame, updateMessage, onVoiceInput, sendVoiceM
           
           {/* The Cups */}
           <div className="flex justify-center space-x-8 mb-4">
-            <div className={`text-center ${userChoice === 'left' ? 'transform scale-110' : ''} transition-transform`}>
+            <button 
+              onClick={() => handleCupChoice('left')}
+              disabled={hasAnswered}
+              className={`text-center ${userChoice === 'left' ? 'transform scale-110' : ''} transition-transform hover:scale-105 disabled:cursor-not-allowed`}
+            >
               <div className="text-4xl mb-2">🏺</div>
               <div className="text-white font-bold">LEFT CUP</div>
               {revealed && poisonCup === 'left' && (
@@ -170,9 +158,13 @@ function PickTheNotPoisonGame({ endGame, updateMessage, onVoiceInput, sendVoiceM
               {revealed && poisonCup !== 'left' && (
                 <div className="text-gold-400 text-xs mt-1">🏆 SAFE!</div>
               )}
-            </div>
+            </button>
             
-            <div className={`text-center ${userChoice === 'right' ? 'transform scale-110' : ''} transition-transform`}>
+            <button 
+              onClick={() => handleCupChoice('right')}
+              disabled={hasAnswered}
+              className={`text-center ${userChoice === 'right' ? 'transform scale-110' : ''} transition-transform hover:scale-105 disabled:cursor-not-allowed`}
+            >
               <div className="text-4xl mb-2">🏺</div>
               <div className="text-white font-bold">RIGHT CUP</div>
               {revealed && poisonCup === 'right' && (
@@ -181,7 +173,7 @@ function PickTheNotPoisonGame({ endGame, updateMessage, onVoiceInput, sendVoiceM
               {revealed && poisonCup !== 'right' && (
                 <div className="text-gold-400 text-xs mt-1">🏆 SAFE!</div>
               )}
-            </div>
+            </button>
           </div>
         </div>
 
@@ -193,7 +185,7 @@ function PickTheNotPoisonGame({ endGame, updateMessage, onVoiceInput, sendVoiceM
               Make your choice!
             </p>
             <p className="text-red-300 text-sm">
-              Say "left" or "right" to choose your cup
+              Click on a cup to choose your fate
             </p>
           </div>
         )}

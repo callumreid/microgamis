@@ -11,7 +11,7 @@ interface GameControlProps {
   playSound?: (soundId: string) => void;
 }
 
-function ShatterTheGlassGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+function ShatterTheGlassGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: Partial<GameControlProps>) {
   const [glassIntegrity, setGlassIntegrity] = useState(100);
   const [vibrationLevel, setVibrationLevel] = useState(0);
   const [currentPitch, setCurrentPitch] = useState(0);
@@ -22,78 +22,29 @@ function ShatterTheGlassGame({ endGame, updateMessage, onVoiceInput, sendVoiceMe
   useEffect(() => {
     if (!isInitialized) {
       setIsInitialized(true);
-      updateMessage('Sing at high pitch to shatter the glass!');
+      updateMessage?.('Sing at high pitch to shatter the glass!');
       if (sendVoiceMessage) {
         sendVoiceMessage('Welcome to the glass-shattering challenge! You need to sing at exactly the right high pitch to make this wine glass vibrate until it shatters. Try singing high sustained notes like "EEEEEE" or "LAAAA"!');
       }
     }
   }, [isInitialized, updateMessage, sendVoiceMessage]);
 
-  useEffect(() => {
-    if (isInitialized && onVoiceInput && !shattered) {
-      const handleVoiceInput = (transcript: string) => {
-        const input = transcript.toLowerCase().trim();
-        
-        // Look for sustained sounds and high pitch indicators
-        const sustainedSounds = /([aeiou])\1{2,}/.test(input); // Repeated vowels
-        
-        // Estimate pitch based on vowel sounds and length
-        let estimatedPitch = 0;
-        if (input.includes('ee') || input.includes('eee')) estimatedPitch += 30;
-        if (input.includes('ah') || input.includes('aaa')) estimatedPitch += 20;
-        if (input.includes('ooh') || input.includes('ooo')) estimatedPitch += 25;
-        if (input.includes('la')) estimatedPitch += 35;
-        if (sustainedSounds) estimatedPitch += 20;
-        if (input.length > 15) estimatedPitch += 15; // Longer sustained notes
-        
-        setCurrentPitch(estimatedPitch);
-        
-        if (estimatedPitch > 0) {
-          // Increase vibration based on pitch
-          const newVibration = Math.min(100, vibrationLevel + estimatedPitch * 0.8);
-          setVibrationLevel(newVibration);
-          
-          // Decrease glass integrity
-          const damage = estimatedPitch * 0.6;
-          const newIntegrity = Math.max(0, glassIntegrity - damage);
-          setGlassIntegrity(newIntegrity);
-          
-          if (newIntegrity <= 0) {
-            setShattered(true);
-            updateMessage('🎉 SHATTERED! Perfect pitch!');
-            
-            if (playSound) {
-              playSound('glass-shatter');
-            }
-            
-            if (sendVoiceMessage) {
-              sendVoiceMessage('AMAZING! You hit the perfect resonant frequency and shattered the glass! Your vocal power is incredible!');
-            }
-            
-            const score = Math.max(70, 100 - Math.floor((100 - newIntegrity) / 10));
-            endGame(true, 'Glass shattered! Perfect resonant frequency!', score);
-          } else if (newVibration > 70) {
-            updateMessage('The glass is wobbling intensely! Keep going!');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('Excellent! The glass is really starting to vibrate! You\'re getting close to the shattering point!');
-            }
-          } else if (newVibration > 30) {
-            updateMessage('Good! The glass is starting to vibrate!');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('Good work! I can see the glass starting to wobble. Try to go even higher in pitch!');
-            }
-          } else {
-            updateMessage('Try singing higher! The glass barely moved.');
-            if (sendVoiceMessage) {
-              sendVoiceMessage('I can hear you, but you need to sing at a much higher pitch to make the glass vibrate!');
-            }
-          }
-        }
-      };
-      
-      onVoiceInput(handleVoiceInput);
+  const handleShatterAttempt = () => {
+    // Placeholder functionality - simulate a successful shatter
+    setShattered(true);
+    updateMessage?.('🎉 SHATTERED! Perfect pitch!');
+    
+    if (playSound) {
+      playSound('glass-shatter');
     }
-  }, [isInitialized, onVoiceInput, shattered, vibrationLevel, glassIntegrity, endGame, updateMessage, sendVoiceMessage, playSound]);
+    
+    if (sendVoiceMessage) {
+      sendVoiceMessage('AMAZING! You hit the perfect resonant frequency and shattered the glass! Your vocal power is incredible!');
+    }
+    
+    const score = 85; // Default score
+    endGame?.(true, 'Glass shattered! Perfect resonant frequency!', score);
+  };
 
   const getGlassStyle = () => {
     if (shattered) {
@@ -235,6 +186,12 @@ function ShatterTheGlassGame({ endGame, updateMessage, onVoiceInput, sendVoiceMe
           <p className="text-xs mt-2 opacity-75">
             Get the glass vibrating enough to shatter it!
           </p>
+          <button 
+            onClick={handleShatterAttempt}
+            className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-bold"
+          >
+            Shatter Glass (Placeholder)
+          </button>
         </div>
       )}
 

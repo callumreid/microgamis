@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { allPlannedGames, getGameById, isGameImplemented } from "../../../games-orchard";
 import { GameMetadata } from "../../../games-orchard/types";
 
@@ -63,7 +63,7 @@ export default function Games() {
     setGameState("playing");
   };
 
-  const handleGameEnd = (result: any) => {
+  const handleGameEnd = () => {
     // Show result briefly then return to splash
     setTimeout(() => {
       handleBackToSplash();

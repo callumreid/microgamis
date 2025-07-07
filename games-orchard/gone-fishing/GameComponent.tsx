@@ -26,7 +26,7 @@ const fishTypes: Fish[] = [
   { id: 'shark', size: 'huge', weight: 25, emoji: '🦈' },
 ];
 
-function GoneFishingGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
+function GoneFishingGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: Partial<GameControlProps>) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [bobberMovement, setBobberMovement] = useState(0);
   const [bites, setBites] = useState<Fish[]>([]);
@@ -37,7 +37,7 @@ function GoneFishingGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessag
 
   useEffect(() => {
     if (!isInitialized) {
-      updateMessage('Cast your line! Watch the bobber for bites!');
+      updateMessage?.('Cast your line! Watch the bobber for bites!');
       if (sendVoiceMessage) {
         sendVoiceMessage('Welcome to the fishing hole! Watch your bobber carefully - when it moves, a fish is biting. The bigger the movement, the bigger the fish!');
       }
@@ -61,7 +61,7 @@ function GoneFishingGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessag
             playSound('fishing-bite');
           }
           
-          updateMessage(`Bite detected! ${fish.size.toUpperCase()} movement detected!`);
+          updateMessage?.(`Bite detected! ${fish.size.toUpperCase()} movement detected!`);
           
           // Reset bobber after 1 second
           setTimeout(() => {
@@ -81,7 +81,7 @@ function GoneFishingGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessag
             prev.weight > current.weight ? prev : current
           );
           
-          updateMessage(`Time to see what you caught! Biggest fish: ${biggestFish.size} ${biggestFish.emoji}`);
+          updateMessage?.(`Time to see what you caught! Biggest fish: ${biggestFish.size} ${biggestFish.emoji}`);
           if (sendVoiceMessage) {
             sendVoiceMessage(`Fishing time is up! Let's see what you caught. Your biggest fish was a ${biggestFish.size} ${biggestFish.id} weighing ${biggestFish.weight} pounds!`);
           }
@@ -91,15 +91,15 @@ function GoneFishingGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessag
           const success = biggestFish.weight >= 8; // Large or huge fish
           
           setTimeout(() => {
-            endGame(success, `You caught a ${biggestFish.size} ${biggestFish.id}! (${biggestFish.weight}lbs)`, score);
+            endGame?.(success, `You caught a ${biggestFish.size} ${biggestFish.id}! (${biggestFish.weight}lbs)`, score);
           }, 2000);
         } else {
-          updateMessage('No fish caught today...');
+          updateMessage?.('No fish caught today...');
           if (sendVoiceMessage) {
             sendVoiceMessage('Unfortunately, no fish took the bait today. Better luck next time!');
           }
           setTimeout(() => {
-            endGame(false, 'The fish weren\'t biting today!', 0);
+            endGame?.(false, 'The fish weren\'t biting today!', 0);
           }, 2000);
         }
       }, 8000);

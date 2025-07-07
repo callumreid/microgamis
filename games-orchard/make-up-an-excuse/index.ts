@@ -1,6 +1,7 @@
 import { GameMetadata } from '../types';
 import MakeExcuseGameComponent from './GameComponent';
 
+// Flagship
 export const metadata: GameMetadata = {
   id: 'make-up-an-excuse',
   name: 'Make Up an Excuse',

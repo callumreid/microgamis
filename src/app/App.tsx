@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 
 import Image from "next/image";
 
@@ -13,7 +14,7 @@ import Games from "./components/Games";
 
 // Types
 import { SessionStatus } from "@/app/types";
-import type { RealtimeAgent } from '@openai/agents/realtime';
+import type { RealtimeAgent } from "@openai/agents/realtime";
 
 // Context providers & hooks
 import { useTranscript } from "@/app/contexts/TranscriptContext";
@@ -41,6 +42,11 @@ const sdkScenarioMap: Record<string, RealtimeAgent[]> = {
 import useAudioDownload from "./hooks/useAudioDownload";
 import { useHandleSessionHistory } from "./hooks/useHandleSessionHistory";
 
+// Fire TV mic key plugin
+const MicKey = Capacitor.isNativePlatform()
+  ? registerPlugin<any>("MicKey")
+  : undefined;
+
 function App() {
   const searchParams = useSearchParams()!;
 
@@ -56,13 +62,10 @@ function App() {
   // ---------------------------------------------------------------------
   const urlCodec = searchParams.get("codec") || "opus";
 
-  // Agents SDK doesn't currently support codec selection so it is now forced 
-  // via global codecPatch at module load 
+  // Agents SDK doesn't currently support codec selection so it is now forced
+  // via global codecPatch at module load
 
-  const {
-    addTranscriptMessage,
-    addTranscriptBreadcrumb,
-  } = useTranscript();
+  const { addTranscriptMessage, addTranscriptBreadcrumb } = useTranscript();
   const { logClientEvent, logServerEvent } = useEvent();
 
   const [selectedAgentName, setSelectedAgentName] = useState<string>("");
@@ -73,12 +76,14 @@ function App() {
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   // Ref to identify whether the latest agent switch came from an automatic handoff
   const handoffTriggeredRef = useRef(false);
+  // Ref to track if M key is currently being pressed to prevent repeat events
+  const mKeyPressedRef = useRef(false);
 
   const sdkAudioElement = React.useMemo(() => {
-    if (typeof window === 'undefined') return undefined;
-    const el = document.createElement('audio');
+    if (typeof window === "undefined") return undefined;
+    const el = document.createElement("audio");
     el.autoplay = true;
-    el.style.display = 'none';
+    el.style.display = "none";
     document.body.appendChild(el);
     return el;
   }, []);
@@ -97,6 +102,9 @@ function App() {
     sendEvent,
     interrupt,
     mute,
+    pushToTalkStartNative,
+    pushToTalkStopNative,
+    isNativeAudioAvailable,
   } = useRealtimeSession({
     onConnectionChange: (s) => setSessionStatus(s as SessionStatus),
     onAgentHandoff: (agentName: string) => {
@@ -115,10 +123,10 @@ function App() {
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState<boolean>(false);
   const [isAudioPlaybackEnabled, setIsAudioPlaybackEnabled] = useState<boolean>(
     () => {
-      if (typeof window === 'undefined') return true;
-      const stored = localStorage.getItem('audioPlaybackEnabled');
-      return stored ? stored === 'true' : true;
-    },
+      if (typeof window === "undefined") return true;
+      const stored = localStorage.getItem("audioPlaybackEnabled");
+      return stored ? stored === "true" : true;
+    }
   );
   const [showGames, setShowGames] = useState<boolean>(false);
 
@@ -131,7 +139,7 @@ function App() {
       sendEvent(eventObj);
       logClientEvent(eventObj, eventNameSuffix);
     } catch (err) {
-      console.error('Failed to send via SDK', err);
+      console.error("Failed to send via SDK", err);
     }
   };
 
@@ -158,7 +166,7 @@ function App() {
     if (selectedAgentName && sessionStatus === "DISCONNECTED") {
       connectToRealtime();
     }
-  }, [selectedAgentName]);
+  }, [selectedAgentName, sessionStatus]);
 
   useEffect(() => {
     if (
@@ -184,7 +192,11 @@ function App() {
 
   const fetchEphemeralKey = async (): Promise<string | null> => {
     logClientEvent({ url: "/session" }, "fetch_session_token_request");
-    const tokenResponse = await fetch("/api/session");
+    const fetchUrl = process.env.NEXT_PUBLIC_API_URL
+      ? `http://${process.env.NEXT_PUBLIC_API_URL}/api/session/`
+      : "/api/session/";
+    console.log("fetchUrl", fetchUrl);
+    const tokenResponse = await fetch(fetchUrl);
     const data = await tokenResponse.json();
     logServerEvent(data, "fetch_session_token_response");
 
@@ -210,15 +222,18 @@ function App() {
 
         // Ensure the selectedAgentName is first so that it becomes the root
         const reorderedAgents = [...sdkScenarioMap[agentSetKey]];
-        const idx = reorderedAgents.findIndex((a) => a.name === selectedAgentName);
+        const idx = reorderedAgents.findIndex(
+          (a) => a.name === selectedAgentName
+        );
         if (idx > 0) {
           const [agent] = reorderedAgents.splice(idx, 1);
           reorderedAgents.unshift(agent);
         }
 
-        const companyName = agentSetKey === 'customerServiceRetail'
-          ? customerServiceRetailCompanyName
-          : chatSupervisorCompanyName;
+        const companyName =
+          agentSetKey === "customerServiceRetail"
+            ? customerServiceRetailCompanyName
+            : chatSupervisorCompanyName;
         const guardrail = createModerationGuardrail(companyName);
 
         await connect({
@@ -249,15 +264,18 @@ function App() {
     addTranscriptMessage(id, "user", text, true);
 
     sendClientEvent({
-      type: 'conversation.item.create',
+      type: "conversation.item.create",
       item: {
         id,
-        type: 'message',
-        role: 'user',
-        content: [{ type: 'input_text', text }],
+        type: "message",
+        role: "user",
+        content: [{ type: "input_text", text }],
       },
     });
-    sendClientEvent({ type: 'response.create' }, '(simulated user text message)');
+    sendClientEvent(
+      { type: "response.create" },
+      "(simulated user text message)"
+    );
   };
 
   const updateSession = (shouldTriggerResponse: boolean = false) => {
@@ -267,7 +285,7 @@ function App() {
     const turnDetection = isPTTActive
       ? null
       : {
-          type: 'server_vad',
+          type: "server_vad",
           threshold: 0.9,
           prefix_padding_ms: 300,
           silence_duration_ms: 500,
@@ -275,7 +293,7 @@ function App() {
         };
 
     sendEvent({
-      type: 'session.update',
+      type: "session.update",
       session: {
         turn_detection: turnDetection,
       },
@@ -283,10 +301,10 @@ function App() {
 
     // Send an initial 'hi' message to trigger the agent to greet the user
     if (shouldTriggerResponse) {
-      sendSimulatedUserMessage('hi');
+      sendSimulatedUserMessage("hi");
     }
     return;
-  }
+  };
 
   const handleSendTextMessage = () => {
     if (!userText.trim()) return;
@@ -295,29 +313,56 @@ function App() {
     try {
       sendUserText(userText.trim());
     } catch (err) {
-      console.error('Failed to send via SDK', err);
+      console.error("Failed to send via SDK", err);
     }
 
     setUserText("");
   };
 
   const handleTalkButtonDown = () => {
-    if (sessionStatus !== 'CONNECTED') return;
+    if (sessionStatus !== "CONNECTED") return;
+
+    // Prevent multiple simultaneous PTT sessions
+    if (isPTTUserSpeaking) {
+      console.log("[PTT] Already speaking, ignoring additional keydown");
+      return;
+    }
+
     interrupt();
 
     setIsPTTUserSpeaking(true);
-    sendClientEvent({ type: 'input_audio_buffer.clear' }, 'clear PTT buffer');
 
-    // No placeholder; we'll rely on server transcript once ready.
+    // Use native audio if available (Fire TV), otherwise fall back to WebRTC
+    if (isNativeAudioAvailable) {
+      console.log("[PTT] Using native audio input");
+      pushToTalkStartNative().then((success) => {
+        if (!success) {
+          console.error("[PTT] Failed to start native audio recording");
+          setIsPTTUserSpeaking(false);
+        } else {
+          console.log("[PTT] Native audio recording started");
+        }
+      });
+    } else {
+      console.log("[PTT] Using WebRTC audio input");
+      sendClientEvent({ type: "input_audio_buffer.clear" }, "clear PTT buffer");
+    }
   };
 
   const handleTalkButtonUp = () => {
-    if (sessionStatus !== 'CONNECTED' || !isPTTUserSpeaking)
-      return;
+    if (sessionStatus !== "CONNECTED" || !isPTTUserSpeaking) return;
 
     setIsPTTUserSpeaking(false);
-    sendClientEvent({ type: 'input_audio_buffer.commit' }, 'commit PTT');
-    sendClientEvent({ type: 'response.create' }, 'trigger response PTT');
+
+    // Use native audio if available (Fire TV), otherwise fall back to WebRTC
+    if (isNativeAudioAvailable) {
+      console.log("[PTT] Stopping native audio input");
+      pushToTalkStopNative();
+    } else {
+      console.log("[PTT] Stopping WebRTC audio input");
+      sendClientEvent({ type: "input_audio_buffer.commit" }, "commit PTT");
+      sendClientEvent({ type: "response.create" }, "trigger response PTT");
+    }
   };
 
   const onToggleConnection = () => {
@@ -401,34 +446,39 @@ function App() {
     }
 
     // Toggle server-side audio stream mute so bandwidth is saved when the
-    // user disables playback. 
+    // user disables playback.
     try {
       mute(!isAudioPlaybackEnabled);
     } catch (err) {
-      console.warn('Failed to toggle SDK mute', err);
+      console.warn("Failed to toggle SDK mute", err);
     }
   }, [isAudioPlaybackEnabled]);
 
-  // Handle "M" key for microphone toggle
+  // Handle native Fire TV mic key events
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Only trigger if M key is pressed and we're not typing in an input field
-      if (event.key.toLowerCase() === 'm' && 
-          !(event.target instanceof HTMLInputElement) && 
-          !(event.target instanceof HTMLTextAreaElement)) {
-        event.preventDefault();
+    if (!MicKey) return; // Only run on native platforms
+
+    const handleNativeMicKey = (event: { type: string }) => {
+      console.log(
+        `[NativeMicKey] Event: ${event.type}, mKeyPressed: ${mKeyPressedRef.current}, isPTTUserSpeaking: ${isPTTUserSpeaking}`
+      );
+
+      if (event.type === "down") {
+        // Prevent multiple calls when key is held down
+        if (mKeyPressedRef.current) {
+          console.log("[NativeMicKey] Key already pressed, ignoring repeat");
+          return;
+        }
+
+        mKeyPressedRef.current = true;
+
         if (isPTTActive) {
           // In PTT mode, trigger talk button
           handleTalkButtonDown();
         }
-      }
-    };
+      } else if (event.type === "up") {
+        mKeyPressedRef.current = false;
 
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === 'm' && 
-          !(event.target instanceof HTMLInputElement) && 
-          !(event.target instanceof HTMLTextAreaElement)) {
-        event.preventDefault();
         if (isPTTActive) {
           // In PTT mode, release talk button
           handleTalkButtonUp();
@@ -436,23 +486,26 @@ function App() {
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('keyup', handleKeyUp);
-    
+    const listener = MicKey.addListener("micKey", handleNativeMicKey);
+
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('keyup', handleKeyUp);
+      listener?.remove();
     };
-  }, [isPTTActive, handleTalkButtonDown, handleTalkButtonUp]);
+  }, [
+    isPTTActive,
+    isPTTUserSpeaking,
+    handleTalkButtonDown,
+    handleTalkButtonUp,
+  ]);
 
   // Ensure mute state is propagated to transport right after we connect or
   // whenever the SDK client reference becomes available.
   useEffect(() => {
-    if (sessionStatus === 'CONNECTED') {
+    if (sessionStatus === "CONNECTED") {
       try {
         mute(!isAudioPlaybackEnabled);
       } catch (err) {
-        console.warn('mute sync after connect failed', err);
+        console.warn("mute sync after connect failed", err);
       }
     }
   }, [sessionStatus, isAudioPlaybackEnabled]);
@@ -494,7 +547,7 @@ function App() {
             />
           </div>
           <div>
-            Realtime API <span className="text-gray-500">Agents</span>
+            HUUUB <span className="text-gray-500">Agents</span>
           </div>
         </div>
         <div className="flex items-center gap-4 flex-wrap">
@@ -574,9 +627,7 @@ function App() {
           setUserText={setUserText}
           onSendMessage={handleSendTextMessage}
           downloadRecording={downloadRecording}
-          canSend={
-            sessionStatus === "CONNECTED"
-          }
+          canSend={sessionStatus === "CONNECTED"}
         />
 
         <Events isExpanded={isEventsPaneExpanded} />

@@ -3,7 +3,7 @@ import { gameHostAgentInstructions, gameHostTools } from "./gameHostAgent";
 
 export const chatAgent = new RealtimeAgent({
   name: "gameHostAgent",
-  voice: "ash",
+  voice: "sage",
   instructions: gameHostAgentInstructions,
   tools: gameHostTools,
 });

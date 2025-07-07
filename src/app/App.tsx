@@ -119,7 +119,7 @@ function App() {
   const [isEventsPaneExpanded, setIsEventsPaneExpanded] =
     useState<boolean>(true);
   const [userText, setUserText] = useState<string>("");
-  const [isPTTActive, setIsPTTActive] = useState<boolean>(false);
+  const [isPTTActive, setIsPTTActive] = useState<boolean>(true);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState<boolean>(false);
   const [isAudioPlaybackEnabled, setIsAudioPlaybackEnabled] = useState<boolean>(
     () => {
@@ -547,7 +547,7 @@ function App() {
             />
           </div>
           <div>
-            HUUUB <span className="text-gray-500">Agents</span>
+            HUUUUUB <span className="text-gray-500">Agents</span>
           </div>
         </div>
         <div className="flex items-center gap-4 flex-wrap">
@@ -587,7 +587,7 @@ function App() {
           {agentSetKey && (
             <div className="flex items-center gap-2">
               <label className="text-base font-medium whitespace-nowrap">
-                Agent
+                Ageent
               </label>
               <div className="relative inline-block">
                 <select
@@ -645,7 +645,7 @@ function App() {
         setIsAudioPlaybackEnabled={setIsAudioPlaybackEnabled}
         codec={urlCodec}
         onCodecChange={handleCodecChange}
-        isPTTActive={true}
+        isPTTActive={isPTTActive}
       />
     </div>
   );

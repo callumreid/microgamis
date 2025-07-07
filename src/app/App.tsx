@@ -645,6 +645,7 @@ function App() {
         setIsAudioPlaybackEnabled={setIsAudioPlaybackEnabled}
         codec={urlCodec}
         onCodecChange={handleCodecChange}
+        isPTTActive={true}
       />
     </div>
   );

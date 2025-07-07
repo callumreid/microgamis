@@ -13,6 +13,7 @@ interface BottomToolbarProps {
   setIsAudioPlaybackEnabled: (val: boolean) => void;
   codec: string;
   onCodecChange: (newCodec: string) => void;
+  isPTTActive: boolean;
 }
 
 function BottomToolbar({
@@ -27,6 +28,7 @@ function BottomToolbar({
   setIsAudioPlaybackEnabled,
   codec,
   onCodecChange,
+  isPTTActive,
 }: BottomToolbarProps) {
   const isConnected = sessionStatus === "CONNECTED";
   const isConnecting = sessionStatus === "CONNECTING";
@@ -70,7 +72,7 @@ function BottomToolbar({
           onMouseUp={handleTalkButtonUp}
           onTouchStart={handleTalkButtonDown}
           onTouchEnd={handleTalkButtonUp}
-          disabled={!isConnected}
+          disabled={!isPTTActive}
           className={
             (isPTTUserSpeaking ? "bg-gray-300" : "bg-gray-200") +
             " py-1 px-4 cursor-pointer rounded-md"

@@ -14,33 +14,263 @@ interface GameControlProps {
 function ShatterTheGlassGame({ endGame, updateMessage, onVoiceInput, sendVoiceMessage, playSound }: GameControlProps) {
   const [glassIntegrity, setGlassIntegrity] = useState(100);
   const [vibrationLevel, setVibrationLevel] = useState(0);
-  const [shattered, setShattered] = useState(false);
   const [currentPitch, setCurrentPitch] = useState(0);
+  const [shattered, setShattered] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize game once
   useEffect(() => {
-    setIsInitialized(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-    
-    updateMessage('Sing at a high pitch to shatter the glass!');
-    if (sendVoiceMessage) {
-      sendVoiceMessage('Welcome to the glass shattering challenge! You need to sing or make sounds at a high enough pitch to shatter this glass panel. Start low and gradually increase your pitch until the glass breaks!');
+    if (!isInitialized) {
+      setIsInitialized(true);
+      updateMessage('Sing at high pitch to shatter the glass!');
+      if (sendVoiceMessage) {
+        sendVoiceMessage('Welcome to the glass-shattering challenge! You need to sing at exactly the right high pitch to make this wine glass vibrate until it shatters. Try singing high sustained notes like "EEEEEE" or "LAAAA"!');
+      }
     }
   }, [isInitialized, updateMessage, sendVoiceMessage]);
 
   useEffect(() => {
-    if (!isInitialized || !onVoiceInput || shattered) return;
+    if (isInitialized && onVoiceInput && !shattered) {
       const handleVoiceInput = (transcript: string) => {
         const input = transcript.toLowerCase().trim();
         
-        // Detect high-pitched sounds, singing, or sustained notes
-        const highPitchKeywords = ['ah', 'ee', 'ooh', 'la', 'oh', 'sing'];
-        const sustainedSounds = input.length > 10 && (input.includes('aaa') || input.includes('eee') || input.includes('ooo'));
-        const hasPitchKeywords = highPitchKeywords.some(keyword => input.includes(keyword));
+        // Look for sustained sounds and high pitch indicators
+        const sustainedSounds = /([aeiou])\1{2,}/.test(input); // Repeated vowels
         
         // Estimate pitch based on vowel sounds and length
         let estimatedPitch = 0;
-        if (input.includes('ee') || input.includes('eee')) estimatedPitch += 30;\n        if (input.includes('ah') || input.includes('aaa')) estimatedPitch += 20;\n        if (input.includes('ooh') || input.includes('ooo')) estimatedPitch += 25;\n        if (input.includes('la')) estimatedPitch += 35;\n        if (sustainedSounds) estimatedPitch += 20;\n        if (input.length > 15) estimatedPitch += 15; // Longer sustained notes\n        \n        setCurrentPitch(estimatedPitch);\n        \n        if (estimatedPitch > 0) {\n          // Increase vibration based on pitch\n          const newVibration = Math.min(100, vibrationLevel + estimatedPitch * 0.8);\n          setVibrationLevel(newVibration);\n          \n          // Decrease glass integrity\n          const damage = estimatedPitch * 0.6;\n          const newIntegrity = Math.max(0, glassIntegrity - damage);\n          setGlassIntegrity(newIntegrity);\n          \n          if (newIntegrity <= 0) {\n            setShattered(true);\n            updateMessage('🎉 SHATTERED! Perfect pitch!');\n            \n            if (playSound) {\n              playSound('glass-shatter');\n            }\n            \n            if (sendVoiceMessage) {\n              sendVoiceMessage('AMAZING! You hit the perfect resonant frequency and shattered the glass! Your vocal power is incredible!');\n            }\n            \n            const score = Math.max(70, 100 - Math.floor((100 - newIntegrity) / 10));\n            endGame(true, 'Glass shattered! Perfect resonant frequency!', score);\n          } else if (newVibration > 70) {\n            updateMessage('The glass is wobbling intensely! Keep going!');\n            if (sendVoiceMessage) {\n              sendVoiceMessage('Excellent! The glass is really starting to vibrate! You\\'re getting close to the shattering point!');\n            }\n          } else if (newVibration > 30) {\n            updateMessage('Good! The glass is starting to vibrate!');\n            if (sendVoiceMessage) {\n              sendVoiceMessage('Good work! I can see the glass starting to wobble. Try to go even higher in pitch!');\n            }\n          } else {\n            updateMessage('Try singing higher! The glass barely moved.');\n            if (sendVoiceMessage) {\n              sendVoiceMessage('I can hear you, but you need to sing at a much higher pitch to make the glass vibrate!');\n            }\n          }\n        }\n      };\n      \n      onVoiceInput(handleVoiceInput);\n    }\n  }, [isInitialized, onVoiceInput, shattered, vibrationLevel, glassIntegrity, endGame, updateMessage, sendVoiceMessage, playSound]);\n\n  const getGlassStyle = () => {\n    if (shattered) {\n      return {\n        background: 'linear-gradient(45deg, transparent 0%, transparent 40%, rgba(255,255,255,0.1) 41%, rgba(255,255,255,0.1) 42%, transparent 43%, transparent 100%)',\n        transform: 'scale(1.05)',\n        filter: 'blur(2px)',\n      };\n    }\n    \n    const wobble = vibrationLevel > 0 ? `scale(${1 + vibrationLevel * 0.002}) rotate(${Math.sin(Date.now() * 0.01) * vibrationLevel * 0.1}deg)` : 'scale(1)';\n    const opacity = 0.3 + (glassIntegrity / 100) * 0.4;\n    \n    return {\n      transform: wobble,\n      opacity: opacity,\n      transition: 'transform 0.1s ease-out',\n    };\n  };\n\n  return (\n    <div className=\"w-full h-full relative bg-gradient-to-br from-blue-900 via-purple-800 to-black overflow-hidden\">\n      {/* Laboratory background */}\n      <div className=\"absolute inset-0\">\n        <div className=\"absolute top-8 left-8 text-3xl \">🔬</div>\n        <div className=\"absolute top-12 right-12 text-2xl \">⚗️</div>\n        <div className=\"absolute bottom-12 left-12 text-2xl \" >🧪</div>\n        <div className=\"absolute bottom-8 right-8 text-3xl \" >🔊</div>\n      </div>\n\n      {/* Glass panel */}\n      <div className=\"absolute inset-8 flex items-center justify-center\">\n        <div \n          className=\"w-full h-full bg-gradient-to-br from-cyan-100 to-blue-200 border-4 border-gray-300 relative\"\n          style={getGlassStyle()}\n        >\n          {/* Glass texture */}\n          <div className=\"absolute inset-0 bg-gradient-to-br from-transparent via-white to-transparent opacity-20\"></div>\n          \n          {/* Crack patterns */}\n          {shattered && (\n            <div className=\"absolute inset-0\">\n              {Array.from({ length: 15 }).map((_, i) => (\n                <div\n                  key={i}\n                  className=\"absolute bg-white h-px\"\n                  style={{\n                    left: `${Math.random() * 80 + 10}%`,\n                    top: `${Math.random() * 80 + 10}%`,\n                    width: `${Math.random() * 30 + 10}%`,\n                    transform: `rotate(${Math.random() * 360}deg)`,\n                    opacity: 0.8,\n                  }}\n                />\n              ))}\n            </div>\n          )}\n          \n          {/* Vibration effects */}\n          {vibrationLevel > 50 && !shattered && (\n            <div className=\"absolute inset-0\">\n              {Array.from({ length: 8 }).map((_, i) => (\n                <div\n                  key={i}\n                  className=\"absolute w-2 h-2 bg-white rounded-full opacity-50\"\n                  style={{\n                    left: `${Math.random() * 90 + 5}%`,\n                    top: `${Math.random() * 90 + 5}%`,\n                    \n                  }}\n                />\n              ))}\n            </div>\n          )}\n        </div>\n      </div>\n\n      {/* Status displays */}\n      <div className=\"absolute top-4 left-4 bg-black bg-opacity-70 text-white p-4 rounded\">\n        <div className=\"text-sm font-bold mb-2\">🎚️ Glass Status</div>\n        <div className=\"text-xs mb-1\">Integrity: {Math.round(glassIntegrity)}%</div>\n        <div className=\"w-32 h-2 bg-gray-700 rounded mb-2\">\n          <div \n            className=\"h-full rounded transition-all duration-300\"\n            style={{ \n              width: `${glassIntegrity}%`,\n              backgroundColor: glassIntegrity > 50 ? '#10b981' : glassIntegrity > 25 ? '#f59e0b' : '#ef4444'\n            }}\n          ></div>\n        </div>\n        <div className=\"text-xs mb-1\">Vibration: {Math.round(vibrationLevel)}%</div>\n        <div className=\"w-32 h-2 bg-gray-700 rounded\">\n          <div \n            className=\"h-full bg-purple-500 rounded transition-all duration-300\"\n            style={{ width: `${vibrationLevel}%` }}\n          ></div>\n        </div>\n      </div>\n\n      {/* Pitch meter */}\n      <div className=\"absolute top-4 right-4 bg-black bg-opacity-70 text-white p-4 rounded\">\n        <div className=\"text-sm font-bold mb-2\">🎵 Pitch Level</div>\n        <div className=\"text-xs mb-1\">Current: {Math.round(currentPitch)}</div>\n        <div className=\"w-32 h-16 bg-gray-700 rounded relative\">\n          <div \n            className=\"absolute bottom-0 left-0 right-0 bg-gradient-to-t from-green-500 via-yellow-500 to-red-500 rounded transition-all duration-300\"\n            style={{ height: `${Math.min(100, currentPitch * 1.5)}%` }}\n          ></div>\n          <div className=\"absolute top-1 left-1 right-1 text-xs text-red-400 font-bold\">\n            SHATTER\n          </div>\n        </div>\n      </div>\n\n      {/* Instructions */}\n      {!shattered && (\n        <div className=\"absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white p-4 rounded-lg text-center max-w-md\">\n          <p className=\"text-lg font-bold\">🎤 Sing at high pitch!</p>\n          <p className=\"text-sm\">Try: \"EEEEEE\" or \"LAAAAA\" or sustained high notes</p>\n          <p className=\"text-xs mt-2 opacity-75\">\n            Get the glass vibrating enough to shatter it!\n          </p>\n        </div>\n      )}\n\n      {/* Shatter celebration */}\n      {shattered && (\n        <div className=\"absolute inset-0 bg-white bg-opacity-20 flex items-center justify-center\">\n          <div className=\"text-center\">\n            <div className=\"text-8xl mb-4 \">💥</div>\n            <div className=\"text-4xl font-bold text-white drop-shadow-lg\">\n              GLASS SHATTERED!\n            </div>\n            <div className=\"text-xl text-gray-200 mt-2\">\n              Perfect resonant frequency!\n            </div>\n          </div>\n        </div>\n      )}\n    </div>\n  );\n}\n\nexport default function ShatterTheGlassGameComponent(props: GameProps) {\n  return (\n    <BaseGame\n      title=\"Shatter The Glass\"\n      instructions=\"Sing at high pitch to make the glass vibrate until it shatters!\"\n      duration={15}\n      {...props}\n    >\n      <ShatterTheGlassGame />\n    </BaseGame>\n  );\n}"
+        if (input.includes('ee') || input.includes('eee')) estimatedPitch += 30;
+        if (input.includes('ah') || input.includes('aaa')) estimatedPitch += 20;
+        if (input.includes('ooh') || input.includes('ooo')) estimatedPitch += 25;
+        if (input.includes('la')) estimatedPitch += 35;
+        if (sustainedSounds) estimatedPitch += 20;
+        if (input.length > 15) estimatedPitch += 15; // Longer sustained notes
+        
+        setCurrentPitch(estimatedPitch);
+        
+        if (estimatedPitch > 0) {
+          // Increase vibration based on pitch
+          const newVibration = Math.min(100, vibrationLevel + estimatedPitch * 0.8);
+          setVibrationLevel(newVibration);
+          
+          // Decrease glass integrity
+          const damage = estimatedPitch * 0.6;
+          const newIntegrity = Math.max(0, glassIntegrity - damage);
+          setGlassIntegrity(newIntegrity);
+          
+          if (newIntegrity <= 0) {
+            setShattered(true);
+            updateMessage('🎉 SHATTERED! Perfect pitch!');
+            
+            if (playSound) {
+              playSound('glass-shatter');
+            }
+            
+            if (sendVoiceMessage) {
+              sendVoiceMessage('AMAZING! You hit the perfect resonant frequency and shattered the glass! Your vocal power is incredible!');
+            }
+            
+            const score = Math.max(70, 100 - Math.floor((100 - newIntegrity) / 10));
+            endGame(true, 'Glass shattered! Perfect resonant frequency!', score);
+          } else if (newVibration > 70) {
+            updateMessage('The glass is wobbling intensely! Keep going!');
+            if (sendVoiceMessage) {
+              sendVoiceMessage('Excellent! The glass is really starting to vibrate! You\'re getting close to the shattering point!');
+            }
+          } else if (newVibration > 30) {
+            updateMessage('Good! The glass is starting to vibrate!');
+            if (sendVoiceMessage) {
+              sendVoiceMessage('Good work! I can see the glass starting to wobble. Try to go even higher in pitch!');
+            }
+          } else {
+            updateMessage('Try singing higher! The glass barely moved.');
+            if (sendVoiceMessage) {
+              sendVoiceMessage('I can hear you, but you need to sing at a much higher pitch to make the glass vibrate!');
+            }
+          }
+        }
+      };
+      
+      onVoiceInput(handleVoiceInput);
+    }
+  }, [isInitialized, onVoiceInput, shattered, vibrationLevel, glassIntegrity, endGame, updateMessage, sendVoiceMessage, playSound]);
+
+  const getGlassStyle = () => {
+    if (shattered) {
+      return {
+        background: 'linear-gradient(45deg, transparent 0%, transparent 40%, rgba(255,255,255,0.1) 41%, rgba(255,255,255,0.1) 42%, transparent 43%, transparent 100%)',
+        transform: 'scale(1.05)',
+        filter: 'blur(2px)',
+      };
+    }
+    
+    const vibrationOffset = vibrationLevel > 50 ? Math.sin(Date.now() / 50) * (vibrationLevel / 20) : 0;
+    
+    return {
+      transform: `translateX(${vibrationOffset}px) scale(${1 + vibrationLevel / 1000})`,
+      filter: vibrationLevel > 30 ? `blur(${vibrationLevel / 100}px)` : 'none',
+      background: `linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.1) 100%)`,
+      borderColor: vibrationLevel > 50 ? '#fbbf24' : '#e5e7eb',
+      boxShadow: vibrationLevel > 30 ? `0 0 ${vibrationLevel/2}px rgba(255,255,255,0.5)` : 'none',
+    };
+  };
+
+  return (
+    <div className="w-full h-full relative bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 flex items-center justify-center overflow-hidden">
+      {/* Wine glass */}
+      <div className="relative">
+        {/* Glass bowl */}
+        <div 
+          className="w-32 h-40 border-4 border-gray-300 rounded-b-full mx-auto transition-all duration-100"
+          style={getGlassStyle()}
+        >
+          {/* Wine inside */}
+          <div 
+            className="absolute bottom-2 left-2 right-2 bg-red-800 rounded-b-full transition-all duration-300"
+            style={{ 
+              height: `${60 + vibrationLevel / 5}%`,
+              transform: vibrationLevel > 20 ? `rotate(${Math.sin(Date.now() / 100) * (vibrationLevel / 10)}deg)` : 'none'
+            }}
+          ></div>
+          
+          {/* Glass reflections */}
+          <div className="absolute top-4 left-4 w-8 h-16 bg-white opacity-20 rounded-full transform rotate-12"></div>
+          <div className="absolute top-8 right-6 w-4 h-8 bg-white opacity-15 rounded-full"></div>
+          
+          {/* Shatter effect */}
+          {shattered && (
+            <div className="absolute inset-0">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-1 h-8 bg-white opacity-60"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    transform: `rotate(${Math.random() * 360}deg)`,
+                    animation: `shatter-${i} 0.5s ease-out forwards`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          
+          {/* Vibration effects */}
+          {vibrationLevel > 50 && !shattered && (
+            <div className="absolute inset-0">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-2 h-2 bg-white rounded-full opacity-50"
+                  style={{
+                    left: `${Math.random() * 90 + 5}%`,
+                    top: `${Math.random() * 90 + 5}%`,
+                    animation: `vibrate-${i % 3} 0.1s infinite`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        
+        {/* Glass stem */}
+        <div 
+          className="w-2 h-16 bg-gray-300 mx-auto transition-transform duration-100"
+          style={{ 
+            transform: vibrationLevel > 30 ? `rotate(${Math.sin(Date.now() / 80) * (vibrationLevel / 30)}deg)` : 'none'
+          }}
+        ></div>
+        
+        {/* Glass base */}
+        <div 
+          className="w-20 h-4 bg-gray-300 rounded-full mx-auto transition-transform duration-100"
+          style={{ 
+            transform: vibrationLevel > 40 ? `translateY(${Math.sin(Date.now() / 60) * (vibrationLevel / 40)}px)` : 'none'
+          }}
+        ></div>
+      </div>
+
+      {/* Status displays */}
+      <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white p-4 rounded">
+        <div className="text-sm font-bold mb-2">🎚️ Glass Status</div>
+        <div className="text-xs mb-1">Integrity: {Math.round(glassIntegrity)}%</div>
+        <div className="w-32 h-2 bg-gray-700 rounded mb-2">
+          <div 
+            className="h-full rounded transition-all duration-300"
+            style={{ 
+              width: `${glassIntegrity}%`,
+              backgroundColor: glassIntegrity > 50 ? '#10b981' : glassIntegrity > 25 ? '#f59e0b' : '#ef4444'
+            }}
+          ></div>
+        </div>
+        <div className="text-xs mb-1">Vibration: {Math.round(vibrationLevel)}%</div>
+        <div className="w-32 h-2 bg-gray-700 rounded">
+          <div 
+            className="h-full bg-purple-500 rounded transition-all duration-300"
+            style={{ width: `${vibrationLevel}%` }}
+          ></div>
+        </div>
+      </div>
+
+      {/* Pitch meter */}
+      <div className="absolute top-4 right-4 bg-black bg-opacity-70 text-white p-4 rounded">
+        <div className="text-sm font-bold mb-2">🎵 Pitch Level</div>
+        <div className="text-xs mb-1">Current: {Math.round(currentPitch)}</div>
+        <div className="w-32 h-16 bg-gray-700 rounded relative">
+          <div 
+            className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-green-500 via-yellow-500 to-red-500 rounded transition-all duration-300"
+            style={{ height: `${Math.min(100, currentPitch * 1.5)}%` }}
+          ></div>
+          <div className="absolute top-1 left-1 right-1 text-xs text-red-400 font-bold">
+            SHATTER
+          </div>
+        </div>
+      </div>
+
+      {/* Instructions */}
+      {!shattered && (
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white p-4 rounded-lg text-center max-w-md">
+          <p className="text-lg font-bold">🎤 Sing at high pitch!</p>
+          <p className="text-sm">Try: "EEEEEE" or "LAAAAA" or sustained high notes</p>
+          <p className="text-xs mt-2 opacity-75">
+            Get the glass vibrating enough to shatter it!
+          </p>
+        </div>
+      )}
+
+      {/* Shatter celebration */}
+      {shattered && (
+        <div className="absolute inset-0 bg-white bg-opacity-20 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-8xl mb-4">💥</div>
+            <div className="text-4xl font-bold text-white drop-shadow-lg">
+              GLASS SHATTERED!
+            </div>
+            <div className="text-xl text-gray-200 mt-2">
+              Perfect resonant frequency!
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes vibrate-0 { 0%, 100% { transform: translate(0); } 50% { transform: translate(1px, -1px); } }
+        @keyframes vibrate-1 { 0%, 100% { transform: translate(0); } 50% { transform: translate(-1px, 1px); } }
+        @keyframes vibrate-2 { 0%, 100% { transform: translate(0); } 50% { transform: translate(1px, 1px); } }
+      `}</style>
+    </div>
+  );
+}
+
+export default function ShatterTheGlassGameComponent(props: GameProps) {
+  return (
+    <BaseGame
+      title="Shatter The Glass"
+      instructions="Sing at high pitch to make the glass vibrate until it shatters!"
+      duration={15}
+      {...props}
+    >
+      <ShatterTheGlassGame />
+    </BaseGame>
+  );
+}

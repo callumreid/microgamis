@@ -18,7 +18,7 @@ type RouletteNumber = {
 };
 
 const rouletteNumbers: RouletteNumber[] = [
-  { number: 0, color: 'green' }, { number: 00, color: 'green' },
+  { number: 0, color: 'green' },
   { number: 1, color: 'red' }, { number: 2, color: 'black' }, { number: 3, color: 'red' }, { number: 4, color: 'black' },
   { number: 5, color: 'red' }, { number: 6, color: 'black' }, { number: 7, color: 'red' }, { number: 8, color: 'black' },
   { number: 9, color: 'red' }, { number: 10, color: 'black' }, { number: 11, color: 'black' }, { number: 12, color: 'red' },
@@ -139,4 +139,98 @@ function BetOnRouletteGame({ endGame, updateMessage, onVoiceInput, sendVoiceMess
   }, [onVoiceInput, hasAnswered, result, userBet, sendVoiceMessage, updateMessage]);
 
   return (
-    <div className=\"w-full h-full relative bg-gradient-to-br from-green-800 via-green-600 to-green-900 flex items-center justify-center\">\n      {/* Casino atmosphere */}\n      <div className=\"absolute top-4 left-4 text-3xl animate-pulse\">💰</div>\n      <div className=\"absolute top-4 right-4 text-3xl animate-pulse\" style={{ animationDelay: '0.5s' }}>🎰</div>\n      <div className=\"absolute bottom-4 left-4 text-2xl animate-bounce\">🃏</div>\n      <div className=\"absolute bottom-4 right-4 text-2xl animate-bounce\" style={{ animationDelay: '0.3s' }}>🎲</div>\n\n      <div className=\"bg-white rounded-lg shadow-2xl p-8 max-w-md border-4 border-yellow-400\">\n        <h2 className=\"text-3xl font-bold mb-6 text-center text-gray-800\">🎡 Roulette Table</h2>\n        \n        {/* Roulette wheel */}\n        <div className=\"flex justify-center mb-6\">\n          <div \n            className=\"w-32 h-32 rounded-full border-8 border-yellow-600 bg-gradient-to-br from-red-500 via-black to-green-500 flex items-center justify-center relative\"\n            style={{ transform: `rotate(${wheelPosition}deg)` }}\n          >\n            {/* Wheel segments */}\n            <div className=\"absolute inset-2 rounded-full border-4 border-white bg-gray-800\">\n              <div className=\"w-full h-full flex items-center justify-center text-white font-bold\">\n                {result ? result.number : '🎯'}\n              </div>\n            </div>\n            \n            {/* Ball */}\n            <div className=\"absolute top-1 left-1/2 w-2 h-2 bg-white rounded-full transform -translate-x-1/2\"></div>\n          </div>\n        </div>\n\n        {/* Betting area */}\n        <div className=\"grid grid-cols-3 gap-2 mb-6\">\n          <div className={`bg-red-500 text-white p-4 rounded text-center font-bold cursor-pointer ${userBet === 'red' ? 'ring-4 ring-yellow-400' : ''}`}>\n            RED\n            <div className=\"text-xs mt-1\">Pays 2:1</div>\n          </div>\n          <div className={`bg-black text-white p-4 rounded text-center font-bold cursor-pointer ${userBet === 'black' ? 'ring-4 ring-yellow-400' : ''}`}>\n            BLACK\n            <div className=\"text-xs mt-1\">Pays 2:1</div>\n          </div>\n          <div className={`bg-green-500 text-white p-4 rounded text-center font-bold cursor-pointer ${userBet === 'green' ? 'ring-4 ring-yellow-400' : ''}`}>\n            GREEN\n            <div className=\"text-xs mt-1\">Pays 35:1</div>\n          </div>\n        </div>\n\n        {/* Voice instructions */}\n        {!hasAnswered && !result && (\n          <div className=\"bg-yellow-100 border border-yellow-400 rounded p-3 text-center\">\n            <div className=\"text-2xl mb-2\">🎤</div>\n            <p className=\"text-sm font-semibold text-yellow-800\">\n              Say \"red\", \"black\", or \"green\" to place your bet!\n            </p>\n          </div>\n        )}\n\n        {/* Current bet display */}\n        {userBet && (\n          <div className=\"bg-blue-100 border border-blue-400 rounded p-3 text-center\">\n            <p className=\"font-bold text-blue-800\">\n              Your bet: {userBet.toUpperCase()}\n            </p>\n            <p className=\"text-sm text-blue-600\">Wheel spinning...</p>\n          </div>\n        )}\n\n        {/* Result */}\n        {result && (\n          <div className={`border-2 rounded p-4 text-center ${result.color === userBet ? 'bg-green-100 border-green-400' : 'bg-red-100 border-red-400'}`}>\n            <div className=\"text-4xl mb-2\">\n              {result.color === 'red' ? '🔴' : result.color === 'black' ? '⚫' : '🟢'}\n            </div>\n            <p className=\"font-bold text-lg\">\n              {result.color.toUpperCase()} {result.number}\n            </p>\n            <p className=\"text-sm\">\n              {result.color === userBet ? '🎉 You Win!' : '😢 House Wins'}\n            </p>\n          </div>\n        )}\n      </div>\n    </div>\n  );\n}\n\nexport default function BetOnRouletteGameComponent(props: GameProps) {\n  return (\n    <BaseGame\n      title=\"Bet On Roulette\"\n      instructions=\"Place your bet before the wheel stops spinning!\"\n      duration={8}\n      {...props}\n    >\n      <BetOnRouletteGame />\n    </BaseGame>\n  );\n}"
+    <div className="w-full h-full relative bg-gradient-to-br from-green-800 via-green-600 to-green-900 flex items-center justify-center">
+      {/* Casino atmosphere */}
+      <div className="absolute top-4 left-4 text-3xl animate-pulse">💰</div>
+      <div className="absolute top-4 right-4 text-3xl animate-pulse" style={{ animationDelay: '0.5s' }}>🎰</div>
+      <div className="absolute bottom-4 left-4 text-2xl animate-bounce">🃏</div>
+      <div className="absolute bottom-4 right-4 text-2xl animate-bounce" style={{ animationDelay: '0.3s' }}>🎲</div>
+
+      <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md border-4 border-yellow-400">
+        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">🎡 Roulette Table</h2>
+        
+        {/* Roulette wheel */}
+        <div className="flex justify-center mb-6">
+          <div 
+            className="w-32 h-32 rounded-full border-8 border-yellow-600 bg-gradient-to-br from-red-500 via-black to-green-500 flex items-center justify-center relative"
+            style={{ transform: `rotate(${wheelPosition}deg)` }}
+          >
+            {/* Wheel segments */}
+            <div className="absolute inset-2 rounded-full border-4 border-white bg-gray-800">
+              <div className="w-full h-full flex items-center justify-center text-white font-bold">
+                {result ? result.number : '🎯'}
+              </div>
+            </div>
+            
+            {/* Ball */}
+            <div className="absolute top-1 left-1/2 w-2 h-2 bg-white rounded-full transform -translate-x-1/2"></div>
+          </div>
+        </div>
+
+        {/* Betting area */}
+        <div className="grid grid-cols-3 gap-2 mb-6">
+          <div className={`bg-red-500 text-white p-4 rounded text-center font-bold cursor-pointer ${userBet === 'red' ? 'ring-4 ring-yellow-400' : ''}`}>
+            RED
+            <div className="text-xs mt-1">Pays 2:1</div>
+          </div>
+          <div className={`bg-black text-white p-4 rounded text-center font-bold cursor-pointer ${userBet === 'black' ? 'ring-4 ring-yellow-400' : ''}`}>
+            BLACK
+            <div className="text-xs mt-1">Pays 2:1</div>
+          </div>
+          <div className={`bg-green-500 text-white p-4 rounded text-center font-bold cursor-pointer ${userBet === 'green' ? 'ring-4 ring-yellow-400' : ''}`}>
+            GREEN
+            <div className="text-xs mt-1">Pays 35:1</div>
+          </div>
+        </div>
+
+        {/* Voice instructions */}
+        {!hasAnswered && !result && (
+          <div className="bg-yellow-100 border border-yellow-400 rounded p-3 text-center">
+            <div className="text-2xl mb-2">🎤</div>
+            <p className="text-sm font-semibold text-yellow-800">
+              Say "red", "black", or "green" to place your bet!
+            </p>
+          </div>
+        )}
+
+        {/* Current bet display */}
+        {userBet && (
+          <div className="bg-blue-100 border border-blue-400 rounded p-3 text-center">
+            <p className="font-bold text-blue-800">
+              Your bet: {userBet.toUpperCase()}
+            </p>
+            <p className="text-sm text-blue-600">Wheel spinning...</p>
+          </div>
+        )}
+
+        {/* Result */}
+        {result && (
+          <div className={`border-2 rounded p-4 text-center ${result.color === userBet ? 'bg-green-100 border-green-400' : 'bg-red-100 border-red-400'}`}>
+            <div className="text-4xl mb-2">
+              {result.color === 'red' ? '🔴' : result.color === 'black' ? '⚫' : '🟢'}
+            </div>
+            <p className="font-bold text-lg">
+              {result.color.toUpperCase()} {result.number}
+            </p>
+            <p className="text-sm">
+              {result.color === userBet ? '🎉 You Win!' : '😢 House Wins'}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function BetOnRouletteGameComponent(props: GameProps) {
+  return (
+    <BaseGame
+      title="Bet On Roulette"
+      instructions="Place your bet before the wheel stops spinning!"
+      duration={8}
+      {...props}
+    >
+      <BetOnRouletteGame />
+    </BaseGame>
+  );
+}

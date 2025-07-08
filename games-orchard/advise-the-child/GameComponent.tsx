@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import BaseGame from "../BaseGame";
 import { GameProps } from "../types";
 import {
@@ -8,6 +8,7 @@ import {
   GameFinishResult,
 } from "../../src/app/hooks/useGameAgent";
 import { useGameSession } from "../../src/app/providers/GameSessionProvider";
+import { useTranscript } from "../../src/app/contexts/TranscriptContext";
 
 interface GameControlProps {
   endGame: (success: boolean, message?: string, score?: number) => void;
@@ -33,6 +34,9 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
   );
   const [hostFinishedSpeaking, setHostFinishedSpeaking] = useState(false);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
+  const [currentTranscriptionText, setCurrentTranscriptionText] = useState("");
+  const [lastCapturedText, setLastCapturedText] = useState("");
+  const pttStartTimeRef = useRef<number>(0);
 
   // Push-to-talk functionality
   const {
@@ -42,6 +46,32 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     pushToTalkStartNative,
     pushToTalkStopNative,
   } = useGameSession();
+
+  // Real-time transcription display
+  const { transcriptItems } = useTranscript();
+  
+  // Monitor transcription items - only capture user speech during PTT
+  useEffect(() => {
+    if (!isPTTUserSpeaking) {
+      return;
+    }
+
+    // Find items that appeared since PTT started AND are marked as user role
+    const userItemsSincePTT = transcriptItems
+      .filter(item => 
+        item.title && 
+        item.title.trim() !== "" &&
+        item.role === "user" &&
+        item.createdAtMs > pttStartTimeRef.current
+      )
+      .sort((a, b) => b.createdAtMs - a.createdAtMs);
+
+    if (userItemsSincePTT.length > 0) {
+      const latestUserText = userItemsSincePTT[0].title;
+      console.log("User speech during PTT:", latestUserText);
+      setCurrentTranscriptionText(latestUserText || "");
+    }
+  }, [transcriptItems, isPTTUserSpeaking]);
 
   const {
     startGame,
@@ -87,19 +117,29 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
   }, [startGame]);
 
   // Push-to-talk handlers
-  const handleTalkButtonDown = useCallback(() => {
+  const handleTalkButtonDown = useCallback(async () => {
     if (sessionStatus !== "CONNECTED" || !isWebRTCReady) return;
     if (isPTTUserSpeaking) return;
     interrupt();
+    pttStartTimeRef.current = Date.now(); // Mark when PTT started
     setIsPTTUserSpeaking(true);
-    pushToTalkStartNative();
+    setCurrentTranscriptionText(""); // Clear previous text
+    await pushToTalkStartNative();
+    console.log("PTT started at:", pttStartTimeRef.current);
   }, [sessionStatus, isWebRTCReady, isPTTUserSpeaking, interrupt, pushToTalkStartNative]);
 
-  const handleTalkButtonUp = useCallback(() => {
+  const handleTalkButtonUp = useCallback(async () => {
     if (sessionStatus !== "CONNECTED" || !isPTTUserSpeaking) return;
+    
+    // Save the current transcription text before stopping PTT
+    if (currentTranscriptionText.trim()) {
+      setLastCapturedText(currentTranscriptionText);
+    }
+    
     setIsPTTUserSpeaking(false);
-    pushToTalkStopNative();
-  }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative]);
+    await pushToTalkStopNative();
+    console.log("PTT stopped. Final text:", currentTranscriptionText);
+  }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative, currentTranscriptionText]);
 
   return (
     <div className="text-center max-w-2xl bg-gradient-to-br from-pink-200 via-blue-200 to-purple-200 rounded-lg p-8">
@@ -171,6 +211,25 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
             </div>
           </div>
         )}
+
+        {/* FORCED TRANSCRIPTION DISPLAY - ALWAYS SHOWS */}
+        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mt-4">
+          <div className="text-sm text-green-800 font-medium mb-2">
+            SPEECH TRANSCRIPTION:
+          </div>
+          <div className="text-lg text-green-900 bg-white rounded p-2 border border-green-300">
+            {isPTTUserSpeaking 
+              ? (currentTranscriptionText || "🎤 LISTENING...") 
+              : (lastCapturedText || "Press mic button to speak")}
+          </div>
+          <div className="text-xs text-green-600 mt-2">
+            <div>PTT Active: {isPTTUserSpeaking.toString()}</div>
+            <div>Current: &quot;{currentTranscriptionText}&quot;</div>
+            <div>Last: &quot;{lastCapturedText}&quot;</div>
+            <div>Total transcripts: {transcriptItems.length}</div>
+            <div>User items only: {transcriptItems.filter(item => item.role === "user").slice(-2).map(item => item.title).filter(Boolean).join(" | ")}</div>
+          </div>
+        </div>
       </div>
 
       {/* Decorative elements */}

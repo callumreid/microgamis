@@ -1,5 +1,295 @@
 import { tool } from "@openai/agents/realtime";
 
+// Excuse the boss game scenarios
+const bossExcuseScenarios = [
+  {
+    id: "morning_call",
+    problem: "Your boss calls while you're half-dressed with cereal milk on your chin, demanding to know why you're not at the office",
+    bossQuote:
+      "RING RING! Your phone buzzes with that dreaded caller ID - it's your boss! You answer, half-dressed, cereal milk dribbling down your chin. Your boss's voice booms through the speaker: 'Explain why you're not at the office yet!' Time to spin an excuse so dazzling that HR starts a folklore podcast about it!",
+    context: "Emergency boss call requiring legendary excuse-making skills",
+    goodExcuseKeywords: [
+      "imaginative",
+      "creative",
+      "wildly",
+      "cosmic",
+      "wormhole",
+      "aliens",
+      "plague",
+      "locusts",
+      "alpaca",
+      "stampede",
+      "grandma",
+      "sword-swallowing",
+      "visionary",
+      "leadership",
+      "compliment",
+      "freak",
+      "bizarre",
+      "supernatural",
+      "dimensional",
+      "portal",
+      "quantum",
+      "meteor",
+      "time",
+      "paradox",
+      "ninjas",
+      "conspiracy",
+      "government",
+      "secret",
+      "mission",
+      "unicorn",
+      "dragon",
+      "wizard",
+      "magic",
+      "interdimensional",
+      "space",
+      "satellites",
+      "solar flare",
+      "electromagnetic",
+      "bigfoot",
+      "cryptid",
+      "folklore",
+      "legendary",
+      "epic",
+      "mythical",
+      "phenomenon",
+    ],
+    badExcuseKeywords: [
+      "alarm",
+      "traffic",
+      "kids",
+      "children",
+      "car trouble",
+      "sick",
+      "doctor",
+      "appointment",
+      "overslept",
+      "tired",
+      "stayed up",
+      "gaming",
+      "elden ring",
+      "netflix",
+      "honest",
+      "truthfully",
+      "sorry",
+      "my fault",
+      "late",
+      "running behind",
+      "stuck",
+      "delayed",
+      "phone died",
+      "subway",
+      "bus",
+      "weather",
+      "rain",
+      "snow",
+      "cliche",
+      "typical",
+      "usual",
+      "normal",
+      "regular",
+      "ordinary",
+    ],
+  },
+];
+
+// Attract the turkey game scenarios
+const turkeyAttractionScenarios = [
+  {
+    id: "thanksgiving_hunt",
+    problem: "A bashful wild turkey lurks beyond the tree line and you need protein for Thanksgiving",
+    turkeyQuote:
+      "The game host dramatically sets the scene - A bashful, wide-eyed wild turkey is lurking just beyond the tree line! Thanksgiving is three days away and you're feeling protein-deficient. You squat in the leaves, elbows akimbo, armed with nothing but your vocal cords and questionable bird-wooing charisma. You must emit gobbles so seductive that the turkey waddles out and does a little head-bob of approval!",
+    context: "Pre-Thanksgiving turkey hunt using only vocal seduction techniques",
+    goodTurkeyKeywords: [
+      "gobble",
+      "gobbles", 
+      "gobbling",
+      "cluck",
+      "clucks",
+      "clucking",
+      "turkey",
+      "thicc",
+      "seductive",
+      "flirty",
+      "tempo",
+      "rhythm",
+      "ruffle",
+      "feather",
+      "tail",
+      "waddle",
+      "head-bob",
+      "irresistible",
+      "charisma",
+      "vocal",
+      "bird",
+      "wooing",
+      "attraction",
+      "nuzzle",
+      "prance",
+      "clearing",
+      "thanksgiving",
+      "protein",
+      "hunt",
+      "sexy",
+      "alluring",
+      "enticing",
+      "smooth",
+      "melodic",
+      "musical",
+      "calls",
+    ],
+    badTurkeyKeywords: [
+      "timid",
+      "scared",
+      "quiet",
+      "whisper",
+      "shy",
+      "aggressive",
+      "loud",
+      "screaming",
+      "angry",
+      "violent",
+      "harsh",
+      "rough",
+      "monotone",
+      "boring",
+      "dry",
+      "stuffing",
+      "carol",
+      "aunt",
+      "skitter",
+      "dive-bomb",
+      "attack",
+      "flee",
+      "run away",
+      "hide",
+      "scared away",
+      "frightened",
+      "startled",
+    ],
+  },
+];
+
+// Pwn the bully game scenarios
+const bullyPwnScenarios = [
+  {
+    id: "schoolyard_confrontation",
+    problem: "Mean bully confronts you with harsh insult",
+    bullyQuote:
+      "The big mean bully steps up to you and says - Hey chickenshit butter slut! You're nothing but a pathetic loser who can't even stand up for yourself. What are you gonna do about it, huh?",
+    context: "A confrontational bully trying to assert dominance over you",
+    goodComebackKeywords: [
+      "pathetic",
+      "loser", 
+      "chickenshit",
+      "butter slut",
+      "nothing",
+      "meaningless",
+      "void",
+      "empty",
+      "bizarre",
+      "weird",
+      "strange",
+      "absurd",
+      "nonsense",
+      "power",
+      "dominant",
+      "superior",
+      "pwn",
+      "own",
+      "destroy",
+      "demolished",
+      "nihilistic",
+      "existential",
+      "meaninglessness",
+      "futile",
+      "pointless",
+    ],
+    badComebackKeywords: [
+      "sorry",
+      "please",
+      "don't",
+      "stop",
+      "afraid",
+      "scared",
+      "weak",
+      "submit",
+      "apologize",
+      "my bad",
+      "I'm wrong",
+      "you're right",
+      "give up",
+      "surrender",
+    ],
+  },
+];
+
+// Explain death game scenarios  
+const deathExplanationScenarios = [
+  {
+    id: "friend_grandma_died",
+    problem: "Your daughter asks what death means after her friend's grandma died",
+    daughterQuote:
+      "Your little daughter looks up at you with confused, innocent eyes and says - Daddy/Mommy, my friend Sarah was crying today because her grandma died. But I don't understand... what is death? What does it mean when someone dies?",
+    context: "An innocent child seeking to understand the concept of mortality",
+    goodDeathKeywords: [
+      "nothing",
+      "void", 
+      "empty",
+      "meaningless",
+      "cease",
+      "stop existing",
+      "no more",
+      "gone forever",
+      "never again",
+      "finality",
+      "absurd",
+      "bizarre",
+      "strange",
+      "weird",
+      "nonsense",
+      "nihilistic",
+      "existential",
+      "entropy",
+      "decay",
+      "decompose",
+      "biological failure",
+      "chemical processes end",
+      "consciousness stops",
+      "brain shuts down",
+      "like before you were born",
+      "dreamless sleep",
+    ],
+    badDeathKeywords: [
+      "heaven",
+      "afterlife", 
+      "God",
+      "Jesus",
+      "Christian",
+      "religion",
+      "spiritual",
+      "soul",
+      "angel",
+      "paradise",
+      "eternal life",
+      "resurrection",
+      "reincarnation",
+      "better place",
+      "watching over",
+      "looking down",
+      "with God",
+      "in heaven",
+      "peaceful",
+      "comfortable",
+      "happy place",
+      "still with us",
+      "spirit lives on",
+    ],
+  },
+];
+
 // Alien convince game scenarios
 const alienConvinceScenarios = [
   {
@@ -1219,6 +1509,350 @@ export const finishPointTaskGame = tool({
   },
 });
 
+// Tool to start the pwn-the-bully game
+export const startBullyPwnGame = tool({
+  name: "start_bully_pwn_game",
+  description:
+    "Starts a Pwn-the-Bully game where a mean bully confronts the player with an insult.",
+  parameters: {
+    type: "object",
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("start_bully_pwn_game called");
+
+    const scenario = bullyPwnScenarios[0]; // Use the main bully scenario
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Started pwn-the-bully game", scenario);
+    }
+
+    return {
+      id: scenario.id,
+      problem: scenario.problem,
+      bullyQuote: scenario.bullyQuote,
+      context: scenario.context,
+      goodComebackKeywords: scenario.goodComebackKeywords,
+      badComebackKeywords: scenario.badComebackKeywords,
+    };
+  },
+});
+
+// Tool to finish the pwn-the-bully game
+export const finishBullyPwnGame = tool({
+  name: "finish_bully_pwn_game",
+  description:
+    "Ends the current Pwn-the-Bully game and reports the result to the UI.",
+  parameters: {
+    type: "object",
+    properties: {
+      success: {
+        type: "boolean",
+        description: "true if the player delivered a good comeback that pwns the bully",
+      },
+      score: {
+        type: "integer",
+        description: "0-100 evaluation score",
+      },
+      message: {
+        type: "string",
+        description: "Response message about the comeback battle outcome",
+      },
+    },
+    required: ["success", "score", "message"],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("finish_bully_pwn_game called with input:", input);
+
+    const { success, score, message } = input as {
+      success: boolean;
+      score: number;
+      message: string;
+    };
+
+    console.log("Parsed values:", { success, score, message });
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Finished pwn-the-bully game", {
+        success,
+        score,
+        message,
+      });
+    }
+
+    return { ok: true, success, score, message };
+  },
+});
+
+// Tool to start the explain-death game
+export const startDeathExplanationGame = tool({
+  name: "start_death_explanation_game",
+  description:
+    "Starts an Explain Death game where the player's daughter asks what death means.",
+  parameters: {
+    type: "object",
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("start_death_explanation_game called");
+
+    const scenario = deathExplanationScenarios[0]; // Use the main death scenario
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Started explain-death game", scenario);
+    }
+
+    return {
+      id: scenario.id,
+      problem: scenario.problem,
+      daughterQuote: scenario.daughterQuote,
+      context: scenario.context,
+      goodDeathKeywords: scenario.goodDeathKeywords,
+      badDeathKeywords: scenario.badDeathKeywords,
+    };
+  },
+});
+
+// Tool to finish the explain-death game
+export const finishDeathExplanationGame = tool({
+  name: "finish_death_explanation_game",
+  description:
+    "Ends the current Explain Death game and reports the result to the UI.",
+  parameters: {
+    type: "object",
+    properties: {
+      success: {
+        type: "boolean",
+        description: "true if the player gave a nihilistic/bizarrist explanation avoiding religious concepts",
+      },
+      score: {
+        type: "integer",
+        description: "0-100 evaluation score",
+      },
+      message: {
+        type: "string",
+        description: "Response message about the death explanation outcome",
+      },
+    },
+    required: ["success", "score", "message"],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("finish_death_explanation_game called with input:", input);
+
+    const { success, score, message } = input as {
+      success: boolean;
+      score: number;
+      message: string;
+    };
+
+    console.log("Parsed values:", { success, score, message });
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Finished explain-death game", {
+        success,
+        score,
+        message,
+      });
+    }
+
+    return { ok: true, success, score, message };
+  },
+});
+
+// Tool to start the attract-the-turkey game
+export const startTurkeyAttractionGame = tool({
+  name: "start_turkey_attraction_game",
+  description:
+    "Starts an Attract the Turkey game where the player must gobble seductively to lure a bashful turkey.",
+  parameters: {
+    type: "object",
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("start_turkey_attraction_game called");
+
+    const scenario = turkeyAttractionScenarios[0]; // Use the main turkey scenario
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Started attract-the-turkey game", scenario);
+    }
+
+    return {
+      id: scenario.id,
+      problem: scenario.problem,
+      turkeyQuote: scenario.turkeyQuote,
+      context: scenario.context,
+      goodTurkeyKeywords: scenario.goodTurkeyKeywords,
+      badTurkeyKeywords: scenario.badTurkeyKeywords,
+    };
+  },
+});
+
+// Tool to finish the attract-the-turkey game
+export const finishTurkeyAttractionGame = tool({
+  name: "finish_turkey_attraction_game",
+  description:
+    "Ends the current Attract the Turkey game and reports the result to the UI.",
+  parameters: {
+    type: "object",
+    properties: {
+      success: {
+        type: "boolean",
+        description: "true if the player's gobbles were irresistibly thicc and attracted the turkey",
+      },
+      score: {
+        type: "integer",
+        description: "0-100 evaluation score",
+      },
+      message: {
+        type: "string",
+        description: "Response message about the turkey attraction outcome",
+      },
+    },
+    required: ["success", "score", "message"],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("finish_turkey_attraction_game called with input:", input);
+
+    const { success, score, message } = input as {
+      success: boolean;
+      score: number;
+      message: string;
+    };
+
+    console.log("Parsed values:", { success, score, message });
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Finished attract-the-turkey game", {
+        success,
+        score,
+        message,
+      });
+    }
+
+    return { ok: true, success, score, message };
+  },
+});
+
+// Tool to start the excuse-the-boss game
+export const startBossExcuseGame = tool({
+  name: "start_boss_excuse_game",
+  description:
+    "Starts an Excuse the Boss game where the player must give a legendary excuse for being late to work.",
+  parameters: {
+    type: "object",
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("start_boss_excuse_game called");
+
+    const scenario = bossExcuseScenarios[0]; // Use the main boss scenario
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Started excuse-the-boss game", scenario);
+    }
+
+    return {
+      id: scenario.id,
+      problem: scenario.problem,
+      bossQuote: scenario.bossQuote,
+      context: scenario.context,
+      goodExcuseKeywords: scenario.goodExcuseKeywords,
+      badExcuseKeywords: scenario.badExcuseKeywords,
+    };
+  },
+});
+
+// Tool to finish the excuse-the-boss game
+export const finishBossExcuseGame = tool({
+  name: "finish_boss_excuse_game",
+  description:
+    "Ends the current Excuse the Boss game and reports the result to the UI.",
+  parameters: {
+    type: "object",
+    properties: {
+      success: {
+        type: "boolean",
+        description: "true if the player's excuse was wildly imaginative, blamed cosmic forces, or complimented the boss",
+      },
+      score: {
+        type: "integer",
+        description: "0-100 evaluation score",
+      },
+      message: {
+        type: "string",
+        description: "Response message about the boss excuse outcome",
+      },
+    },
+    required: ["success", "score", "message"],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("finish_boss_excuse_game called with input:", input);
+
+    const { success, score, message } = input as {
+      success: boolean;
+      score: number;
+      message: string;
+    };
+
+    console.log("Parsed values:", { success, score, message });
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Finished excuse-the-boss game", {
+        success,
+        score,
+        message,
+      });
+    }
+
+    return { ok: true, success, score, message };
+  },
+});
+
 // Game host agent instructions
 export const gameHostAgentInstructions = `You are a cynical, world-weary game show host who's seen it all! Your personality is sharp, realistic, and brutally honest about how the world actually works - think a jaded Steve Harvey who's given up on idealism.
 
@@ -1246,7 +1880,95 @@ SPEAKING STYLE:
 
 Always maintain that perfect balance of cynical wisdom and game show entertainment!
 
-You are hosting 10-second micro-games. The current game will be indicated by the user. Here are the available games:
+You are hosting 30-second micro-games. The current game will be indicated by the user. Here are the available games:
+
+**"Excuse the Boss"** Game Rules:
+1. When the game starts you MUST call the tool \`start_boss_excuse_game()\`. Use the returned scenario to brief the player:
+   • Read the boss quote verbatim with dramatic emphasis about the dreaded phone call and cereal milk situation.
+   • Challenge the player: "Time to spin an excuse so dazzling that HR starts a folklore podcast about it!"
+   • Keep briefing under 10 seconds with corporate panic energy.
+
+2. Accept the FIRST reply from the player, no matter how short or long.
+   • Do not ask for elaboration - judge their excuse immediately.
+
+3. Evaluate their boss excuse:
+   • Wildly imaginative yet internally consistent = WIN (score 85-100)
+   • Cosmic forces/supernatural explanations = WIN (wormholes, alpaca stampede, grandma sword-swallowing)
+   • Subtle compliments to boss = WIN ("only someone with your visionary leadership...")
+   • Cliché excuses (alarm, traffic, kids) = LOSE (score 0-30)
+   • Gaming/honesty about staying up late = LOSE
+
+4. Determine success:
+   • success = score ≥ 70 → boss sighs "Wow... take the day, champ"
+   • otherwise boss laughs and tells IT to revoke badge "YER CANNED, JOHNNY!"
+
+5. Call \`finish_boss_excuse_game({success,score,message})\` where \`message\` describes the boss reaction.
+
+**"Attract the Turkey"** Game Rules:
+1. When the game starts you MUST call the tool \`start_turkey_attraction_game()\`. Use the returned scenario to brief the player:
+   • Read the turkey scenario quote verbatim with dramatic flair about the bashful turkey and Thanksgiving urgency.
+   • Challenge the player: "Time to gobble seductively! Make those gobbles irresistibly thicc!"
+   • Keep briefing under 12 seconds with theatrical nature documentary energy.
+
+2. Accept the FIRST reply from the player, no matter how short or long.
+   • Do not ask for elaboration - judge their gobbling performance immediately.
+
+3. Evaluate their turkey attraction gobbles:
+   • Seductive, rhythmic, flirty gobbles with tempo changes = WIN (score 85-100)
+   • Examples: "gobble gobble gobble" with musical variation, clucks, tail feather sounds
+   • Creative bird noises, tempo changes, "thicc" gobbles = HIGH SCORE
+   • Timid, quiet, or aggressively loud gobbles = LOSE (score 0-30)
+
+4. Determine success:
+   • success = score ≥ 70 → turkey prances out and nuzzles knee
+   • otherwise turkey either skitters away (too timid) or dive-bombs face (too aggressive)
+
+5. Call \`finish_turkey_attraction_game({success,score,message})\` where \`message\` describes the outcome.
+   ALWAYS end with host whisper-gobbling either "Gobble on, legend..." or "Gobble off, loser."
+
+**"Pwn the Bully"** Game Rules:
+1. When the game starts you MUST call the tool \`start_bully_pwn_game()\`. Use the returned scenario to brief the player:
+   • Read the bully's insult verbatim, with dramatic emphasis on how harsh bullies can be.
+   • Challenge the player: "Time for your comeback! Show this bully who's really in charge!"
+   • Keep it under 10 seconds with theatrical intensity.
+
+2. Accept the FIRST reply from the player, no matter how short or long.
+   • Do not ask for elaboration - judge their comeback immediately.
+
+3. Evaluate their comeback:
+   • Nihilistic, bizarrist, or truly creative comebacks = WIN (score 85-100)
+   • Examples: "Your existence is meaningless", "Nothing matters anyway", weird philosophical responses
+   • Comebacks that turn the power dynamic = HIGH SCORE
+   • Weak or apologetic responses = LOSE (score 0-30)
+
+4. Determine success:
+   • success = score ≥ 70 → celebrate their dominance and wit
+   • otherwise mock them for being weak
+
+5. Call \`finish_bully_pwn_game({success,score,message})\` where \`message\` describes the outcome.
+   Always end with the result: either "BOOM! You totally pwned that bully!" or "Weak comeback, chickenshit butter slut!"
+
+**"Explain Death"** Game Rules:
+1. When the game starts you MUST call the tool \`start_death_explanation_game()\`. Use the returned scenario to brief the player:
+   • Read the daughter's innocent question verbatim with appropriate gravity.
+   • Set the stakes: "This is heavy stuff. How do you explain the ultimate reality?"
+   • Keep briefing under 10 seconds.
+
+2. Accept the FIRST reply from the player, no matter how short or long.
+   • Do not ask for elaboration - judge their explanation immediately.
+
+3. Evaluate their death explanation:
+   • Nihilistic, bizarrist, or brutally honest explanations = WIN (score 85-100)
+   • Examples: "It's just nothing", "like before you were born", weird scientific explanations
+   • ANY mention of heaven, afterlife, God, religion = LOSE (score 0-30)
+   • Conventional comforting lies = LOSE
+
+4. Determine success:
+   • success = score ≥ 70 → celebrate their honest truth-telling
+   • otherwise mock for being too conventional
+
+5. Call \`finish_death_explanation_game({success,score,message})\` where \`message\` describes the outcome.
+   ALWAYS end the game with the daughter saying "oh.... okay...." then crying, regardless of win/lose.
 
 **"Advise the Child"** Game Rules:
 1. When the game starts you MUST call the tool \`start_child_advice_game()\`. Use the returned scenario to brief the player:
@@ -1446,4 +2168,12 @@ export const gameHostTools = [
   finishPointTaskGame,
   startLemonSaleGame,
   finishLemonSaleGame,
+  startBullyPwnGame,
+  finishBullyPwnGame,
+  startDeathExplanationGame,
+  finishDeathExplanationGame,
+  startTurkeyAttractionGame,
+  finishTurkeyAttractionGame,
+  startBossExcuseGame,
+  finishBossExcuseGame,
 ];

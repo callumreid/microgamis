@@ -141,6 +141,126 @@
 - `src/app/hooks/useGameAgent.ts` - Added alien game type and logic
 - `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added alien scenarios and tools
 
+### Recent Changes - 2025-07-08 (Fourth Game Implementation)
+
+#### Added
+- **New Game: "Pwn the Bully"**: Social confrontation micro game with comeback mechanics
+  - Mean bully calls player a "chickenshit butter slut" and player must deliver perfect comeback
+  - Social combat themed UI with red/orange/yellow gradient and confrontation emojis (💪, 😤, 🔥, 💥)
+  - Win condition: Deliver comeback that totally pwns the bully and regains player power
+  - Lose condition: Weak comeback results in bully maintaining dominance (and calling player "chickenshit butter slut")
+  - 10-second timer focusing on quick wit and verbal combat skills
+
+#### Enhanced
+- **Game Registry**: Added "pwn-the-bully" as first game in play sequence
+  - Positioned at top of `implementedGames` registry for immediate testing
+  - Added to `implementedGameMetadata` array as first option
+  - Game now plays first when randomly selected or during testing
+
+#### Technical Implementation Details
+- **Game Theme**: Social confrontation with comeback battle mechanics
+- **UI Design**: Aggressive color scheme (red to orange to yellow gradient) with confrontation emojis
+- **Voice Integration**: 8-second delay for bully insult, then 10-second player comeback window
+- **Scoring Logic**: Success based on comeback quality that "pwns" the bully
+- **Agent Integration**: Uses "pwn-the-bully" game type with appropriate scenarios
+
+#### Files Modified
+- `games-orchard/pwn-the-bully/` - New game directory with complete implementation
+- `games-orchard/index.ts` - Added bully game to registry as first game
+
+### Recent Changes - 2025-07-08 (Fifth Game Implementation)
+
+#### Added
+- **New Game: "Explain Death"**: Existential family conversation micro game
+  - Your daughter asks "what is death?" after her friend's grandma died
+  - Must provide satisfactory explanation to help her understand death
+  - Win condition: Nihilistic or bizarrist approaches that avoid religious explanations
+  - Lose condition: Mentioning Christian afterlife, heaven, or conventional religious responses
+  - Game always ends with daughter saying "oh.... okay...." then crying
+  - 15-second timer for thoughtful but concise explanations
+
+#### Enhanced
+- **Game Registry**: Added "explain-death" as second game in play sequence
+  - Positioned after "pwn-the-bully" in registry for testing order
+  - Added to `implementedGames` registry and metadata arrays
+  - Dark existential theme with family conversation mechanics
+
+#### Technical Implementation Details
+- **Game Theme**: Parent-child conversation about mortality and existence
+- **UI Design**: Somber gray gradient with thoughtful emojis (💭, ⚰️, 👧, 🖤)
+- **Voice Integration**: 8-second delay for daughter's question, then 15-second explanation window
+- **Scoring Logic**: Rewards honest, nihilistic, or bizarrist explanations over religious comfort
+- **Agent Integration**: Uses "explain-death" game type with daughter quote scenarios
+
+#### Files Modified
+- `games-orchard/explain-death/` - New game directory with complete implementation
+- `games-orchard/index.ts` - Added death explanation game to registry
+- `src/app/hooks/useGameAgent.ts` - Added explain-death game type and daughter quote field
+
+### Recent Changes - 2025-07-08 (Sixth Game Implementation)
+
+#### Added
+- **New Game: "Attract the Turkey"**: Thanksgiving-themed vocal seduction micro game
+  - Player squats in leaves and must gobble seductively to lure a bashful wild turkey
+  - Thanksgiving urgency: only 3 days left and player needs protein
+  - Win condition: "Irresistibly thicc" gobbles with tempo changes, flirty clucks, tail-feather sounds
+  - Win outcome: Turkey prances out and nuzzles player's knee
+  - Lose conditions: Too timid (turkey skitters away, "dryer than aunt Carol's stuffing") or too aggressive (turkey dive-bombs face)
+  - Always ends with host whisper-gobbling "Gobble on, legend..." or "Gobble off, loser"
+  - 30-second timer for seductive gobbling performances
+
+#### Enhanced
+- **Game Registry**: Added "attract-the-turkey" as the FIRST game in play sequence
+  - Positioned at top of both `implementedGames` registry and metadata arrays
+  - Now plays first when randomly selected or during testing
+  - Thanksgiving entertainment theme with turkey vocal attraction mechanics
+
+#### Technical Implementation Details
+- **Game Theme**: Pre-Thanksgiving turkey hunt using only vocal seduction techniques
+- **UI Design**: Autumn/Thanksgiving theme with amber/orange/yellow gradient and turkey emojis (🦃, 🍂, 🌾, 🥧)
+- **Voice Integration**: 12-second delay for turkey scenario setup, then 30-second gobbling window
+- **Scoring Logic**: Rewards creative, rhythmic, seductive gobbles with tempo variation
+- **Agent Integration**: Uses "attract-the-turkey" game type with turkey quote scenarios
+- **Keywords**: Comprehensive good/bad turkey keywords for gobbling evaluation
+
+#### Files Modified
+- `games-orchard/attract-the-turkey/` - New game directory with complete implementation
+- `games-orchard/index.ts` - Added turkey game to registry as first game
+- `src/app/hooks/useGameAgent.ts` - Added attract-the-turkey game type and turkey quote field
+- `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added turkey scenarios, tools, and game rules
+
+### Recent Changes - 2025-07-08 (Seventh Game Implementation)
+
+#### Added
+- **New Game: "Excuse the Boss"**: Corporate emergency call micro game with legendary excuse-making
+  - RING RING! Boss calls while you're half-dressed with cereal milk dribbling down your chin
+  - Boss demands: "Explain why you're not at the office yet!" - you must spin a dazzling excuse
+  - Win conditions: 1) Wildly imaginative yet internally consistent, 2) Blame cosmic forces (wormholes, alpaca stampede, grandma's sword-swallowing), 3) Subtle boss compliments
+  - Win outcome: Boss sighs "Wow... take the day, champ" - HR starts folklore podcast
+  - Lose conditions: Cliché excuses (alarm, traffic), mention kids, gaming honesty ("stayed up till 4am grinding Elden Ring")
+  - Lose outcome: Boss laughs, tells IT to revoke badge - "YER CANNED, JOHNNY!"
+  - 30-second timer for corporate crisis management
+
+#### Enhanced
+- **Game Registry**: Added "excuse-the-boss" as the NEW FIRST game in play sequence
+  - Now positioned at top of both `implementedGames` registry and metadata arrays
+  - Replaces turkey game as the first to play when randomly selected or testing
+  - Corporate comedy theme with boss call crisis mechanics
+
+#### Technical Implementation Details
+- **Game Theme**: Emergency boss call requiring legendary excuse-making skills to avoid termination
+- **UI Design**: Corporate theme with blue/indigo/purple gradient and office panic emojis (📞, 💼, 🥛, 😰)
+- **Voice Integration**: 10-second delay for boss demand, then 30-second excuse-crafting window
+- **Scoring Logic**: Rewards creativity, cosmic blame-shifting, and strategic boss flattery
+- **Agent Integration**: Uses "excuse-the-boss" game type with boss quote scenarios
+- **Keywords**: Comprehensive good/bad excuse keywords focusing on imagination vs clichés
+
+#### Files Modified
+- `games-orchard/excuse-the-boss/` - New game directory with complete implementation
+- `games-orchard/index.ts` - Added boss excuse game to registry as new first game
+- `src/app/hooks/useGameAgent.ts` - Added excuse-the-boss game type and boss quote field
+- `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added boss excuse scenarios, tools, and game rules
+
 ## Instructions for Future AI Agents
 
 When working on this codebase:

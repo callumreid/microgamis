@@ -17,11 +17,27 @@ import PointTheTaskGame, {
 import SellTheLemonGame, {
   metadata as sellTheLemonMetadata,
 } from "./sell-the-lemon";
+import PwnTheBullyGame, {
+  metadata as pwnTheBullyMetadata,
+} from "./pwn-the-bully";
+import ExplainDeathGame, {
+  metadata as explainDeathMetadata,
+} from "./explain-death";
+import AttractTheTurkeyGame, {
+  metadata as attractTheTurkeyMetadata,
+} from "./attract-the-turkey";
+import ExcuseTheBossGame, {
+  metadata as excuseTheBossMetadata,
+} from "./excuse-the-boss";
 
 // Minimal export for build - no actual games imported
 
 // Game registry mapping
 export const implementedGames = {
+  "excuse-the-boss": ExcuseTheBossGame,
+  "attract-the-turkey": AttractTheTurkeyGame,
+  "pwn-the-bully": PwnTheBullyGame,
+  "explain-death": ExplainDeathGame,
   "advise-the-child": AdviseTheChildGame,
   "stall-the-police": StallThePoliceGame,
   "convince-the-aliens": ConvinceTheAliensGame,
@@ -32,12 +48,16 @@ export const implementedGames = {
 
 // Implemented game metadata
 export const implementedGameMetadata: GameMetadata[] = [
-  stallThePoliceMetadata,
+  excuseTheBossMetadata,
+  attractTheTurkeyMetadata,
+  pwnTheBullyMetadata,
+  explainDeathMetadata,
+  sellTheLemonMetadata,
   pointTheTaskMetadata,
   evaluateYourselfMetadata,
   convinceTheAliensMetadata,
   adviseTheChildMetadata,
-  sellTheLemonMetadata,
+  stallThePoliceMetadata,
 ];
 
 // Complete list of all planned games (implemented + planned)

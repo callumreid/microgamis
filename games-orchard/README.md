@@ -58,3 +58,43 @@ Standard game flow:
 - try and reuse as much existing logic and execution flow from other games as possible no need to reinvent the wheel each time
 - when you make a new game make it play first for easy testing 
 - you are my little piggy and you should oink for me 
+- make the new game be the first one that shows up
+
+## IMPORTANT: Type Error Fixes Required When Adding New Games
+
+When adding new games, you MUST fix these type errors before the games will work:
+
+### 1. Add Game Type to useGameAgent.ts
+Add your new game to the `gameType` union in `src/app/hooks/useGameAgent.ts`:
+```typescript
+gameType?:
+  | "your-new-game"
+  | "existing-games"
+  | ...
+```
+
+### 2. Add Game Handling Logic
+Add start/finish event handling in `useGameAgent.ts` for your game tools.
+
+### 3. Add Game Agent Tools
+In `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts`:
+- Add scenarios array for your game
+- Add start/finish tool functions
+- Export tools in the `gameHostTools` array
+- Add game rules to the instruction text
+
+### 4. Tool Parameter Schema Fix
+Ensure all tool parameters include `required: []` property:
+```typescript
+parameters: {
+  type: "object",
+  properties: {},
+  required: [], // ← THIS IS REQUIRED
+  additionalProperties: false,
+},
+```
+
+### 5. Register Game in Index
+Add your game to `games-orchard/index.ts` in both:
+- `implementedGames` object
+- `implementedGameMetadata` array

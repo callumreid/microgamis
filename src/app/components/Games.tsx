@@ -22,7 +22,6 @@ export default function Games() {
   const [GameComponent, setGameComponent] =
     useState<React.ComponentType<any> | null>(null);
 
-
   // PTT state
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState<boolean>(false);
   const mKeyPressedRef = useRef(false);
@@ -146,8 +145,6 @@ export default function Games() {
     }
   };
 
-
-
   const handleBackToLanding = () => {
     setGameState("landing");
     // Keep the selected game but don't reset it
@@ -226,7 +223,6 @@ export default function Games() {
             <p className="text-lg opacity-90 mb-4">
               {selectedGame.description}
             </p>
-            
           </div>
         )}
 
@@ -249,10 +245,8 @@ export default function Games() {
                 <div className="text-sm text-white opacity-75 mb-2">
                   Hold to talk to AI Game Host
                 </div>
-               
               </div>
 
-             
               <button
                 onClick={handleVisitOrchard}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-lg font-bold text-xl transition-colors transform hover:scale-105"
@@ -274,23 +268,21 @@ export default function Games() {
     <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-green-600 to-teal-600 text-white">
       <h2 className="text-4xl font-bold mb-8">Spinning...</h2>
       <div className="relative">
-
         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2">
           <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-transparent border-b-red-500"></div>
         </div>
       </div>
-     
     </div>
   );
 
   const renderOrchard = () => (
     <div className="h-full bg-gradient-to-br from-orange-600 to-amber-600 text-white p-8 overflow-y-auto">
-      <button
+      {/* <button
         onClick={handleBackToLanding}
         className="absolute top-4 left-4 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg font-medium transition-colors z-10"
       >
         ← Back to Games
-      </button>
+      </button> */}
 
       <div className="text-center mb-8 pt-16">
         <h1 className="text-6xl font-bold mb-4">🌳 The Orchard 🌳</h1>
@@ -355,12 +347,12 @@ export default function Games() {
 
   const renderGamePlay = () => (
     <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-red-600 to-pink-600 text-white p-8">
-      <button
+      {/* <button
         onClick={handleBackToLanding}
         className="absolute top-4 left-4 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg font-medium transition-colors"
       >
         ← Back to Games
-      </button>
+      </button> */}
 
       {selectedGame && (
         <div className="w-full h-full">

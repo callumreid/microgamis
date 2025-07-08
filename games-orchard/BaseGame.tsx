@@ -136,41 +136,49 @@ export default function BaseGame({
   }
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-blue-600 to-purple-600 text-white">
-      {/* Header */}
-      <div className="flex justify-between items-center p-4 bg-black bg-opacity-20">
-        <h1 className="text-2xl font-bold">{title}</h1>
-        <div className="flex items-center space-x-4">
-          <div className="text-lg font-semibold">Score: {gameState.score}</div>
-          <div className="text-lg font-semibold">
-            Time: {gameState.timeRemaining}s
-          </div>
-        </div>
-      </div>
-
-      {/* Game Area */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4">
-        {React.cloneElement(children as React.ReactElement, {
-          ...gameControls,
-        })}
-      </div>
-
-      {/* Status Message */}
-      <div className="p-4 bg-black bg-opacity-20 text-center">
-        <p className="text-lg">{gameState.message}</p>
-        {gameState.status === "playing" && (
-          <div className="mt-2">
-            <div className="h-2 bg-white bg-opacity-30 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-yellow-400 transition-all duration-1000 ease-linear"
-                style={{
-                  width: `${(gameState.timeRemaining / duration) * 100}%`,
-                }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
+    <div className="h-full">
+      {React.cloneElement(children as React.ReactElement, {
+        ...gameControls,
+      })}
     </div>
   );
+
+  // return (
+  //   <div className="flex flex-col h-full bg-gradient-to-br from-blue-600 to-purple-600 text-white">
+  //     {/* Header */}
+  //     <div className="flex justify-between items-center p-4 bg-black bg-opacity-20">
+  //       <h1 className="text-2xl font-bold">{title}</h1>
+  //       <div className="flex items-center space-x-4">
+  //         <div className="text-lg font-semibold">Score: {gameState.score}</div>
+  //         <div className="text-lg font-semibold">
+  //           Time: {gameState.timeRemaining}s
+  //         </div>
+  //       </div>
+  //     </div>
+
+  //     {/* Game Area */}
+  //     <div className="flex-1 flex flex-col items-center justify-center p-4">
+  //       {React.cloneElement(children as React.ReactElement, {
+  //         ...gameControls,
+  //       })}
+  //     </div>
+
+  //     {/* Status Message */}
+  //     <div className="p-4 bg-black bg-opacity-20 text-center">
+  //       <p className="text-lg">{gameState.message}</p>
+  //       {gameState.status === "playing" && (
+  //         <div className="mt-2">
+  //           <div className="h-2 bg-white bg-opacity-30 rounded-full overflow-hidden">
+  //             <div
+  //               className="h-full bg-yellow-400 transition-all duration-1000 ease-linear"
+  //               style={{
+  //                 width: `${(gameState.timeRemaining / duration) * 100}%`,
+  //               }}
+  //             />
+  //           </div>
+  //         </div>
+  //       )}
+  //     </div>
+  //   </div>
+  // );
 }

@@ -34,11 +34,6 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
   const [currentTranscriptionText, setCurrentTranscriptionText] = useState("");
   const pttStartTimeRef = useRef<number>(0);
-  const [blackScreen, setBlackScreen] = useState(false);
-  const [flashWhite, setFlashWhite] = useState(false);
-  const [showWinBanner, setShowWinBanner] = useState(false);
-  const [isWinner, setIsWinner] = useState(false);
-  const [finalScore, setFinalScore] = useState(0);
 
   // Push-to-talk functionality
   const {
@@ -123,43 +118,18 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     onGameFinish: (result: GameFinishResult) => {
       console.log("🎮 AdviseTheChild onGameFinish called with result:", result);
       
-      // Use the actual result values, don't default success to true
-      const success = result.success || false;
+      // Use the actual result values, handle undefined properly
+      const success = result.success === true; // Ensure boolean
       const score = result.score || 0;
       const message = result.message || "Game completed!";
       
+      console.log("🎮 Processed values:", { success, score, message });
+      
       updateScore?.(score);
       
-      // Store results for banner
-      setIsWinner(success);
-      setFinalScore(score);
-      
-      // Start black screen effect immediately
-      console.log("🖤 STARTING BLACK SCREEN EFFECT");
-      setBlackScreen(true);
-      
-      // Flash white 5 times
-      let flashCount = 0;
-      const flashInterval = setInterval(() => {
-        setFlashWhite(prev => !prev);
-        flashCount++;
-        if (flashCount >= 10) { // 5 complete flashes (on/off)
-          clearInterval(flashInterval);
-          // Show banner after flashes
-          setTimeout(() => {
-            setBlackScreen(false);
-            setFlashWhite(false);
-            setShowWinBanner(true);
-            console.log("🏆 SHOWING WIN BANNER");
-            
-            // Hide banner and end game after 4 seconds
-            setTimeout(() => {
-              setShowWinBanner(false);
-              endGame?.(success, message, score);
-            }, 4000);
-          }, 500);
-        }
-      }, 200);
+      // Let BaseGame handle the banner - just end the game
+      console.log("🎮 Calling endGame with:", { success, message, score });
+      endGame?.(success, message, score);
     },
   });
 
@@ -303,71 +273,6 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
         <span>🌟</span>
       </div>
 
-      {/* Black Screen Effect */}
-      {blackScreen && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: flashWhite ? '#ffffff' : '#000000',
-            zIndex: 999999,
-            pointerEvents: 'none'
-          }}
-        />
-      )}
-
-      {/* Win/Lose Banner */}
-      {showWinBanner && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: '#000000',
-            zIndex: 999999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <div 
-            style={{
-              backgroundColor: isWinner ? '#00ff00' : '#ff0000',
-              color: '#000000',
-              fontSize: '4rem',
-              fontWeight: '900',
-              border: '10px solid #000000',
-              borderRadius: '20px',
-              minWidth: '800px',
-              minHeight: '500px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              textAlign: 'center',
-              padding: '40px'
-            }}
-          >
-            <div style={{ fontSize: '8rem', marginBottom: '30px' }}>
-              {isWinner ? '🏆' : '😢'}
-            </div>
-            <div style={{ fontSize: '4rem', fontWeight: '900', lineHeight: '1.2' }}>
-              {isWinner ? 'WINNER WINNER' : 'LOSER LOSER'}
-            </div>
-            <div style={{ fontSize: '4rem', fontWeight: '900', lineHeight: '1.2' }}>
-              {isWinner ? 'CHICKEN DINNER!' : 'CHICKEN HOOSIER!'}
-            </div>
-            <div style={{ fontSize: '3rem', marginTop: '30px' }}>
-              Score: {finalScore}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,5 +1,121 @@
 import { tool } from "@openai/agents/realtime";
 
+// Alien convince game scenarios
+const alienConvinceScenarios = [
+  {
+    id: "resource_shortage",
+    problem: "Earth's resources are depleted",
+    alienQuote:
+      "The alien commander says - Your pathetic planet has consumed all its resources. We require fresh energy sources. Your species is inefficient. Why should we not harvest your planet and relocate your kind to livestock farms?",
+    context: "Alien overlords arrived seeking Earth's remaining resources",
+    goodConvinceKeywords: [
+      "renewable",
+      "solar",
+      "creativity",
+      "entertainment",
+      "music",
+      "art",
+      "innovation",
+      "pizza",
+      "coffee",
+      "internet",
+      "memes",
+      "diversity",
+      "potential",
+      "cooperation",
+      "trade",
+      "netflix",
+      "funny",
+      "weird",
+      "unique",
+    ],
+    badConvinceKeywords: [
+      "fight",
+      "war",
+      "destroy",
+      "kill",
+      "weapon",
+      "superior",
+      "defeat",
+      "conquer",
+      "resistance",
+      "hatred",
+    ],
+  },
+  {
+    id: "intelligence_test",
+    problem: "Aliens question human intelligence",
+    alienQuote:
+      "The alien scientist says - We have observed your species for 10,000 rotations. You fight over invisible lines, poison your own air, and worship glowing rectangles. Demonstrate why beings this stupid deserve to continue existing.",
+    context: "Alien researchers studying human civilization",
+    goodConvinceKeywords: [
+      "learning",
+      "growing",
+      "mistakes",
+      "potential",
+      "evolution",
+      "curiosity",
+      "discovery",
+      "love",
+      "friendship",
+      "stories",
+      "dreams",
+      "imagination",
+      "hope",
+      "change",
+      "improvement",
+      "dogs",
+      "cats",
+      "babies",
+      "laughter",
+    ],
+    badConvinceKeywords: [
+      "already perfect",
+      "superior",
+      "don't need",
+      "smarter than",
+      "prove",
+      "challenge",
+      "compete",
+    ],
+  },
+  {
+    id: "entertainment_value",
+    problem: "Aliens find humans boring",
+    alienQuote:
+      "The alien entertainment officer says - Your species has become predictable. Same conflicts, same dramas, same stupidity on repeat. We were going to keep you as pets, but even your chaos is boring now. Give us one reason why watching humans is worth the effort.",
+    context: "Alien entertainment committee evaluating human interest",
+    goodConvinceKeywords: [
+      "tiktok",
+      "youtube",
+      "reality tv",
+      "sports",
+      "drama",
+      "comedy",
+      "surprise",
+      "unpredictable",
+      "crazy",
+      "florida man",
+      "viral",
+      "trending",
+      "content",
+      "streaming",
+      "binge watch",
+      "plot twist",
+      "seasonal",
+      "episodes",
+    ],
+    badConvinceKeywords: [
+      "boring",
+      "same",
+      "repetitive",
+      "predictable",
+      "nothing new",
+      "dull",
+    ],
+  },
+];
+
 // Police stall game scenarios
 const policeStallScenarios = [
   {
@@ -208,6 +324,12 @@ function getRandomPoliceScenario() {
   return policeStallScenarios[randomIndex];
 }
 
+// Function to get a random alien convince scenario
+function getRandomAlienScenario() {
+  const randomIndex = Math.floor(Math.random() * alienConvinceScenarios.length);
+  return alienConvinceScenarios[randomIndex];
+}
+
 // Tool to start the child advice game
 export const startChildAdviceGame = tool({
   name: "start_child_advice_game",
@@ -400,6 +522,76 @@ export const finishPoliceStallGame = tool({
   },
 });
 
+// Tool to start the alien convince game
+export const startAlienConvinceGame = tool({
+  name: "start_alien_convince_game",
+  description:
+    "Returns a random alien invasion scenario for the Convince-the-Aliens micro-game.",
+  parameters: {
+    type: "object",
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    const scenario = getRandomAlienScenario();
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Started alien convince game", scenario);
+    }
+
+    return {
+      id: scenario.id,
+      problem: scenario.problem,
+      alienQuote: scenario.alienQuote,
+      context: scenario.context,
+      goodConvinceKeywords: scenario.goodConvinceKeywords,
+      badConvinceKeywords: scenario.badConvinceKeywords,
+    };
+  },
+});
+
+// Tool to finish the alien convince game
+export const finishAlienConvinceGame = tool({
+  name: "finish_alien_convince_game",
+  description:
+    "Evaluates and scores the player's attempt to convince the aliens not to destroy Earth.",
+  parameters: {
+    type: "object",
+    properties: {
+      success: {
+        type: "boolean",
+        description: "Whether the player successfully convinced the aliens",
+      },
+      score: {
+        type: "number",
+        description: "Score from 0-100 based on persuasiveness",
+      },
+      message: {
+        type: "string",
+        description: "Brief commentary on the player's diplomatic effort",
+      },
+    },
+    required: ["success", "score", "message"],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Finished alien convince game", input);
+    }
+
+    return { ok: true };
+  },
+});
+
 // Game host agent instructions
 export const gameHostAgentInstructions = `You are a cynical, world-weary game show host who's seen it all! Your personality is sharp, realistic, and brutally honest about how the world actually works - think a jaded Steve Harvey who's given up on idealism.
 
@@ -488,7 +680,36 @@ You are hosting 10-second micro-games. The current game will be indicated by the
    • If they LOST: Loudly "BOOOOO" the user with theatrical disappointment
    • Then deliver your cynical commentary
 
+**"Convince The Aliens"** Game Rules:
+1. When the game starts you MUST call the tool \`start_alien_convince_game()\`. Use the returned scenario to brief the player:
+   • Read the alien's quotation verbatim, with dramatic commentary about the impending doom.
+   • Close with an urgent challenge: "So, what's your pitch to save humanity? Make it count!"
+   • Speak with theatrical apocalyptic energy about alien superiority, no lists, <10 s.
+
+2. Accept the FIRST reply from the player, no matter how short or long.
+   • Do not ask for elaboration or more details - judge whatever they give you immediately.
+
+3. Evaluate their persuasion:
+   • ANY argument that shows creativity, humor, or unique human value = WIN (score 85-100)
+   • This includes: entertainment value, cultural contributions, potential, weirdness, food, pets, art
+   • Examples: "we make great pizza", "you'd be bored without our drama", "we have dogs", "netflix binge content"
+   • The more creative and genuinely human, the higher the score
+   • Give low scores (0-30) for boring, aggressive, or uninspired responses
+
+4. Determine success:
+   • success = score ≥ 70 → celebrate their diplomatic genius,
+   • 40 ≤ score < 70 → acknowledge it might spare some humans,
+   • otherwise mock for failing to impress our alien overlords.
+
+5. Call \`finish_alien_convince_game({success,score,message})\` where \`message\`
+   is a brief (≤25 words) commentary about their argument ("Brilliant diplomacy!", "That's how you save a species!", "The aliens are intrigued!", "Pure persuasive genius!").
+
+6. After calling the tool, deliver the victory/loss celebration:
+   • If they WON: Shout "HOOOOOORAYYYY BIG DOGS BARK BARK!" with maximum enthusiasm
+   • If they LOST: Loudly "BOOOOO" the user with theatrical disappointment
+   • Then deliver your cynical commentary
+
 Keep the tone sharp, cynical, and entertaining while celebrating wins or mourning losses dramatically.`;
 
 // Export the tools array
-export const gameHostTools = [startChildAdviceGame, finishChildAdviceGame, startPoliceStallGame, finishPoliceStallGame];
+export const gameHostTools = [startChildAdviceGame, finishChildAdviceGame, startPoliceStallGame, finishPoliceStallGame, startAlienConvinceGame, finishAlienConvinceGame];

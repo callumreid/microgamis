@@ -21,7 +21,7 @@ interface GameControlProps {
   playSound?: (soundId: string) => void;
 }
 
-function StallThePoliceGame(props: Partial<GameControlProps>) {
+function ConvinceTheAliensGame(props: Partial<GameControlProps>) {
   const {
     endGame,
     updateMessage,
@@ -46,7 +46,7 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
 
   // Real-time transcription display
   const { transcriptItems } = useTranscript();
-  
+
   // Monitor transcription items - only capture user speech during PTT
   useEffect(() => {
     if (!isPTTUserSpeaking) {
@@ -55,11 +55,12 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
 
     // Find items that appeared since PTT started AND are marked as user role
     const userItemsSincePTT = transcriptItems
-      .filter(item => 
-        item.title && 
-        item.title.trim() !== "" &&
-        item.role === "user" &&
-        item.createdAtMs > pttStartTimeRef.current
+      .filter(
+        (item) =>
+          item.title &&
+          item.title.trim() !== "" &&
+          item.role === "user" &&
+          item.createdAtMs > pttStartTimeRef.current
       )
       .sort((a, b) => b.createdAtMs - a.createdAtMs);
 
@@ -98,26 +99,29 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
     sendPlayerText: _sendAgentText,
     isGameActive: _isGameActive,
   } = useGameAgent({
-    gameType: "stall-the-police",
+    gameType: "convince-the-aliens",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
       updateMessage?.(
-        "The police officer is at your door! Listen carefully and convince them to leave!"
+        "The alien overlords have arrived! Listen to their demands and convince them not to destroy Earth!"
       );
 
       // Start timer after host finishes speaking (estimated 8 seconds for host to speak)
       setTimeout(() => {
         setHostFinishedSpeaking(true);
         startTimer?.();
+        updateMessage?.(
+          "Quick! You have 30 seconds to save humanity with your words!"
+        );
       }, 8000);
     },
     onGameFinish: (result: GameFinishResult) => {
-      console.log("🎮 StallThePolice onGameFinish called with result:", result);
+      console.log("🎮 ConvinceTheAliens onGameFinish called with result:", result);
       
       // Use the actual result values, handle undefined properly
       const success = result.success === true; // Ensure boolean
       const score = result.score || 0;
-      const message = result.message || "Game completed!";
+      const message = result.message || "The aliens have made their decision!";
       
       console.log("🎮 Processed values:", { success, score, message });
       
@@ -132,7 +136,7 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
   // Start the game when component mounts (user has already clicked START GAME)
   useEffect(() => {
     updateMessage?.(
-      "Welcome to Stall the Police! The AI police officer is preparing to knock on your door..."
+      "Welcome to Convince The Aliens! Alien ships are approaching Earth..."
     );
 
     // Start the game after a brief delay
@@ -153,7 +157,13 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
     setCurrentTranscriptionText(""); // Clear previous text
     await pushToTalkStartNative();
     console.log("PTT started at:", pttStartTimeRef.current);
-  }, [sessionStatus, isWebRTCReady, isPTTUserSpeaking, interrupt, pushToTalkStartNative]);
+  }, [
+    sessionStatus,
+    isWebRTCReady,
+    isPTTUserSpeaking,
+    interrupt,
+    pushToTalkStartNative,
+  ]);
 
   const handleTalkButtonUp = useCallback(async () => {
     if (sessionStatus !== "CONNECTED" || !isPTTUserSpeaking) return;
@@ -169,30 +179,31 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
   ]);
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-red-900 via-gray-800 to-black">
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mt-16">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-purple-900 via-indigo-900 to-black">
+      <div className="bg-gray-900 border-4 border-green-400 rounded-lg shadow-2xl p-6 max-w-4xl w-full mt-16">
         <div className="flex justify-between items-center">
-          <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
-            Score: {gameState?.score || 0}
+          <div className="text-lg font-semibold text-green-400 p-3 bg-black rounded-lg border border-green-400">
+            Human Score: {gameState?.score || 0}
           </div>
-          <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-            🚔 Stall The Police
+          <h2 className="text-2xl font-bold mb-4 text-center text-green-400">
+            👽 Convince The Aliens 🛸
           </h2>
-          <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
+          <div className="text-lg font-semibold text-green-400 p-3 bg-black rounded-lg border border-green-400">
             Time: {gameState?.timeRemaining || 30}s
           </div>
         </div>
+        
         {/* Speech Bubble - Centered and Prominent */}
-        <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 mb-4 min-h-[200px] flex flex-col justify-center">
+        <div className="bg-black border-2 border-green-400 rounded-lg p-6 mb-4 min-h-[200px] flex flex-col justify-center">
           {/* Host Speech Bubble */}
           {latestHost && (
             <div className="mb-4">
               <div className="flex justify-start">
-                <div className="bg-red-100 border-2 border-red-300 rounded-2xl rounded-bl-none p-4 max-w-md text-black">
-                  <div className="text-sm text-red-800 font-medium mb-1">
-                    🚔 Officer:
+                <div className="bg-purple-900 border-2 border-purple-400 rounded-2xl rounded-bl-none p-4 max-w-md text-white">
+                  <div className="text-sm text-purple-300 font-medium mb-1">
+                    👽 Alien Overlord:
                   </div>
-                  <div className="text-red-900 text-lg">{latestHost}</div>
+                  <div className="text-purple-100 text-lg">{latestHost}</div>
                 </div>
               </div>
             </div>
@@ -202,13 +213,13 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
           {(latestUser || isPTTUserSpeaking) && (
             <div className="mb-2">
               <div className="flex justify-end">
-                <div className="bg-green-100 border-2 border-green-300 rounded-2xl rounded-br-none p-4 max-w-md text-black">
-                  <div className="text-sm text-green-800 font-medium mb-1">
-                    👤 You:
+                <div className="bg-blue-900 border-2 border-blue-400 rounded-2xl rounded-br-none p-4 max-w-md text-white">
+                  <div className="text-sm text-blue-300 font-medium mb-1">
+                    🌍 Human Ambassador:
                   </div>
-                  <div className="text-green-900 text-lg">
+                  <div className="text-blue-100 text-lg">
                     {isPTTUserSpeaking
-                      ? currentTranscriptionText || "🎤 Speaking..."
+                      ? currentTranscriptionText || "🎤 Pleading for humanity..."
                       : latestUser || "Press mic to speak"}
                   </div>
                 </div>
@@ -218,8 +229,8 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
 
           {/* No conversation yet */}
           {!latestHost && !latestUser && !isPTTUserSpeaking && (
-            <div className="text-center text-gray-500 text-lg">
-              Conversation will appear here...
+            <div className="text-center text-green-400 text-lg">
+              Alien-Human diplomacy will appear here...
             </div>
           )}
         </div>
@@ -231,19 +242,19 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
         sessionStatus === "CONNECTED" &&
         isWebRTCReady && (
           <div className="fixed bottom-6 right-6 z-10">
-            <div className="bg-red-50 border-2 border-red-200 rounded-full p-4 shadow-lg">
+            <div className="bg-green-900 border-2 border-green-400 rounded-full p-4 shadow-lg">
               <div className="text-center">
-                <div className="text-xs text-red-800 mb-1">Hold to Talk</div>
+                <div className="text-xs text-green-300 mb-1">Hold to Save Earth</div>
                 <button
                   onMouseDown={handleTalkButtonDown}
                   onMouseUp={handleTalkButtonUp}
                   onMouseLeave={handleTalkButtonUp}
                   onTouchStart={handleTalkButtonDown}
                   onTouchEnd={handleTalkButtonUp}
-                  className={`w-16 h-16 rounded-full border-4 border-red-400 transition-all duration-150 ${
+                  className={`w-16 h-16 rounded-full border-4 border-green-400 transition-all duration-150 ${
                     isPTTUserSpeaking
                       ? "bg-red-500 scale-110 shadow-lg"
-                      : "bg-red-200 hover:bg-red-300"
+                      : "bg-green-700 hover:bg-green-600"
                   }`}
                 >
                   <div className="text-5xl">
@@ -255,27 +266,28 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
           </div>
         )}
 
-      {/* Decorative elements - Smaller */}
+      {/* Decorative elements - Space themed */}
       <div className="flex justify-center space-x-3 text-lg opacity-30 mt-4">
-        <span>🚨</span>
-        <span>⚖️</span>
-        <span>🤐</span>
-        <span>🏃</span>
+        <span>🛸</span>
+        <span>👽</span>
+        <span>🌍</span>
+        <span>💫</span>
+        <span>🚀</span>
       </div>
 
     </div>
   );
 }
 
-export default function StallThePoliceGameComponent(props: GameProps) {
+export default function ConvinceTheAliensGameComponent(props: GameProps) {
   return (
     <BaseGame
-      title="Stall The Police"
-      instructions="A police officer will arrive at your door - convince them to leave!"
+      title="Convince The Aliens"
+      instructions="Alien invaders have arrived! Convince them not to destroy Earth and humanity!"
       duration={30}
       {...props}
     >
-      <StallThePoliceGame />
+      <ConvinceTheAliensGame />
     </BaseGame>
   );
 }

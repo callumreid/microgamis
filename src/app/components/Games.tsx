@@ -41,6 +41,7 @@ export default function Games() {
   // Auto-start sequence state
   const [showContent, setShowContent] = useState(true);
   const [showOverlay, setShowOverlay] = useState(true);
+  const [isFlashing, setIsFlashing] = useState(false);
 
   // Media refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -102,20 +103,26 @@ export default function Games() {
       sessionStatus === "CONNECTED" &&
       isWebRTCReady
     ) {
-      // After 4 seconds, fade out content and overlay
+      // After 1 second, start flashing the title
+      const flashTimer = setTimeout(() => {
+        setIsFlashing(true);
+      }, 1000);
+
+      // After 6 seconds, fade out content and overlay (was 4 seconds)
       const fadeOutTimer = setTimeout(() => {
         setShowContent(false);
         setShowOverlay(false);
-      }, 4000);
+      }, 6000);
 
-      // After 8 seconds, start the game
+      // After 10 seconds, start the game (was 8 seconds)
       const startGameTimer = setTimeout(() => {
         if (selectedGame && GameComponent) {
           setGameState("playing");
         }
-      }, 8000);
+      }, 10000);
 
       return () => {
+        clearTimeout(flashTimer);
         clearTimeout(fadeOutTimer);
         clearTimeout(startGameTimer);
       };
@@ -333,9 +340,33 @@ export default function Games() {
             showContent ? "opacity-100" : "opacity-0"
           }`}
         >
-          <h1 className="text-8xl font-bold mb-12 text-center">
-            Game Orchard!
+          <h1 className={`text-8xl font-bold mb-12 text-center ${isFlashing ? 'animate-pulse' : ''}`} style={{
+            color: isFlashing ? '#ffffff' : '#ffffff',
+            animation: isFlashing ? 'flashText 0.3s infinite' : 'none'
+          }}>
+            <span className={isFlashing ? 'animate-bounce inline-block' : ''}>G</span>
+            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.1s'}}>a</span>
+            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.2s'}}>m</span>
+            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.3s'}}>e</span>
+            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.4s'}}>&nbsp;</span>
+            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.5s'}}>O</span>
+            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.6s'}}>r</span>
+            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.7s'}}>c</span>
+            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.8s'}}>h</span>
+            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.9s'}}>a</span>
+            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '1.0s'}}>r</span>
+            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '1.1s'}}>d</span>
+            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '1.2s'}}>!</span>
           </h1>
+          
+          {/* CSS for flashing animation */}
+          <style jsx>{`
+            @keyframes flashText {
+              0% { color: #ffffff; }
+              50% { color: #000000; }
+              100% { color: #ffffff; }
+            }
+          `}</style>
 
           {/* Connection Status */}
           <div className="mb-8 text-center">

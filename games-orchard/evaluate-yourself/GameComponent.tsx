@@ -59,7 +59,11 @@ function EvaluateYourselfGame(props: Partial<GameControlProps>) {
 
     const userItems = transcriptItems
       .filter(
-        (item) => item.role === "user" && item.title && item.title.trim() !== ""
+        (item) =>
+          item.role === "user" &&
+          item.title &&
+          item.title.trim() !== "" &&
+          item.title.trim() !== "[inaudible]"
       )
       .sort((a, b) => b.createdAtMs - a.createdAtMs);
 

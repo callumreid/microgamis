@@ -40,6 +40,28 @@
 - API routes: `src/app/api/`
 - Audio utilities: `src/app/lib/audioUtils.ts`
 
+### Recent Changes - 2025-07-08
+
+#### Added
+- **In-Game Push-to-Talk Button**: Added web-compatible PTT button directly to "Advise the Child" game component
+  - Button appears after AI host finishes speaking (when player input is needed)
+  - Visual feedback: 🎤 when ready, 🔴 when speaking, with scaling animation
+  - Works with both mouse (click & hold) and touch (tap & hold) interactions
+  - Positioned in yellow-themed section matching game UI style
+  - Only shows when session is connected and WebRTC is ready
+
+#### Fixed
+- **useEffect Infinite Loop**: Removed `updateMessage` from dependency array in GameComponent.tsx
+  - Was causing "Maximum update depth exceeded" error in BaseGame.tsx:121
+  - `updateMessage` function recreated on every render, causing infinite re-renders
+  - Safe to remove since it's only called once during component mount
+
+#### Technical Implementation Details
+- Integrated `useGameSession` hook directly in game component for PTT access
+- Added PTT state management (`isPTTUserSpeaking`) with proper callbacks
+- PTT handlers follow same pattern as main Games.tsx component
+- Button conditional rendering based on game state and connection status
+
 ## Instructions for Future AI Agents
 
 When working on this codebase:

@@ -8,6 +8,7 @@ export interface GameScenario {
   childQuote?: string;
   policeQuote?: string;
   alienQuote?: string;
+  customerQuote?: string;
   context: string;
   goodAdviceKeywords?: string[];
   badAdviceKeywords?: string[];
@@ -15,6 +16,8 @@ export interface GameScenario {
   badStallKeywords?: string[];
   goodConvinceKeywords?: string[];
   badConvinceKeywords?: string[];
+  goodSaleKeywords?: string[];
+  badSaleKeywords?: string[];
 }
 
 export interface GameFinishResult {
@@ -26,7 +29,13 @@ export interface GameFinishResult {
 export interface UseGameAgentOptions {
   onGameStart?: (scenario: GameScenario) => void;
   onGameFinish?: (result: GameFinishResult) => void;
-  gameType?: "advise-the-child" | "stall-the-police" | "convince-the-aliens" | "evaluate-yourself" | "point-the-task";
+  gameType?:
+    | "advise-the-child"
+    | "stall-the-police"
+    | "convince-the-aliens"
+    | "evaluate-yourself"
+    | "point-the-task"
+    | "sell-the-lemon";
 }
 
 export function useGameAgent(options: UseGameAgentOptions = {}) {
@@ -56,7 +65,11 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
     for (const item of recentBreadcrumbs) {
       if (item.title?.includes("function call result:")) {
         // Handle child advice game
-        if (item.title.includes("start_child_advice_game") && item.data && gameType === "advise-the-child") {
+        if (
+          item.title.includes("start_child_advice_game") &&
+          item.data &&
+          gameType === "advise-the-child"
+        ) {
           try {
             const scenario = item.data as GameScenario;
             setCurrentScenario(scenario);
@@ -64,9 +77,15 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameStart?.(scenario);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse child advice game start scenario:", e);
+            console.error(
+              "Failed to parse child advice game start scenario:",
+              e
+            );
           }
-        } else if (item.title.includes("finish_child_advice_game") && gameType === "advise-the-child") {
+        } else if (
+          item.title.includes("finish_child_advice_game") &&
+          gameType === "advise-the-child"
+        ) {
           try {
             console.log("🔍 Found finish_child_advice_game breadcrumb:", item);
             const result = item.data as GameFinishResult;
@@ -75,11 +94,18 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameFinish?.(result);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse child advice game finish result:", e);
+            console.error(
+              "Failed to parse child advice game finish result:",
+              e
+            );
           }
         }
         // Handle police stall game
-        else if (item.title.includes("start_police_stall_game") && item.data && gameType === "stall-the-police") {
+        else if (
+          item.title.includes("start_police_stall_game") &&
+          item.data &&
+          gameType === "stall-the-police"
+        ) {
           try {
             const scenario = item.data as GameScenario;
             setCurrentScenario(scenario);
@@ -87,9 +113,15 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameStart?.(scenario);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse police stall game start scenario:", e);
+            console.error(
+              "Failed to parse police stall game start scenario:",
+              e
+            );
           }
-        } else if (item.title.includes("finish_police_stall_game") && gameType === "stall-the-police") {
+        } else if (
+          item.title.includes("finish_police_stall_game") &&
+          gameType === "stall-the-police"
+        ) {
           try {
             console.log("🔍 Found finish_police_stall_game breadcrumb:", item);
             const result = item.data as GameFinishResult;
@@ -98,11 +130,18 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameFinish?.(result);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse police stall game finish result:", e);
+            console.error(
+              "Failed to parse police stall game finish result:",
+              e
+            );
           }
         }
         // Handle alien convince game
-        else if (item.title.includes("start_alien_convince_game") && item.data && gameType === "convince-the-aliens") {
+        else if (
+          item.title.includes("start_alien_convince_game") &&
+          item.data &&
+          gameType === "convince-the-aliens"
+        ) {
           try {
             const scenario = item.data as GameScenario;
             setCurrentScenario(scenario);
@@ -110,22 +149,38 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameStart?.(scenario);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse alien convince game start scenario:", e);
+            console.error(
+              "Failed to parse alien convince game start scenario:",
+              e
+            );
           }
-        } else if (item.title.includes("finish_alien_convince_game") && gameType === "convince-the-aliens") {
+        } else if (
+          item.title.includes("finish_alien_convince_game") &&
+          gameType === "convince-the-aliens"
+        ) {
           try {
-            console.log("🔍 Found finish_alien_convince_game breadcrumb:", item);
+            console.log(
+              "🔍 Found finish_alien_convince_game breadcrumb:",
+              item
+            );
             const result = item.data as GameFinishResult;
             console.log("🔍 Parsed result:", result);
             setIsGameActive(false);
             onGameFinish?.(result);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse alien convince game finish result:", e);
+            console.error(
+              "Failed to parse alien convince game finish result:",
+              e
+            );
           }
         }
         // Handle self-evaluation game
-        else if (item.title.includes("start_self_evaluation_game") && item.data && gameType === "evaluate-yourself") {
+        else if (
+          item.title.includes("start_self_evaluation_game") &&
+          item.data &&
+          gameType === "evaluate-yourself"
+        ) {
           try {
             const scenario = item.data as GameScenario;
             setCurrentScenario(scenario);
@@ -133,22 +188,38 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameStart?.(scenario);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse self-evaluation game start scenario:", e);
+            console.error(
+              "Failed to parse self-evaluation game start scenario:",
+              e
+            );
           }
-        } else if (item.title.includes("finish_self_evaluation_game") && gameType === "evaluate-yourself") {
+        } else if (
+          item.title.includes("finish_self_evaluation_game") &&
+          gameType === "evaluate-yourself"
+        ) {
           try {
-            console.log("🔍 Found finish_self_evaluation_game breadcrumb:", item);
+            console.log(
+              "🔍 Found finish_self_evaluation_game breadcrumb:",
+              item
+            );
             const result = item.data as GameFinishResult;
             console.log("🔍 Parsed result:", result);
             setIsGameActive(false);
             onGameFinish?.(result);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse self-evaluation game finish result:", e);
+            console.error(
+              "Failed to parse self-evaluation game finish result:",
+              e
+            );
           }
         }
         // Handle point-the-task game
-        else if (item.title.includes("start_point_task_game") && item.data && gameType === "point-the-task") {
+        else if (
+          item.title.includes("start_point_task_game") &&
+          item.data &&
+          gameType === "point-the-task"
+        ) {
           try {
             const scenario = item.data as GameScenario;
             setCurrentScenario(scenario);
@@ -156,9 +227,15 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameStart?.(scenario);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse point-the-task game start scenario:", e);
+            console.error(
+              "Failed to parse point-the-task game start scenario:",
+              e
+            );
           }
-        } else if (item.title.includes("finish_point_task_game") && gameType === "point-the-task") {
+        } else if (
+          item.title.includes("finish_point_task_game") &&
+          gameType === "point-the-task"
+        ) {
           try {
             console.log("🔍 Found finish_point_task_game breadcrumb:", item);
             const result = item.data as GameFinishResult;
@@ -167,7 +244,40 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameFinish?.(result);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse point-the-task game finish result:", e);
+            console.error(
+              "Failed to parse point-the-task game finish result:",
+              e
+            );
+          }
+        }
+        // Handle lemon sale game
+        else if (
+          item.title.includes("start_lemon_sale_game") &&
+          item.data &&
+          gameType === "sell-the-lemon"
+        ) {
+          try {
+            const scenario = item.data as GameScenario;
+            setCurrentScenario(scenario);
+            setIsGameActive(true);
+            onGameStart?.(scenario);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse lemon sale game start scenario:", e);
+          }
+        } else if (
+          item.title.includes("finish_lemon_sale_game") &&
+          gameType === "sell-the-lemon"
+        ) {
+          try {
+            console.log("🔍 Found finish_lemon_sale_game breadcrumb:", item);
+            const result = item.data as GameFinishResult;
+            console.log("🔍 Parsed result:", result);
+            setIsGameActive(false);
+            onGameFinish?.(result);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse lemon sale game finish result:", e);
           }
         }
       }
@@ -189,13 +299,20 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
 
     // Send a message to trigger the game host agent to start the appropriate game
     const gameMessages = {
-      "advise-the-child": "Hello! I'm ready to play Advise the Child. Please start the game!",
-      "stall-the-police": "Hello! I'm ready to play Stall the Police. Please start the game!",
-      "convince-the-aliens": "Hello! I'm ready to play Convince the Aliens. Please start the game!",
-      "evaluate-yourself": "Hello! I'm ready to play Evaluate Yourself. Please start the game!",
-      "point-the-task": "Hello! I'm ready to play Point the Engineering Task. Please start the game!"
+      "advise-the-child":
+        "Hello! I'm ready to play Advise the Child. Please start the game!",
+      "stall-the-police":
+        "Hello! I'm ready to play Stall the Police. Please start the game!",
+      "convince-the-aliens":
+        "Hello! I'm ready to play Convince the Aliens. Please start the game!",
+      "evaluate-yourself":
+        "Hello! I'm ready to play Evaluate Yourself. Please start the game!",
+      "point-the-task":
+        "Hello! I'm ready to play Point the Engineering Task. Please start the game!",
+      "sell-the-lemon":
+        "Hello! I'm ready to play Sell the Lemon. Please start the game!",
     };
-    
+
     sendUserText(gameMessages[gameType]);
   }, [sendUserText, isWebRTCReady, gameType]);
 

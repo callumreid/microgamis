@@ -1,9 +1,22 @@
 import { GameMetadata } from "./types";
-import AdviseTheChildGame, { metadata as adviseTheChildMetadata } from "./advise-the-child";
-import StallThePoliceGame, { metadata as stallThePoliceMetadata } from "./stall-the-police";
-import ConvinceTheAliensGame, { metadata as convinceTheAliensMetadata } from "./convince-the-aliens";
-import EvaluateYourselfGame, { metadata as evaluateYourselfMetadata } from "./evaluate-yourself";
-import PointTheTaskGame, { metadata as pointTheTaskMetadata } from "./point-the-task";
+import AdviseTheChildGame, {
+  metadata as adviseTheChildMetadata,
+} from "./advise-the-child";
+import StallThePoliceGame, {
+  metadata as stallThePoliceMetadata,
+} from "./stall-the-police";
+import ConvinceTheAliensGame, {
+  metadata as convinceTheAliensMetadata,
+} from "./convince-the-aliens";
+import EvaluateYourselfGame, {
+  metadata as evaluateYourselfMetadata,
+} from "./evaluate-yourself";
+import PointTheTaskGame, {
+  metadata as pointTheTaskMetadata,
+} from "./point-the-task";
+import SellTheLemonGame, {
+  metadata as sellTheLemonMetadata,
+} from "./sell-the-lemon";
 
 // Minimal export for build - no actual games imported
 
@@ -14,10 +27,18 @@ export const implementedGames = {
   "convince-the-aliens": ConvinceTheAliensGame,
   "evaluate-yourself": EvaluateYourselfGame,
   "point-the-task": PointTheTaskGame,
+  "sell-the-lemon": SellTheLemonGame,
 };
 
 // Implemented game metadata
-export const implementedGameMetadata: GameMetadata[] = [pointTheTaskMetadata, evaluateYourselfMetadata, convinceTheAliensMetadata, adviseTheChildMetadata, stallThePoliceMetadata];
+export const implementedGameMetadata: GameMetadata[] = [
+  pointTheTaskMetadata,
+  evaluateYourselfMetadata,
+  convinceTheAliensMetadata,
+  adviseTheChildMetadata,
+  stallThePoliceMetadata,
+  sellTheLemonMetadata,
+];
 
 // Complete list of all planned games (implemented + planned)
 export const allPlannedGames: GameMetadata[] = [

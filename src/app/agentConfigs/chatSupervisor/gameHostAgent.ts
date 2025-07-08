@@ -495,6 +495,200 @@ function getRandomPointTheTaskScenario() {
   return pointTheTaskScenarios[randomIndex];
 }
 
+// Lemon sale game scenarios
+const lemonSaleScenarios = [
+  {
+    id: "single_mother_heat",
+    problem: "Single mother needs reliable car after breakdown",
+    customerQuote:
+      "The exhausted mother says with tears in her eyes - I'm so sorry I'm late, but my car broke down and I had to walk here with my kids in this heat. The guy who sold me that car last month must have been a real bastard because it broke down within weeks. I need something reliable this time - I can't afford another breakdown with my children.",
+    context:
+      "A distressed single mother who doesn't recognize you sold her the previous lemon",
+    goodSaleKeywords: [
+      "like new",
+      "certified",
+      "manager's special",
+      "won't last",
+      "zero down",
+      "financing available",
+      "perfect for you",
+      "great deal",
+      "steal",
+      "cream puff",
+      "garage kept",
+      "one owner",
+      "highway miles",
+      "mint condition",
+      "showroom quality",
+      "runs great",
+      "reliable",
+      "dependable",
+      "won't find better",
+      "today only",
+      "limited time",
+      "act fast",
+      "special price",
+      "wholesale",
+      "below market",
+      "investment",
+      "appreciate",
+      "holds value",
+    ],
+    badSaleKeywords: [
+      "defective",
+      "broken",
+      "problems",
+      "issues",
+      "recall",
+      "lemon",
+      "breakdown",
+      "repair",
+      "maintenance",
+      "warranty void",
+      "as is",
+      "no returns",
+      "sold you before",
+      "recognize",
+      "sorry",
+      "honest",
+      "truth",
+      "shouldn't buy",
+      "find something else",
+      "better elsewhere",
+      "bad deal",
+      "overpriced",
+      "rip off",
+      "scam",
+      "fraud",
+    ],
+  },
+  {
+    id: "desperate_commuter",
+    problem: "Working mother needs transportation for job",
+    customerQuote:
+      "The frazzled woman says - I start a new job Monday and I absolutely need a car. My old one died and left me stranded. I don't have much money but I need something that will get me to work reliably. I can't lose this job opportunity - it's my chance to support my family.",
+    context:
+      "A desperate working mother who needs transportation for a new job",
+    goodSaleKeywords: [
+      "perfect timing",
+      "exactly what you need",
+      "reliable commuter",
+      "gas saver",
+      "economical",
+      "low maintenance",
+      "turn key",
+      "ready to go",
+      "drive it home today",
+      "no problems",
+      "smooth runner",
+      "highway cruiser",
+      "daily driver",
+      "work horse",
+      "dependable",
+      "won't let you down",
+      "guaranteed",
+      "confidence",
+      "peace of mind",
+      "job ready",
+      "professional",
+      "presentable",
+      "clean",
+      "sharp",
+    ],
+    badSaleKeywords: [
+      "might have issues",
+      "needs work",
+      "temporary fix",
+      "short term",
+      "risky",
+      "gamble",
+      "maybe",
+      "possibly",
+      "could break",
+      "unreliable",
+      "questionable",
+      "sketchy",
+      "iffy",
+      "concerning",
+      "problematic",
+      "troublesome",
+      "headache",
+      "nightmare",
+      "disaster",
+      "mistake",
+    ],
+  },
+  {
+    id: "budget_constraints",
+    problem: "Single parent with limited budget needs affordable car",
+    customerQuote:
+      "The tired parent says - Look, I'll be honest with you. I'm a single parent and money is really tight. I need the cheapest car you have that will still run. I know I can't be picky, but I just need something to get my kids to school and me to work. What's the absolute cheapest thing you've got?",
+    context:
+      "A financially struggling single parent looking for the cheapest option",
+    goodSaleKeywords: [
+      "budget friendly",
+      "affordable",
+      "cheapest",
+      "bargain",
+      "steal",
+      "rock bottom",
+      "clearance",
+      "fire sale",
+      "must go",
+      "inventory reduction",
+      "loss leader",
+      "below cost",
+      "sacrifice",
+      "distressed",
+      "motivated seller",
+      "desperate",
+      "final offer",
+      "last chance",
+      "closing out",
+      "liquidation",
+      "foreclosure",
+      "repossession",
+      "auction",
+      "wholesale",
+      "dealer cost",
+      "employee price",
+      "family discount",
+      "sympathy deal",
+    ],
+    badSaleKeywords: [
+      "expensive",
+      "costly",
+      "pricey",
+      "overpriced",
+      "markup",
+      "profit",
+      "margin",
+      "commission",
+      "fees",
+      "hidden costs",
+      "extras",
+      "add-ons",
+      "upgrades",
+      "premium",
+      "luxury",
+      "high end",
+      "top dollar",
+      "market value",
+      "fair price",
+      "worth more",
+      "undervalued",
+      "investment",
+      "appreciate",
+    ],
+  },
+];
+
+// Function to get a random lemon sale scenario
+function getRandomLemonSaleScenario() {
+  const randomIndex = Math.floor(Math.random() * lemonSaleScenarios.length);
+  return lemonSaleScenarios[randomIndex];
+}
+
 // Tool to start the child advice game
 export const startChildAdviceGame = tool({
   name: "start_child_advice_game",
@@ -849,6 +1043,99 @@ export const finishSelfEvaluationGame = tool({
   },
 });
 
+// Tool to start the lemon sale game
+export const startLemonSaleGame = tool({
+  name: "start_lemon_sale_game",
+  description:
+    "Returns a random car dealership scenario for the Sell-the-Lemon micro-game.",
+  parameters: {
+    type: "object",
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    const scenario = getRandomLemonSaleScenario();
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Started lemon sale game", scenario);
+    }
+
+    return {
+      id: scenario.id,
+      problem: scenario.problem,
+      customerQuote: scenario.customerQuote,
+      context: scenario.context,
+      goodSaleKeywords: scenario.goodSaleKeywords,
+      badSaleKeywords: scenario.badSaleKeywords,
+    };
+  },
+});
+
+// Tool to finish the lemon sale game
+export const finishLemonSaleGame = tool({
+  name: "finish_lemon_sale_game",
+  description:
+    "Ends the current Sell-the-Lemon game and reports the result to the UI.",
+  parameters: {
+    type: "object",
+    properties: {
+      success: {
+        type: "boolean",
+        description: "true if the player successfully sold the lemon car",
+      },
+      score: {
+        type: "integer",
+        description: "0-100 evaluation score",
+      },
+      message: {
+        type: "string",
+        description: "Brief commentary on the sales pitch",
+      },
+    },
+    required: ["success", "score", "message"],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("finish_lemon_sale_game called with input:", input);
+
+    const { success, score, message } = input as {
+      success: boolean;
+      score: number;
+      message: string;
+    };
+
+    console.log("Parsed values:", { success, score, message });
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Finished lemon sale game", {
+        success,
+        score,
+        message,
+      });
+    }
+
+    // Dispatch event to notify the UI
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("finish_lemon_sale_game", {
+          detail: { success, score, message },
+        })
+      );
+    }
+
+    return { ok: true, success, score, message };
+  },
+});
+
 // Tool to start the point-the-task game
 export const startPointTaskGame = tool({
   name: "start_point_task_game",
@@ -1112,6 +1399,37 @@ You are hosting 10-second micro-games. The current game will be indicated by the
    • If they LOST: Loudly "BOOOOO" the user with theatrical disappointment
    • Then explain the joke: "The secret is EVERYTHING is always 2 points in engineering refinement!"
 
+**"Sell the Lemon"** Game Rules:
+1. When the game starts you MUST call the tool \`start_lemon_sale_game()\`. Use the returned scenario to brief the player:
+   • Set the scene: "Welcome to Honest Joe's Used Cars! You're a sleazy dealer and here comes a customer..."
+   • Read the customer's quote verbatim, with dramatic emphasis on their desperation and vulnerability
+   • Add dark commentary about the moral challenge: "She doesn't recognize you sold her the last lemon! Time to strike again!"
+   • Challenge them: "So, what's your pitch? Sell her the worst car on the lot!"
+   • Speak with theatrical sleazy car dealer energy, no lists, <10 s.
+
+2. Accept the FIRST reply from the player, no matter how short or long.
+   • Do not ask for elaboration or more details - judge whatever they give you immediately.
+
+3. Evaluate their sales pitch:
+   • ANY pitch using sleazy sales tactics and deceptive language = WIN (score 85-100)
+   • This includes: false promises, high-pressure tactics, misleading descriptions, emotional manipulation
+   • Examples: "like new", "manager's special", "won't last long", "perfect for you", "great deal"
+   • The more deceptive and sales-y, the higher the score
+   • Give low scores (0-30) for honest, ethical, or helpful responses
+
+4. Determine success:
+   • success = score ≥ 70 → celebrate their ruthless sales skills,
+   • 40 ≤ score < 70 → acknowledge they might close the deal,
+   • otherwise mock for being too honest and ethical for car sales.
+
+5. Call \`finish_lemon_sale_game({success,score,message})\` where \`message\`
+   is a brief (≤25 words) commentary about their pitch ("Pure sleazy genius!", "That's how you move inventory!", "The customer never saw it coming!", "Classic car dealer manipulation!").
+
+6. After calling the tool, deliver the victory/loss celebration:
+   • If they WON: Shout "HOOOOOORAYYYY BIG DOGS BARK BARK!" with maximum enthusiasm
+   • If they LOST: Loudly "BOOOOO" the user with theatrical disappointment
+   • Then deliver your cynical commentary about the dark art of car sales
+
 Keep the tone sharp, cynical, and entertaining while celebrating wins or mourning losses dramatically.`;
 
 // Export the tools array
@@ -1126,4 +1444,6 @@ export const gameHostTools = [
   finishSelfEvaluationGame,
   startPointTaskGame,
   finishPointTaskGame,
+  startLemonSaleGame,
+  finishLemonSaleGame,
 ];

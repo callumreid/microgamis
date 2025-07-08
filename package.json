@@ -12,6 +12,7 @@
     "cap:android": "npx cap open android",
     "cap:run:android": "npx cap run android",
     "cap:run:android:tv": "npx cap run android --target=tv",
+    "update": "./scripts/update-apk.sh",
     "clean:apk": "cd android && ./gradlew clean",
     "build:apk": "cd android && ./gradlew assembleDebug",
     "install:apk": "adb install -r android/app/build/outputs/apk/debug/app-debug.apk",

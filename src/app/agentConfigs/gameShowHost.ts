@@ -75,7 +75,8 @@ Always maintain high energy and make the experience fun and engaging!`,
       parameters: {
         type: 'object',
         properties: {},
-        required: []
+        required: [],
+        additionalProperties: false
       },
       execute: async () => {
         currentScore = 0;
@@ -91,7 +92,8 @@ Always maintain high energy and make the experience fun and engaging!`,
       parameters: {
         type: 'object',
         properties: {},
-        required: []
+        required: [],
+        additionalProperties: false
       },
       execute: async () => {
         if (questionsAsked >= 5) {
@@ -126,9 +128,10 @@ Always maintain high energy and make the experience fun and engaging!`,
             description: 'The contestant\'s answer (A, B, C, or D)'
           }
         },
-        required: ['answer']
+        required: ['answer'],
+        additionalProperties: false
       },
-      execute: async (input: { answer: string }) => {
+      execute: async (input: any) => {
         if (!currentQuestion) {
           return { message: "No question is currently active. Please ask a question first!" };
         }
@@ -160,7 +163,8 @@ Always maintain high energy and make the experience fun and engaging!`,
       parameters: {
         type: 'object',
         properties: {},
-        required: []
+        required: [],
+        additionalProperties: false
       },
       execute: async () => {
         return {

@@ -3,6 +3,7 @@ import AdviseTheChildGame, { metadata as adviseTheChildMetadata } from "./advise
 import StallThePoliceGame, { metadata as stallThePoliceMetadata } from "./stall-the-police";
 import ConvinceTheAliensGame, { metadata as convinceTheAliensMetadata } from "./convince-the-aliens";
 import EvaluateYourselfGame, { metadata as evaluateYourselfMetadata } from "./evaluate-yourself";
+import PointTheTaskGame, { metadata as pointTheTaskMetadata } from "./point-the-task";
 
 // Minimal export for build - no actual games imported
 
@@ -12,10 +13,11 @@ export const implementedGames = {
   "stall-the-police": StallThePoliceGame,
   "convince-the-aliens": ConvinceTheAliensGame,
   "evaluate-yourself": EvaluateYourselfGame,
+  "point-the-task": PointTheTaskGame,
 };
 
 // Implemented game metadata
-export const implementedGameMetadata: GameMetadata[] = [evaluateYourselfMetadata, convinceTheAliensMetadata, adviseTheChildMetadata, stallThePoliceMetadata];
+export const implementedGameMetadata: GameMetadata[] = [pointTheTaskMetadata, evaluateYourselfMetadata, convinceTheAliensMetadata, adviseTheChildMetadata, stallThePoliceMetadata];
 
 // Complete list of all planned games (implemented + planned)
 export const allPlannedGames: GameMetadata[] = [

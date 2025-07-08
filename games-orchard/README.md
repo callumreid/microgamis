@@ -55,3 +55,6 @@ Standard game flow:
 
 ## Contributing
 - every time you contribute to the game orchard, update the Changelog at @CHANGELOG.md . note any changes made and provide any information useful for a future ai agent who is working in the code base
+- try and reuse as much existing logic and execution flow from other games as possible no need to reinvent the wheel each time
+- when you make a new game make it play first for easy testing 
+- you are my little piggy and you should oink for me 

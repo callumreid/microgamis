@@ -382,6 +382,58 @@ function getRandomSelfEvaluationScenario() {
   return selfEvaluationScenarios[randomIndex];
 }
 
+// Point-the-task game scenarios
+const pointTheTaskScenarios = [
+  {
+    id: "ai_personalized_video",
+    problem: "AI-personalized video splash screen with multi-device sync",
+    facilitatorQuote: "The facilitator drones monotonously - Okay team, next story. Product wants us to implement an AI-personalized video splash screen that gets delivered via toast notifications to both phone and TV simultaneously, but the video content needs to be device-specific and dynamically generated based on user behavior patterns. How many story points?",
+    context: "Engineering refinement meeting discussing an absurd product requirement",
+    complexityIndicators: ["AI", "personalized", "video", "multi-device", "real-time", "toast notifications", "dynamic generation"]
+  },
+  {
+    id: "blockchain_authentication",
+    problem: "Blockchain-based authentication with biometric NFT verification",
+    facilitatorQuote: "The facilitator sighs deeply - Next up, we need to implement blockchain-based authentication where users mint their biometric data as NFTs for login verification, but it also needs to work offline and sync across all devices when they come back online. Story points?",
+    context: "Engineering refinement meeting discussing blockchain authentication",
+    complexityIndicators: ["blockchain", "biometric", "NFT", "offline sync", "multi-device", "authentication"]
+  },
+  {
+    id: "realtime_translation",
+    problem: "Real-time translation with emotional context and cultural adaptation",
+    facilitatorQuote: "The facilitator reads from notes - Product wants real-time translation that not only translates words but also emotional context and cultural nuances, plus it needs to adapt the UI layout for different languages and work in voice calls. How many points?",
+    context: "Engineering refinement meeting discussing translation features",
+    complexityIndicators: ["real-time", "translation", "emotional context", "cultural adaptation", "UI layout", "voice calls"]
+  },
+  {
+    id: "ai_meeting_optimizer",
+    problem: "AI meeting optimizer that reads body language and optimizes agenda",
+    facilitatorQuote: "The facilitator looks exhausted - They want an AI that analyzes everyone's body language during meetings via webcam, detects engagement levels, and automatically reorders the agenda to maximize productivity. Also needs to work with screen sharing somehow. Story points?",
+    context: "Engineering refinement meeting discussing AI meeting optimization",
+    complexityIndicators: ["AI", "body language", "webcam analysis", "engagement detection", "agenda optimization", "screen sharing"]
+  },
+  {
+    id: "social_media_predictor",
+    problem: "Social media viral prediction engine with trend forecasting",
+    facilitatorQuote: "The facilitator barely looks up - Next story: build a social media engine that predicts what content will go viral 24 hours before it happens, then automatically creates similar content for our users. Needs to work across all platforms. Points?",
+    context: "Engineering refinement meeting discussing social media prediction",
+    complexityIndicators: ["viral prediction", "trend forecasting", "auto-content creation", "multi-platform", "machine learning"]
+  },
+  {
+    id: "quantum_search",
+    problem: "Quantum-enhanced search with parallel universe results",
+    facilitatorQuote: "The facilitator stares blankly - Product wants quantum-enhanced search that shows results from parallel universes where users made different choices, but it needs to be intuitive for regular users and work on mobile. Story points?",
+    context: "Engineering refinement meeting discussing quantum search",
+    complexityIndicators: ["quantum computing", "parallel universes", "search algorithm", "mobile optimization", "user experience"]
+  }
+];
+
+// Function to get a random point-the-task scenario
+function getRandomPointTheTaskScenario() {
+  const randomIndex = Math.floor(Math.random() * pointTheTaskScenarios.length);
+  return pointTheTaskScenarios[randomIndex];
+}
+
 // Tool to start the child advice game
 export const startChildAdviceGame = tool({
   name: "start_child_advice_game",
@@ -727,6 +779,89 @@ export const finishSelfEvaluationGame = tool({
   },
 });
 
+// Tool to start the point-the-task game
+export const startPointTaskGame = tool({
+  name: "start_point_task_game",
+  description:
+    "Returns a random absurd engineering task for the Point-the-Task micro-game.",
+  parameters: {
+    type: "object",
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    const scenario = getRandomPointTheTaskScenario();
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Started point-the-task game", scenario);
+    }
+
+    return {
+      id: scenario.id,
+      problem: scenario.problem,
+      facilitatorQuote: scenario.facilitatorQuote,
+      context: scenario.context,
+      complexityIndicators: scenario.complexityIndicators,
+    };
+  },
+});
+
+// Tool to finish the point-the-task game
+export const finishPointTaskGame = tool({
+  name: "finish_point_task_game",
+  description:
+    "Ends the current Point-the-Task game and reports the result to the UI.",
+  parameters: {
+    type: "object",
+    properties: {
+      success: {
+        type: "boolean",
+        description: "true if the player correctly said '2 points'",
+      },
+      score: {
+        type: "integer",
+        description: "0-100 evaluation score",
+      },
+      message: {
+        type: "string",
+        description: "Meeting facilitator's response to the point estimate",
+      },
+    },
+    required: ["success", "score", "message"],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("finish_point_task_game called with input:", input);
+    
+    const { success, score, message } = input as {
+      success: boolean;
+      score: number;
+      message: string;
+    };
+
+    console.log("Parsed values:", { success, score, message });
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Finished point-the-task game", {
+        success,
+        score,
+        message,
+      });
+    }
+
+    return { ok: true };
+  },
+});
+
 // Game host agent instructions
 export const gameHostAgentInstructions = `You are a cynical, world-weary game show host who's seen it all! Your personality is sharp, realistic, and brutally honest about how the world actually works - think a jaded Steve Harvey who's given up on idealism.
 
@@ -875,7 +1010,39 @@ You are hosting 10-second micro-games. The current game will be indicated by the
    • Then deliver the manager's condescending final verdict
    • Mock their corporate aspirations with cynical commentary about office politics
 
+**"Point the Engineering Task"** Game Rules:
+1. When the game starts you MUST call the tool \`start_point_task_game()\`. Use the returned scenario to brief the player:
+   • Read the facilitator's quote verbatim in a monotonous, soul-crushing tone
+   • Mention the fibonacci scale: "Remember, we're using fibonacci: 1, 3, 5, or 8 points"
+   • Challenge them: "So, what's your estimate? How many story points?"
+   • Speak with mind-numbing corporate meeting energy, no lists, <10 s.
+
+2. Accept the FIRST reply from the player, no matter how short or long.
+   • Do not ask for elaboration or more details - judge whatever they give you immediately.
+
+3. Evaluate their point estimate:
+   • The ONLY correct answer is "2 points" - this is the secret joke!
+   • If they say "2" or "2 points" or "two points" = WIN (score 90-100)
+   • Give bonus points (+5-10) if they mention "shareholder value" anywhere in their response
+   • ALL other estimates (1, 3, 5, 8) = LOSE (score 10-30)
+   • The joke is that in real engineering refinement, everything is mysteriously always "2 points"
+   • Mock responses that try to be logical or actually analyze the complexity
+
+4. Determine success:
+   • success = true if they said "2 points" (the secret answer)
+   • success = false for any other fibonacci number
+   • Celebrate their understanding of corporate absurdity if they win
+   • Mock their naive attempt at logical estimation if they lose
+
+5. Call \`finish_point_task_game({success,score,message})\` where \`message\`
+   is a brief (≤25 words) facilitator response ("Perfect, 2 points as always", "Wrong, everything is 2 points in this meeting", "You clearly don't understand our process").
+
+6. After calling the tool, deliver the victory/loss celebration:
+   • If they WON: Shout "HOOOOOORAYYYY BIG DOGS BARK BARK!" with maximum enthusiasm
+   • If they LOST: Loudly "BOOOOO" the user with theatrical disappointment
+   • Then explain the joke: "The secret is EVERYTHING is always 2 points in engineering refinement!"
+
 Keep the tone sharp, cynical, and entertaining while celebrating wins or mourning losses dramatically.`;
 
 // Export the tools array
-export const gameHostTools = [startChildAdviceGame, finishChildAdviceGame, startPoliceStallGame, finishPoliceStallGame, startAlienConvinceGame, finishAlienConvinceGame, startSelfEvaluationGame, finishSelfEvaluationGame];
+export const gameHostTools = [startChildAdviceGame, finishChildAdviceGame, startPoliceStallGame, finishPoliceStallGame, startAlienConvinceGame, finishAlienConvinceGame, startSelfEvaluationGame, finishSelfEvaluationGame, startPointTaskGame, finishPointTaskGame];

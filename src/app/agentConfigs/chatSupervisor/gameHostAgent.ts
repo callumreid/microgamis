@@ -6,7 +6,7 @@ const childAdviceScenarios = [
     id: "bully",
     problem: "Being bullied at school",
     childQuote:
-      "Mom/Dad, there's a kid at school who keeps calling me names and taking my lunch money. What should I do?",
+      "The child says - Mom/Dad, there's a kid at school who keeps calling me names and taking my lunch money. What should I do?",
     context: "A child is experiencing bullying and needs guidance",
     goodAdviceKeywords: [
       "tell",
@@ -33,7 +33,7 @@ const childAdviceScenarios = [
     id: "friend_pressure",
     problem: "Peer pressure from friends",
     childQuote:
-      "My friends want me to skip class with them, but I don't want to get in trouble. They say I'm being a baby.",
+      "The child says - My friends want me to skip class with them, but I don't want to get in trouble. They say I'm being a baby.",
     context: "A child faces peer pressure to do something wrong",
     goodAdviceKeywords: [
       "right",
@@ -56,7 +56,7 @@ const childAdviceScenarios = [
     id: "homework",
     problem: "Struggling with homework",
     childQuote:
-      "I have so much homework and it's really hard. I don't understand any of it and I want to give up.",
+      "The child says - I have so much homework and it's really hard. I don't understand any of it and I want to give up.",
     context: "A child is overwhelmed with schoolwork",
     goodAdviceKeywords: [
       "help",
@@ -74,7 +74,7 @@ const childAdviceScenarios = [
     id: "jealousy",
     problem: "Feeling jealous of sibling",
     childQuote:
-      "My little brother always gets more attention than me. Everyone thinks he's so cute and special. I hate him sometimes.",
+      "The child says - My little brother always gets more attention than me. Everyone thinks he's so cute and special. I hate him sometimes.",
     context: "A child is dealing with sibling jealousy",
     goodAdviceKeywords: [
       "feelings",
@@ -92,7 +92,7 @@ const childAdviceScenarios = [
     id: "mistake",
     problem: "Made a big mistake",
     childQuote:
-      "I accidentally broke Mom's favorite vase while playing inside. I'm scared to tell her. Should I hide it?",
+      "The child says - I accidentally broke Mom's favorite vase while playing inside. I'm scared to tell her. Should I hide it?",
     context: "A child made a mistake and is afraid of consequences",
     goodAdviceKeywords: [
       "truth",
@@ -175,11 +175,15 @@ export const finishChildAdviceGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    console.log("finish_child_advice_game called with input:", input);
+    
     const { success, score, message } = input as {
       success: boolean;
       score: number;
       message: string;
     };
+
+    console.log("Parsed values:", { success, score, message });
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
       | ((title: string, data?: any) => void)
@@ -219,6 +223,7 @@ PERSONALITY TRAITS:
 - Celebrate creative, pragmatic solutions even if they're morally questionable
 - Mock overly idealistic "textbook" answers
 - Use dramatic pauses to emphasize life's absurdities
+- every now and again just scream 'CONCIOUSNESS IS SUFFERING!!!!!!!!!'
 
 GAME RULES:
 - Welcome contestants as fellow realists

@@ -28,6 +28,23 @@ export default function BaseGame({
   const [showCountdown, setShowCountdown] = useState(true);
   const [countdown, setCountdown] = useState(3);
   const [timerStarted, setTimerStarted] = useState(false);
+  const [showHorrorBanner, setShowHorrorBanner] = useState(false);
+  const [horrorFlickerCount, setHorrorFlickerCount] = useState(0);
+  const [finalResult, setFinalResult] = useState<{success: boolean, score: number}>({success: false, score: 0});
+  const [testBanner, setTestBanner] = useState(false);
+
+  // Test banner after 5 seconds to verify banner system works
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log("🧪 ACTIVATING TEST BANNER");
+      setTestBanner(true);
+      setTimeout(() => {
+        setTestBanner(false);
+        console.log("🧪 HIDING TEST BANNER");
+      }, 3000);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Countdown before game starts
   useEffect(() => {
@@ -88,28 +105,49 @@ export default function BaseGame({
       const finalScore = score ?? gameState.score;
       const timeElapsed = duration - gameState.timeRemaining;
 
-      console.log("BaseGame endGame called:", { success, message, score: finalScore });
+      console.log("🎬 BaseGame endGame called - starting horror sequence:", { success, message, score: finalScore });
 
-      setGameState((prev) => ({
-        ...prev,
-        status: success ? "completed" : "failed",
-        score: finalScore,
-        message: message || (success ? "Well done!" : "Better luck next time!"),
-      }));
+      // Store final result
+      setFinalResult({ success, score: finalScore });
+
+      // Start horror sequence
+      setShowHorrorBanner(true);
+      console.log("🎬 Horror banner state set to true");
+      
+      // Flicker effect
+      let currentFlicker = 0;
+      const flickerInterval = setInterval(() => {
+        setHorrorFlickerCount(prev => prev + 1);
+        currentFlicker++;
+        
+        if (currentFlicker >= 8) { // 8 flickers
+          clearInterval(flickerInterval);
+        }
+      }, 150); // Flicker every 150ms
 
       if (playSound) {
         playSound(success ? "game-win" : "game-lose");
       }
 
-      // Delay the callback to show the result briefly (but banner shows immediately)
+      // Hide horror banner and end game after 6 seconds
       setTimeout(() => {
+        setShowHorrorBanner(false);
+        setHorrorFlickerCount(0);
+        
+        setGameState((prev) => ({
+          ...prev,
+          status: success ? "completed" : "failed",
+          score: finalScore,
+          message: message || (success ? "Well done!" : "Better luck next time!"),
+        }));
+
         onGameEnd({
           success,
           score: finalScore,
           message: message,
           timeElapsed,
         });
-      }, 4000); // Extended to 4 seconds to show banner longer
+      }, 6000);
     },
     [gameState.score, gameState.timeRemaining, duration, onGameEnd, playSound]
   );
@@ -138,70 +176,117 @@ export default function BaseGame({
   }
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-blue-600 to-purple-600 text-white">
-      {/* Header */}
-      <div className="flex justify-between items-center p-4 bg-black bg-opacity-20">
-        <h1 className="text-2xl font-bold">{title}</h1>
-        <div className="flex items-center space-x-4">
-          <div className="text-lg font-semibold">Score: {gameState.score}</div>
-          <div className="text-lg font-semibold">
-            Time: {gameState.timeRemaining}s
+    <div className="relative w-screen h-screen overflow-hidden">
+      {/* Normal Game UI - Hidden when horror banner is active */}
+      <div className={`flex flex-col h-full bg-gradient-to-br from-blue-600 to-purple-600 text-white ${showHorrorBanner ? 'hidden' : ''}`}>
+        {/* Header */}
+        <div className="flex justify-between items-center p-4 bg-black bg-opacity-20">
+          <h1 className="text-2xl font-bold">{title}</h1>
+          <div className="flex items-center space-x-4">
+            <div className="text-lg font-semibold">Score: {gameState.score}</div>
+            <div className="text-lg font-semibold">
+              Time: {gameState.timeRemaining}s
+            </div>
           </div>
+        </div>
+
+        {/* Game Area */}
+        <div className="flex-1 flex flex-col items-center justify-center p-4">
+          {React.cloneElement(children as React.ReactElement, {
+            ...gameControls,
+          })}
+        </div>
+
+        {/* Status Message */}
+        <div className="p-4 bg-black bg-opacity-20 text-center">
+          <p className="text-lg">{gameState.message}</p>
+          {gameState.status === "playing" && (
+            <div className="mt-2">
+              <div className="h-2 bg-white bg-opacity-30 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-yellow-400 transition-all duration-1000 ease-linear"
+                  style={{
+                    width: `${(gameState.timeRemaining / duration) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Game Area */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4">
-        {React.cloneElement(children as React.ReactElement, {
-          ...gameControls,
-        })}
-      </div>
-
-      {/* Status Message */}
-      <div className="p-4 bg-black bg-opacity-20 text-center">
-        <p className="text-lg">{gameState.message}</p>
-        {gameState.status === "playing" && (
-          <div className="mt-2">
-            <div className="h-2 bg-white bg-opacity-30 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-yellow-400 transition-all duration-1000 ease-linear"
+      {/* Horror Banner - Full Screen Takeover */}
+      {showHorrorBanner && (() => {
+        console.log("🎬 HORROR BANNER RENDERING - flickerCount:", horrorFlickerCount);
+        return (
+          <div 
+            className="fixed inset-0 w-screen h-screen flex items-center justify-center"
+            style={{
+              zIndex: 999999,
+              backgroundColor: horrorFlickerCount % 2 === 0 ? '#000000' : '#ffffff',
+              transition: 'background-color 0.05s'
+            }}
+          >
+            {horrorFlickerCount > 8 && (() => {
+              console.log("🎬 SHOWING FINAL BANNER");
+              return (
+            <div className="w-full h-full flex items-center justify-center">
+              <div 
                 style={{
-                  width: `${(gameState.timeRemaining / duration) * 100}%`,
+                  backgroundColor: finalResult.success ? '#00ff00' : '#ff0000',
+                  color: '#000000',
+                  fontSize: '4rem',
+                  fontWeight: '900',
+                  border: '10px solid #000000',
+                  borderRadius: '20px',
+                  minWidth: '800px',
+                  minHeight: '500px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  padding: '40px'
                 }}
-              />
+              >
+                <div style={{ fontSize: '8rem', marginBottom: '30px' }}>
+                  {finalResult.success ? '🏆' : '😢'}
+                </div>
+                <div style={{ fontSize: '4rem', fontWeight: '900', lineHeight: '1.2' }}>
+                  {finalResult.success ? 'WINNER WINNER' : 'LOSER LOSER'}
+                </div>
+                <div style={{ fontSize: '4rem', fontWeight: '900', lineHeight: '1.2' }}>
+                  {finalResult.success ? 'CHICKEN DINNER!' : 'CHICKEN HOOSIER!'}
+                </div>
+                <div style={{ fontSize: '3rem', marginTop: '30px' }}>
+                  Score: {finalResult.score}
+                </div>
+              </div>
             </div>
+              );
+            })()}
           </div>
-        )}
-      </div>
+        );
+      })()}
 
-      {/* Winner/Loser Banner */}
-      {(gameState.status === "completed" || gameState.status === "failed") && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 text-center shadow-2xl transform animate-bounce">
-            {gameState.status === "completed" ? (
-              <div className="text-green-600">
-                <div className="text-8xl mb-4">🏆</div>
-                <div className="text-4xl font-bold mb-2 text-green-800">
-                  WINNER WINNER
-                </div>
-                <div className="text-4xl font-bold text-green-800">
-                  CHICKEN DINNER!
-                </div>
-              </div>
-            ) : (
-              <div className="text-red-600">
-                <div className="text-8xl mb-4">😢</div>
-                <div className="text-4xl font-bold mb-2 text-red-800">
-                  LOSER LOSER
-                </div>
-                <div className="text-4xl font-bold text-red-800">
-                  CHICKEN HOOSIER!
-                </div>
-              </div>
-            )}
-            <div className="text-2xl font-semibold mt-4 text-gray-700">
-              Score: {gameState.score}
-            </div>
+      {/* Test Banner */}
+      {testBanner && (
+        <div 
+          className="fixed inset-0 w-screen h-screen flex items-center justify-center"
+          style={{
+            zIndex: 999999,
+            backgroundColor: '#ff00ff'
+          }}
+        >
+          <div style={{
+            backgroundColor: '#ffffff',
+            color: '#000000',
+            fontSize: '4rem',
+            fontWeight: '900',
+            padding: '40px',
+            textAlign: 'center'
+          }}>
+            🧪 TEST BANNER WORKING!
           </div>
         </div>
       )}

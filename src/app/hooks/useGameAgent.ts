@@ -11,6 +11,7 @@ export interface GameScenario {
   customerQuote?: string;
   bullyQuote?: string;
   daughterQuote?: string;
+  turkeyQuote?: string;
   context: string;
   goodAdviceKeywords?: string[];
   badAdviceKeywords?: string[];
@@ -24,6 +25,8 @@ export interface GameScenario {
   badComebackKeywords?: string[];
   goodDeathKeywords?: string[];
   badDeathKeywords?: string[];
+  goodTurkeyKeywords?: string[];
+  badTurkeyKeywords?: string[];
 }
 
 export interface GameFinishResult {
@@ -36,6 +39,7 @@ export interface UseGameAgentOptions {
   onGameStart?: (scenario: GameScenario) => void;
   onGameFinish?: (result: GameFinishResult) => void;
   gameType?:
+    | "attract-the-turkey"
     | "pwn-the-bully"
     | "explain-death"
     | "advise-the-child"
@@ -318,6 +322,36 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             console.error("Failed to parse explain-death game finish result:", e);
           }
         }
+        // Handle attract-the-turkey game
+        else if (
+          item.title.includes("start_turkey_attraction_game") &&
+          item.data &&
+          gameType === "attract-the-turkey"
+        ) {
+          try {
+            const scenario = item.data as GameScenario;
+            setCurrentScenario(scenario);
+            setIsGameActive(true);
+            onGameStart?.(scenario);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse attract-the-turkey game start scenario:", e);
+          }
+        } else if (
+          item.title.includes("finish_turkey_attraction_game") &&
+          gameType === "attract-the-turkey"
+        ) {
+          try {
+            console.log("🔍 Found finish_turkey_attraction_game breadcrumb:", item);
+            const result = item.data as GameFinishResult;
+            console.log("🔍 Parsed result:", result);
+            setIsGameActive(false);
+            onGameFinish?.(result);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse attract-the-turkey game finish result:", e);
+          }
+        }
         // Handle lemon sale game
         else if (
           item.title.includes("start_lemon_sale_game") &&
@@ -367,6 +401,8 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
 
     // Send a message to trigger the game host agent to start the appropriate game
     const gameMessages = {
+      "attract-the-turkey":
+        "Hello! I'm ready to play Attract the Turkey. Please start the game!",
       "pwn-the-bully":
         "Hello! I'm ready to play Pwn the Bully. Please start the game!",
       "explain-death":

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 // CORS headers
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

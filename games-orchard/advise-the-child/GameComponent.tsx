@@ -104,9 +104,9 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     onGameFinish: (result: GameFinishResult) => {
       console.log("🎮 AdviseTheChild onGameFinish called with result:", result);
       
-      // Handle undefined/null results - default to success if no clear failure
-      const success = result.success !== undefined ? result.success : true;
-      const score = result.score !== undefined ? result.score : 85;
+      // Use the actual result values, don't default success to true
+      const success = result.success || false;
+      const score = result.score || 0;
       const message = result.message || "Game completed!";
       
       updateScore?.(score);

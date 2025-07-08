@@ -28,6 +28,12 @@ export default function Games() {
   const [implementedGames] = useState<GameMetadata[]>(() =>
     getImplementedGames()
   );
+  const [currentTransitionVideo, setCurrentTransitionVideo] = useState(0);
+  const transitionVideos = [
+    "/bg-video.mp4",
+    "/bg-video-1.mp4",
+    "/bg-video-2.mp4",
+  ];
 
   // Auto-start sequence state
   const [showContent, setShowContent] = useState(true);
@@ -77,7 +83,7 @@ export default function Games() {
       sessionStatus === "CONNECTED" &&
       isWebRTCReady
     ) {
-      // After 5 seconds, fade out content and overlay
+      // After 4 seconds, fade out content and overlay
       const fadeOutTimer = setTimeout(() => {
         setShowContent(false);
         setShowOverlay(false);
@@ -199,6 +205,7 @@ export default function Games() {
     setGameState("landing");
     // Reset game sequence
     setCurrentGameIndex(0);
+    setCurrentTransitionVideo(0);
     setShowContent(true);
     setShowOverlay(true);
 
@@ -234,6 +241,9 @@ export default function Games() {
 
     // Check if there's a next game in the sequence
     if (currentGameIndex < implementedGames.length - 1) {
+      // Cycle to next transition video
+      setCurrentTransitionVideo((prev) => (prev + 1) % transitionVideos.length);
+
       // Start transition to next game
       setGameState("transition");
 
@@ -463,8 +473,12 @@ export default function Games() {
         // muted
         playsInline
         className="absolute inset-0 w-full h-full object-cover z-0"
+        key={transitionVideos[currentTransitionVideo]} // Force re-render when video changes
       >
-        <source src="/bg-video.mp4" type="video/mp4" />
+        <source
+          src={transitionVideos[currentTransitionVideo]}
+          type="video/mp4"
+        />
       </video>
 
       {/* Dark overlay for better text readability */}

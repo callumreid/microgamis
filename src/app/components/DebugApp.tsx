@@ -7,10 +7,9 @@ import { Capacitor, registerPlugin } from "@capacitor/core";
 import Image from "next/image";
 
 // UI components
-import Transcript from "./components/Transcript";
-import Events from "./components/Events";
-import BottomToolbar from "./components/BottomToolbar";
-import Games from "./components/Games";
+import Transcript from "./Transcript";
+import Events from "./Events";
+import BottomToolbar from "./BottomToolbar";
 
 // Types
 import { SessionStatus } from "@/app/types";
@@ -19,12 +18,15 @@ import type { RealtimeAgent } from "@openai/agents/realtime";
 // Context providers & hooks
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
-import { useRealtimeSession } from "./hooks/useRealtimeSession";
+import { useRealtimeSession } from "../hooks/useRealtimeSession";
+import { createModerationGuardrail } from "@/app/agentConfigs/guardrails";
 
 // Agent configs
 import { allAgentSets, defaultAgentSetKey } from "@/app/agentConfigs";
 import { customerServiceRetailScenario } from "@/app/agentConfigs/customerServiceRetail";
 import { chatSupervisorScenario } from "@/app/agentConfigs/chatSupervisor";
+import { customerServiceRetailCompanyName } from "@/app/agentConfigs/customerServiceRetail";
+import { chatSupervisorCompanyName } from "@/app/agentConfigs/chatSupervisor";
 import { simpleHandoffScenario } from "@/app/agentConfigs/simpleHandoff";
 
 // Map used by connect logic for scenarios defined via the SDK.
@@ -34,31 +36,18 @@ const sdkScenarioMap: Record<string, RealtimeAgent[]> = {
   chatSupervisor: chatSupervisorScenario,
 };
 
-import useAudioDownload from "./hooks/useAudioDownload";
-import { useHandleSessionHistory } from "./hooks/useHandleSessionHistory";
+import useAudioDownload from "../hooks/useAudioDownload";
+import { useHandleSessionHistory } from "../hooks/useHandleSessionHistory";
 
 // Fire TV mic key plugin
 const MicKey = Capacitor.isNativePlatform()
   ? registerPlugin<any>("MicKey")
   : undefined;
 
-function App() {
+function DebugApp() {
   const searchParams = useSearchParams()!;
 
-  // ---------------------------------------------------------------------
-  // Codec selector – lets you toggle between wide-band Opus (48 kHz)
-  // and narrow-band PCMU/PCMA (8 kHz) to hear what the agent sounds like on
-  // a traditional phone line and to validate ASR / VAD behaviour under that
-  // constraint.
-  //
-  // We read the `?codec=` query-param and rely on the `changePeerConnection`
-  // hook (configured in `useRealtimeSession`) to set the preferred codec
-  // before the offer/answer negotiation.
-  // ---------------------------------------------------------------------
   const urlCodec = searchParams.get("codec") || "opus";
-
-  // Agents SDK doesn't currently support codec selection so it is now forced
-  // via global codecPatch at module load
 
   const { addTranscriptMessage, addTranscriptBreadcrumb } = useTranscript();
   const { logClientEvent, logServerEvent } = useEvent();
@@ -69,9 +58,7 @@ function App() {
   >(null);
 
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
-  // Ref to identify whether the latest agent switch came from an automatic handoff
   const handoffTriggeredRef = useRef(false);
-  // Ref to track if M key is currently being pressed to prevent repeat events
   const mKeyPressedRef = useRef(false);
 
   const sdkAudioElement = React.useMemo(() => {
@@ -83,7 +70,6 @@ function App() {
     return el;
   }, []);
 
-  // Attach SDK audio element once it exists (after first render in browser)
   useEffect(() => {
     if (sdkAudioElement && !audioElementRef.current) {
       audioElementRef.current = sdkAudioElement;
@@ -123,9 +109,7 @@ function App() {
       return stored ? stored === "true" : true;
     }
   );
-  const [showGames, setShowGames] = useState<boolean>(false);
 
-  // Initialize the recording hook.
   const { startRecording, stopRecording, downloadRecording } =
     useAudioDownload();
 
@@ -142,21 +126,8 @@ function App() {
 
   useEffect(() => {
     let finalAgentConfig = searchParams.get("agentConfig");
-    const viewParam = searchParams.get("view");
 
-    // If view=games is specified, show games directly
-    if (viewParam === "games") {
-      setShowGames(true);
-      return;
-    }
-
-    // If no agentConfig is provided, default to games view
-    if (!finalAgentConfig) {
-      setShowGames(true);
-      return;
-    }
-
-    if (!allAgentSets[finalAgentConfig]) {
+    if (!finalAgentConfig || !allAgentSets[finalAgentConfig]) {
       finalAgentConfig = defaultAgentSetKey;
       const url = new URL(window.location.toString());
       url.searchParams.set("agentConfig", finalAgentConfig);
@@ -188,7 +159,6 @@ function App() {
       );
       addTranscriptBreadcrumb(`Agent: ${selectedAgentName}`, currentAgent);
       updateSession(!handoffTriggeredRef.current);
-      // Reset flag after handling so subsequent effects behave normally
       handoffTriggeredRef.current = false;
     }
   }, [selectedAgentConfigSet, selectedAgentName, sessionStatus]);
@@ -229,7 +199,6 @@ function App() {
         const EPHEMERAL_KEY = await fetchEphemeralKey();
         if (!EPHEMERAL_KEY) return;
 
-        // Ensure the selectedAgentName is first so that it becomes the root
         const reorderedAgents = [...sdkScenarioMap[agentSetKey]];
         const idx = reorderedAgents.findIndex(
           (a) => a.name === selectedAgentName
@@ -239,10 +208,17 @@ function App() {
           reorderedAgents.unshift(agent);
         }
 
+        const companyName =
+          agentSetKey === "customerServiceRetail"
+            ? customerServiceRetailCompanyName
+            : chatSupervisorCompanyName;
+        const guardrail = createModerationGuardrail(companyName);
+
         await connect({
           getEphemeralKey: async () => EPHEMERAL_KEY,
           initialAgents: reorderedAgents,
           audioElement: sdkAudioElement,
+          outputGuardrails: [guardrail],
           extraContext: {
             addTranscriptBreadcrumb,
           },
@@ -281,9 +257,6 @@ function App() {
   };
 
   const updateSession = (shouldTriggerResponse: boolean = false) => {
-    // Reflect Push-to-Talk UI state by (de)activating server VAD on the
-    // backend. The Realtime SDK supports live session updates via the
-    // `session.update` event.
     const turnDetection = isPTTActive
       ? null
       : {
@@ -301,7 +274,6 @@ function App() {
       },
     });
 
-    // Send an initial 'hi' message to trigger the agent to greet the user
     if (shouldTriggerResponse) {
       sendSimulatedUserMessage("hi");
     }
@@ -324,17 +296,14 @@ function App() {
   const handleTalkButtonDown = () => {
     if (sessionStatus !== "CONNECTED") return;
 
-    // Prevent multiple simultaneous PTT sessions
     if (isPTTUserSpeaking) {
       console.log("[PTT] Already speaking, ignoring additional keydown");
       return;
     }
 
     interrupt();
-
     setIsPTTUserSpeaking(true);
 
-    // Use native audio if available (Fire TV), otherwise fall back to WebRTC
     if (isNativeAudioAvailable) {
       console.log("[PTT] Using native audio input");
       pushToTalkStartNative().then((success) => {
@@ -356,7 +325,6 @@ function App() {
 
     setIsPTTUserSpeaking(false);
 
-    // Use native audio if available (Fire TV), otherwise fall back to WebRTC
     if (isNativeAudioAvailable) {
       console.log("[PTT] Stopping native audio input");
       pushToTalkStopNative();
@@ -387,14 +355,10 @@ function App() {
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const newAgentName = e.target.value;
-    // Reconnect session with the newly selected agent as root so that tool
-    // execution works correctly.
     disconnectFromRealtime();
     setSelectedAgentName(newAgentName);
-    // connectToRealtime will be triggered by effect watching selectedAgentName
   };
 
-  // Because we need a new connection, refresh the page when codec changes
   const handleCodecChange = (newCodec: string) => {
     const url = new URL(window.location.toString());
     url.searchParams.set("codec", newCodec);
@@ -441,14 +405,11 @@ function App() {
           console.warn("Autoplay may be blocked by browser:", err);
         });
       } else {
-        // Mute and pause to avoid brief audio blips before pause takes effect.
         audioElementRef.current.muted = true;
         audioElementRef.current.pause();
       }
     }
 
-    // Toggle server-side audio stream mute so bandwidth is saved when the
-    // user disables playback.
     try {
       mute(!isAudioPlaybackEnabled);
     } catch (err) {
@@ -456,9 +417,8 @@ function App() {
     }
   }, [isAudioPlaybackEnabled]);
 
-  // Handle native Fire TV mic key events
   useEffect(() => {
-    if (!MicKey) return; // Only run on native platforms
+    if (!MicKey) return;
 
     const handleNativeMicKey = (event: { type: string }) => {
       console.log(
@@ -466,7 +426,6 @@ function App() {
       );
 
       if (event.type === "down") {
-        // Prevent multiple calls when key is held down
         if (mKeyPressedRef.current) {
           console.log("[NativeMicKey] Key already pressed, ignoring repeat");
           return;
@@ -475,14 +434,12 @@ function App() {
         mKeyPressedRef.current = true;
 
         if (isPTTActive) {
-          // In PTT mode, trigger talk button
           handleTalkButtonDown();
         }
       } else if (event.type === "up") {
         mKeyPressedRef.current = false;
 
         if (isPTTActive) {
-          // In PTT mode, release talk button
           handleTalkButtonUp();
         }
       }
@@ -500,8 +457,6 @@ function App() {
     handleTalkButtonUp,
   ]);
 
-  // Ensure mute state is propagated to transport right after we connect or
-  // whenever the SDK client reference becomes available.
   useEffect(() => {
     if (sessionStatus === "CONNECTED") {
       try {
@@ -514,33 +469,16 @@ function App() {
 
   useEffect(() => {
     if (sessionStatus === "CONNECTED" && audioElementRef.current?.srcObject) {
-      // The remote audio stream from the audio element.
       const remoteStream = audioElementRef.current.srcObject as MediaStream;
       startRecording(remoteStream);
     }
 
-    // Clean up on unmount or when sessionStatus is updated.
     return () => {
       stopRecording();
     };
   }, [sessionStatus]);
 
   const agentSetKey = searchParams.get("agentConfig") || "default";
-
-  // Auto-connect for games if needed
-  useEffect(() => {
-    if (showGames && sessionStatus === "DISCONNECTED") {
-      // Auto-connect with chatSupervisor for games
-      setSelectedAgentName("gameHost");
-      setSelectedAgentConfigSet(sdkScenarioMap["chatSupervisor"]);
-      // connectToRealtime will be triggered by the selectedAgentName effect
-    }
-  }, [showGames, sessionStatus]);
-
-  // Show games interface if games button is clicked
-  if (showGames) {
-    return <Games />;
-  }
 
   return (
     <div className="text-base flex flex-col h-screen bg-gray-100 text-gray-800 relative">
@@ -559,16 +497,10 @@ function App() {
             />
           </div>
           <div>
-            HUUUB <span className="text-gray-500">Agents</span>
+            DEBUG <span className="text-gray-500">Agents</span>
           </div>
         </div>
         <div className="flex items-center gap-4 flex-wrap">
-          <button
-            onClick={() => setShowGames(!showGames)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-          >
-            Games
-          </button>
           <div className="flex items-center gap-2">
             <label className="text-base font-medium whitespace-nowrap">
               Scenario
@@ -666,4 +598,4 @@ function App() {
   );
 }
 
-export default App;
+export default DebugApp;

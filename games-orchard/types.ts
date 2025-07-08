@@ -7,8 +7,7 @@ export interface GameResult {
 
 export interface GameProps {
   onGameEnd: (result: GameResult) => void;
-  onVoiceInput?: (transcript: string) => void;
-  sendVoiceMessage?: (message: string) => void;
+  sendPlayerText?: (text: string) => void;
   playSound?: (soundId: string) => void;
 }
 
@@ -24,19 +23,19 @@ export interface MicroGame {
 }
 
 export interface GameState {
-  status: 'waiting' | 'playing' | 'completed' | 'failed';
+  status: "waiting" | "playing" | "completed" | "failed";
   timeRemaining: number;
   score: number;
   message: string;
 }
 
-export type GameCategory = 
-  | 'social'
-  | 'recognition' 
-  | 'decision'
-  | 'action'
-  | 'counting'
-  | 'creative';
+export type GameCategory =
+  | "social"
+  | "recognition"
+  | "decision"
+  | "action"
+  | "counting"
+  | "creative";
 
 export interface GameMetadata {
   id: string;

@@ -88,6 +88,8 @@ export default function BaseGame({
       const finalScore = score ?? gameState.score;
       const timeElapsed = duration - gameState.timeRemaining;
 
+      console.log("BaseGame endGame called:", { success, message, score: finalScore });
+
       setGameState((prev) => ({
         ...prev,
         status: success ? "completed" : "failed",
@@ -99,7 +101,7 @@ export default function BaseGame({
         playSound(success ? "game-win" : "game-lose");
       }
 
-      // Delay the callback to show the result briefly
+      // Delay the callback to show the result briefly (but banner shows immediately)
       setTimeout(() => {
         onGameEnd({
           success,
@@ -107,7 +109,7 @@ export default function BaseGame({
           message: message,
           timeElapsed,
         });
-      }, 2000);
+      }, 4000); // Extended to 4 seconds to show banner longer
     },
     [gameState.score, gameState.timeRemaining, duration, onGameEnd, playSound]
   );
@@ -171,6 +173,38 @@ export default function BaseGame({
           </div>
         )}
       </div>
+
+      {/* Winner/Loser Banner */}
+      {(gameState.status === "completed" || gameState.status === "failed") && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 text-center shadow-2xl transform animate-bounce">
+            {gameState.status === "completed" ? (
+              <div className="text-green-600">
+                <div className="text-8xl mb-4">🏆</div>
+                <div className="text-4xl font-bold mb-2 text-green-800">
+                  WINNER WINNER
+                </div>
+                <div className="text-4xl font-bold text-green-800">
+                  CHICKEN DINNER!
+                </div>
+              </div>
+            ) : (
+              <div className="text-red-600">
+                <div className="text-8xl mb-4">😢</div>
+                <div className="text-4xl font-bold mb-2 text-red-800">
+                  LOSER LOSER
+                </div>
+                <div className="text-4xl font-bold text-red-800">
+                  CHICKEN HOOSIER!
+                </div>
+              </div>
+            )}
+            <div className="text-2xl font-semibold mt-4 text-gray-700">
+              Score: {gameState.score}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

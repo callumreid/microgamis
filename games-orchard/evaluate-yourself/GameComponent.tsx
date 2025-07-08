@@ -193,24 +193,7 @@ function EvaluateYourselfGame(props: Partial<GameControlProps>) {
           </div>
         </div>
 
-        {/* Performance Rating Guide */}
-        <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4 mb-4">
-          <h3 className="font-bold text-gray-800 mb-2">📋 Performance Ratings:</h3>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="bg-red-100 border border-red-300 p-2 rounded">
-              <span className="font-semibold text-red-800">1. Needs Development</span>
-            </div>
-            <div className="bg-yellow-100 border border-yellow-300 p-2 rounded">
-              <span className="font-semibold text-yellow-800">2. Occasionally Meets Expectations</span>
-            </div>
-            <div className="bg-blue-100 border border-blue-300 p-2 rounded">
-              <span className="font-semibold text-blue-800">3. Consistently Meets Expectations</span>
-            </div>
-            <div className="bg-green-100 border border-green-300 p-2 rounded">
-              <span className="font-semibold text-green-800">4. Exceeds Expectations</span>
-            </div>
-          </div>
-        </div>
+      
         
         {/* Speech Bubble - Centered and Prominent */}
         <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 mb-4 min-h-[200px] flex flex-col justify-center">

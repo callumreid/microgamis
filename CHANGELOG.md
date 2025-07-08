@@ -141,6 +141,33 @@
 - `src/app/hooks/useGameAgent.ts` - Added alien game type and logic
 - `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added alien scenarios and tools
 
+### Recent Changes - 2025-07-08 (Fourth Game Implementation)
+
+#### Added
+- **New Game: "Pwn the Bully"**: Social confrontation micro game with comeback mechanics
+  - Mean bully calls player a "chickenshit butter slut" and player must deliver perfect comeback
+  - Social combat themed UI with red/orange/yellow gradient and confrontation emojis (💪, 😤, 🔥, 💥)
+  - Win condition: Deliver comeback that totally pwns the bully and regains player power
+  - Lose condition: Weak comeback results in bully maintaining dominance (and calling player "chickenshit butter slut")
+  - 10-second timer focusing on quick wit and verbal combat skills
+
+#### Enhanced
+- **Game Registry**: Added "pwn-the-bully" as first game in play sequence
+  - Positioned at top of `implementedGames` registry for immediate testing
+  - Added to `implementedGameMetadata` array as first option
+  - Game now plays first when randomly selected or during testing
+
+#### Technical Implementation Details
+- **Game Theme**: Social confrontation with comeback battle mechanics
+- **UI Design**: Aggressive color scheme (red to orange to yellow gradient) with confrontation emojis
+- **Voice Integration**: 8-second delay for bully insult, then 10-second player comeback window
+- **Scoring Logic**: Success based on comeback quality that "pwns" the bully
+- **Agent Integration**: Uses "pwn-the-bully" game type with appropriate scenarios
+
+#### Files Modified
+- `games-orchard/pwn-the-bully/` - New game directory with complete implementation
+- `games-orchard/index.ts` - Added bully game to registry as first game
+
 ## Instructions for Future AI Agents
 
 When working on this codebase:

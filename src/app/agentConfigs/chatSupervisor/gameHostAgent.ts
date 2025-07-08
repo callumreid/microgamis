@@ -330,6 +330,58 @@ function getRandomAlienScenario() {
   return alienConvinceScenarios[randomIndex];
 }
 
+// Self-evaluation game scenarios
+const selfEvaluationScenarios = [
+  {
+    id: "quarterly_review",
+    problem: "Time for your quarterly self-evaluation",
+    managerQuote: "The manager says with a condescending smile - Well, well, well. Another quarter, another self-evaluation. Let's see what delusions of grandeur you've cooked up this time. Rate yourself on the four-tier system and tell me why you think you deserve it. I'll be the judge of that.",
+    context: "Your snotty manager is conducting your quarterly performance review",
+    performanceCategories: [
+      "communication skills",
+      "project delivery",
+      "teamwork",
+      "problem solving",
+      "meeting deadlines",
+      "quality of work"
+    ]
+  },
+  {
+    id: "annual_review",
+    problem: "Annual performance self-assessment",
+    managerQuote: "The manager rolls their eyes - Oh joy, it's that time of year again. Annual reviews. Let me guess, you think you're employee of the year material? Rate yourself and explain why you think you deserve anything above 'occasionally meets expectations' - which, let's be honest, is generous for most of you people.",
+    context: "Your condescending manager is conducting your annual performance review",
+    performanceCategories: [
+      "leadership potential",
+      "innovation",
+      "client satisfaction",
+      "efficiency",
+      "adaptability",
+      "initiative"
+    ]
+  },
+  {
+    id: "promotion_review",
+    problem: "Self-evaluation for promotion consideration",
+    managerQuote: "The manager smirks - So you think you're ready for a promotion? How precious. Rate yourself on our performance scale and convince me why you're not just another mediocre employee who occasionally meets expectations. This should be entertaining.",
+    context: "Your arrogant manager is reviewing you for potential promotion",
+    performanceCategories: [
+      "strategic thinking",
+      "mentoring others",
+      "results delivery",
+      "process improvement",
+      "stakeholder management",
+      "decision making"
+    ]
+  }
+];
+
+// Function to get a random self-evaluation scenario
+function getRandomSelfEvaluationScenario() {
+  const randomIndex = Math.floor(Math.random() * selfEvaluationScenarios.length);
+  return selfEvaluationScenarios[randomIndex];
+}
+
 // Tool to start the child advice game
 export const startChildAdviceGame = tool({
   name: "start_child_advice_game",
@@ -592,6 +644,89 @@ export const finishAlienConvinceGame = tool({
   },
 });
 
+// Tool to start the self-evaluation game
+export const startSelfEvaluationGame = tool({
+  name: "start_self_evaluation_game",
+  description:
+    "Returns a random corporate self-evaluation scenario for the Evaluate-Yourself micro-game.",
+  parameters: {
+    type: "object",
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    const scenario = getRandomSelfEvaluationScenario();
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Started self-evaluation game", scenario);
+    }
+
+    return {
+      id: scenario.id,
+      problem: scenario.problem,
+      managerQuote: scenario.managerQuote,
+      context: scenario.context,
+      performanceCategories: scenario.performanceCategories,
+    };
+  },
+});
+
+// Tool to finish the self-evaluation game
+export const finishSelfEvaluationGame = tool({
+  name: "finish_self_evaluation_game",
+  description:
+    "Ends the current Evaluate-Yourself game and reports the result to the UI.",
+  parameters: {
+    type: "object",
+    properties: {
+      success: {
+        type: "boolean",
+        description: "true if the player showed appropriate corporate humility",
+      },
+      score: {
+        type: "integer",
+        description: "0-100 evaluation score",
+      },
+      message: {
+        type: "string",
+        description: "Snotty manager's response to the self-evaluation",
+      },
+    },
+    required: ["success", "score", "message"],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("finish_self_evaluation_game called with input:", input);
+    
+    const { success, score, message } = input as {
+      success: boolean;
+      score: number;
+      message: string;
+    };
+
+    console.log("Parsed values:", { success, score, message });
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Finished self-evaluation game", {
+        success,
+        score,
+        message,
+      });
+    }
+
+    return { ok: true };
+  },
+});
+
 // Game host agent instructions
 export const gameHostAgentInstructions = `You are a cynical, world-weary game show host who's seen it all! Your personality is sharp, realistic, and brutally honest about how the world actually works - think a jaded Steve Harvey who's given up on idealism.
 
@@ -709,7 +844,38 @@ You are hosting 10-second micro-games. The current game will be indicated by the
    • If they LOST: Loudly "BOOOOO" the user with theatrical disappointment
    • Then deliver your cynical commentary
 
+**"Evaluate Yourself"** Game Rules:
+1. When the game starts you MUST call the tool \`start_self_evaluation_game()\`. Use the returned scenario to brief the player:
+   • Read the manager's quote verbatim, with extra condescending emphasis on their arrogance.
+   • Explain the 4-tier rating system: "Needs Development", "Occasionally Meets Expectations", "Consistently Meets Expectations", "Exceeds Expectations"
+   • Challenge them: "So, rate yourself and justify it. Let's see how delusional you are!"
+   • Speak with theatrical corporate cynicism about performance reviews, no lists, <10 s.
+
+2. Accept the FIRST reply from the player, no matter how short or long.
+   • Do not ask for elaboration or more details - judge whatever they give you immediately.
+
+3. Evaluate their self-assessment:
+   • The snotty manager ALWAYS defaults to "Occasionally Meets Expectations" regardless of input
+   • ANY self-rating = LOSE (score 20-40) because the manager dismisses all self-evaluations
+   • The manager will find fault with everything: too confident, too modest, unrealistic expectations
+   • Examples of manager responses: "How predictable", "That's what they all say", "Occasionally meets expectations, at best"
+   • Give slightly higher scores (35-40) for creative or funny responses, but still a loss
+   • Give lowest scores (20-25) for boring or overly serious responses
+
+4. Determine success:
+   • success = false (always) → the manager always wins and puts you in your place
+   • The game is rigged - corporate life is unfair and managers have all the power
+   • Celebrate the manager's victory over employee delusions
+
+5. Call \`finish_self_evaluation_game({success,score,message})\` where \`message\`
+   is a brief (≤25 words) snotty manager response dismissing their self-evaluation ("Occasionally meets expectations, like everyone else", "How original, another overconfident employee", "That's what they all think").
+
+6. After calling the tool, deliver the victory/loss celebration:
+   • Since they always LOSE: Loudly "BOOOOO" the user with theatrical disappointment
+   • Then deliver the manager's condescending final verdict
+   • Mock their corporate aspirations with cynical commentary about office politics
+
 Keep the tone sharp, cynical, and entertaining while celebrating wins or mourning losses dramatically.`;
 
 // Export the tools array
-export const gameHostTools = [startChildAdviceGame, finishChildAdviceGame, startPoliceStallGame, finishPoliceStallGame, startAlienConvinceGame, finishAlienConvinceGame];
+export const gameHostTools = [startChildAdviceGame, finishChildAdviceGame, startPoliceStallGame, finishPoliceStallGame, startAlienConvinceGame, finishAlienConvinceGame, startSelfEvaluationGame, finishSelfEvaluationGame];

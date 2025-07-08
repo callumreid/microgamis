@@ -186,7 +186,7 @@ function SellTheLemonGame(props: Partial<GameControlProps>) {
             🚗🍋 Sell The Lemon
           </h2>
           <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
-            Time: {gameState?.timeRemaining || 45}s
+            Time: {gameState?.timeRemaining || 30}s
           </div>
         </div>
         {/* Speech Bubble - Centered and Prominent */}

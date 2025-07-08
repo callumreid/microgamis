@@ -5,10 +5,13 @@ import { useTranscript } from "../contexts/TranscriptContext";
 export interface GameScenario {
   id: string;
   problem: string;
-  childQuote: string;
+  childQuote?: string;
+  policeQuote?: string;
   context: string;
-  goodAdviceKeywords: string[];
-  badAdviceKeywords: string[];
+  goodAdviceKeywords?: string[];
+  badAdviceKeywords?: string[];
+  goodStallKeywords?: string[];
+  badStallKeywords?: string[];
 }
 
 export interface GameFinishResult {
@@ -20,10 +23,11 @@ export interface GameFinishResult {
 export interface UseGameAgentOptions {
   onGameStart?: (scenario: GameScenario) => void;
   onGameFinish?: (result: GameFinishResult) => void;
+  gameType?: "advise-the-child" | "puh-lease-officer";
 }
 
 export function useGameAgent(options: UseGameAgentOptions = {}) {
-  const { onGameStart, onGameFinish } = options;
+  const { onGameStart, onGameFinish, gameType = "advise-the-child" } = options;
   const { sendUserText, isWebRTCReady } = useGameSession();
   const { transcriptItems } = useTranscript();
   const [isGameActive, setIsGameActive] = useState(false);
@@ -48,7 +52,8 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
 
     for (const item of recentBreadcrumbs) {
       if (item.title?.includes("function call result:")) {
-        if (item.title.includes("start_child_advice_game") && item.data) {
+        // Handle child advice game
+        if (item.title.includes("start_child_advice_game") && item.data && gameType === "advise-the-child") {
           try {
             const scenario = item.data as GameScenario;
             setCurrentScenario(scenario);
@@ -56,11 +61,9 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameStart?.(scenario);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse game start scenario:", e);
+            console.error("Failed to parse child advice game start scenario:", e);
           }
-        } else if (
-          item.title.includes("finish_child_advice_game")
-        ) {
+        } else if (item.title.includes("finish_child_advice_game") && gameType === "advise-the-child") {
           try {
             console.log("🔍 Found finish_child_advice_game breadcrumb:", item);
             const result = item.data as GameFinishResult;
@@ -69,12 +72,35 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameFinish?.(result);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse game finish result:", e);
+            console.error("Failed to parse child advice game finish result:", e);
+          }
+        }
+        // Handle police game
+        else if (item.title.includes("start_puh_lease_officer_game") && item.data && gameType === "puh-lease-officer") {
+          try {
+            const scenario = item.data as GameScenario;
+            setCurrentScenario(scenario);
+            setIsGameActive(true);
+            onGameStart?.(scenario);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse police game start scenario:", e);
+          }
+        } else if (item.title.includes("finish_puh_lease_officer_game") && gameType === "puh-lease-officer") {
+          try {
+            console.log("🔍 Found finish_puh_lease_officer_game breadcrumb:", item);
+            const result = item.data as GameFinishResult;
+            console.log("🔍 Parsed result:", result);
+            setIsGameActive(false);
+            onGameFinish?.(result);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse police game finish result:", e);
           }
         }
       }
     }
-  }, [transcriptItems, onGameStart, onGameFinish, processedItemIds]);
+  }, [transcriptItems, onGameStart, onGameFinish, processedItemIds, gameType]);
 
   const startGame = useCallback(() => {
     if (!sendUserText) {
@@ -89,11 +115,14 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
       return;
     }
 
-    // Send a message to trigger the game host agent to start the game
-    sendUserText(
-      "Hello! I'm ready to play Advise the Child. Please start the game!"
-    );
-  }, [sendUserText, isWebRTCReady]);
+    // Send a message to trigger the game host agent to start the appropriate game
+    const gameMessages = {
+      "advise-the-child": "Hello! I'm ready to play Advise the Child. Please start the game!",
+      "puh-lease-officer": "Hello! I'm ready to play Puh Lease Officer. Please start the game!"
+    };
+    
+    sendUserText(gameMessages[gameType]);
+  }, [sendUserText, isWebRTCReady, gameType]);
 
   const sendPlayerText = useCallback(
     (text: string) => {

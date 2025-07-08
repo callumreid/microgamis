@@ -60,9 +60,9 @@ export default function Games() {
         }
       }
     } else {
-      // Default to Advise The Child
+      // Default to Puh Lease Officer
       const defaultGame = allPlannedGames.find(
-        (g) => g.id === "advise-the-child"
+        (g) => g.id === "puh-lease-officer"
       );
       if (defaultGame) {
         setSelectedGame(defaultGame);

@@ -1,15 +1,17 @@
 import { GameMetadata } from "./types";
-import AdviseTheChildGame, { metadata } from "./advise-the-child";
+import AdviseTheChildGame, { metadata as adviseTheChildMetadata } from "./advise-the-child";
+import StallThePoliceGame, { metadata as stallThePoliceMetadata } from "./stall-the-police";
 
 // Minimal export for build - no actual games imported
 
 // Game registry mapping
 export const implementedGames = {
   "advise-the-child": AdviseTheChildGame,
+  "stall-the-police": StallThePoliceGame,
 };
 
 // Implemented game metadata
-export const implementedGameMetadata: GameMetadata[] = [metadata];
+export const implementedGameMetadata: GameMetadata[] = [adviseTheChildMetadata, stallThePoliceMetadata];
 
 // Complete list of all planned games (implemented + planned)
 export const allPlannedGames: GameMetadata[] = [

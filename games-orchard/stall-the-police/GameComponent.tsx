@@ -21,7 +21,7 @@ interface GameControlProps {
   playSound?: (soundId: string) => void;
 }
 
-function AdviseTheChildGame(props: Partial<GameControlProps>) {
+function StallThePoliceGame(props: Partial<GameControlProps>) {
   const {
     endGame,
     updateMessage,
@@ -51,7 +51,7 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
 
   // Real-time transcription display
   const { transcriptItems } = useTranscript();
-
+  
   // Monitor transcription items - only capture user speech during PTT
   useEffect(() => {
     if (!isPTTUserSpeaking) {
@@ -60,12 +60,11 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
 
     // Find items that appeared since PTT started AND are marked as user role
     const userItemsSincePTT = transcriptItems
-      .filter(
-        (item) =>
-          item.title &&
-          item.title.trim() !== "" &&
-          item.role === "user" &&
-          item.createdAtMs > pttStartTimeRef.current
+      .filter(item => 
+        item.title && 
+        item.title.trim() !== "" &&
+        item.role === "user" &&
+        item.createdAtMs > pttStartTimeRef.current
       )
       .sort((a, b) => b.createdAtMs - a.createdAtMs);
 
@@ -104,24 +103,21 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     sendPlayerText: _sendAgentText,
     isGameActive: _isGameActive,
   } = useGameAgent({
-    gameType: "advise-the-child",
+    gameType: "stall-the-police",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
       updateMessage?.(
-        "The AI host is presenting your scenario. Listen carefully and give your best advice!"
+        "The police officer is at your door! Listen carefully and convince them to leave!"
       );
 
       // Start timer after host finishes speaking (estimated 8 seconds for host to speak)
       setTimeout(() => {
         setHostFinishedSpeaking(true);
         startTimer?.();
-        updateMessage?.(
-          "Now give your advice! You have 30 seconds to respond thoughtfully."
-        );
       }, 8000);
     },
     onGameFinish: (result: GameFinishResult) => {
-      console.log("🎮 AdviseTheChild onGameFinish called with result:", result);
+      console.log("🎮 StallThePolice onGameFinish called with result:", result);
       
       // Use the actual result values, don't default success to true
       const success = result.success || false;
@@ -166,7 +162,7 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
   // Start the game when component mounts (user has already clicked START GAME)
   useEffect(() => {
     updateMessage?.(
-      "Welcome to Advise the Child! The AI game host is preparing a scenario for you..."
+      "Welcome to Stall the Police! The AI police officer is preparing to knock on your door..."
     );
 
     // Start the game after a brief delay
@@ -187,13 +183,7 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     setCurrentTranscriptionText(""); // Clear previous text
     await pushToTalkStartNative();
     console.log("PTT started at:", pttStartTimeRef.current);
-  }, [
-    sessionStatus,
-    isWebRTCReady,
-    isPTTUserSpeaking,
-    interrupt,
-    pushToTalkStartNative,
-  ]);
+  }, [sessionStatus, isWebRTCReady, isPTTUserSpeaking, interrupt, pushToTalkStartNative]);
 
   const handleTalkButtonUp = useCallback(async () => {
     if (sessionStatus !== "CONNECTED" || !isPTTUserSpeaking) return;
@@ -209,14 +199,14 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
   ]);
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-pink-200 via-blue-200 to-purple-200">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-red-900 via-gray-800 to-black">
       <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mt-16">
         <div className="flex justify-between items-center">
           <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
             Score: {gameState?.score || 0}
           </div>
           <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-            👶 Advise The Child
+            🚔 Stall The Police
           </h2>
           <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
             Time: {gameState?.timeRemaining || 30}s
@@ -228,11 +218,11 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
           {latestHost && (
             <div className="mb-4">
               <div className="flex justify-start">
-                <div className="bg-blue-100 border-2 border-blue-300 rounded-2xl rounded-bl-none p-4 max-w-md text-black">
-                  <div className="text-sm text-blue-800 font-medium mb-1">
-                    🎭 Host:
+                <div className="bg-red-100 border-2 border-red-300 rounded-2xl rounded-bl-none p-4 max-w-md text-black">
+                  <div className="text-sm text-red-800 font-medium mb-1">
+                    🚔 Officer:
                   </div>
-                  <div className="text-blue-900 text-lg">{latestHost}</div>
+                  <div className="text-red-900 text-lg">{latestHost}</div>
                 </div>
               </div>
             </div>
@@ -271,19 +261,19 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
         sessionStatus === "CONNECTED" &&
         isWebRTCReady && (
           <div className="fixed bottom-6 right-6 z-10">
-            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-full p-4 shadow-lg">
+            <div className="bg-red-50 border-2 border-red-200 rounded-full p-4 shadow-lg">
               <div className="text-center">
-                <div className="text-xs text-yellow-800 mb-1">Hold to Talk</div>
+                <div className="text-xs text-red-800 mb-1">Hold to Talk</div>
                 <button
                   onMouseDown={handleTalkButtonDown}
                   onMouseUp={handleTalkButtonUp}
                   onMouseLeave={handleTalkButtonUp}
                   onTouchStart={handleTalkButtonDown}
                   onTouchEnd={handleTalkButtonUp}
-                  className={`w-16 h-16 rounded-full border-4 border-yellow-400 transition-all duration-150 ${
+                  className={`w-16 h-16 rounded-full border-4 border-red-400 transition-all duration-150 ${
                     isPTTUserSpeaking
                       ? "bg-red-500 scale-110 shadow-lg"
-                      : "bg-yellow-200 hover:bg-yellow-300"
+                      : "bg-red-200 hover:bg-red-300"
                   }`}
                 >
                   <div className="text-5xl">
@@ -297,10 +287,10 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
 
       {/* Decorative elements - Smaller */}
       <div className="flex justify-center space-x-3 text-lg opacity-30 mt-4">
-        <span>❤️</span>
-        <span>🤗</span>
-        <span>💪</span>
-        <span>🌟</span>
+        <span>🚨</span>
+        <span>⚖️</span>
+        <span>🤐</span>
+        <span>🏃</span>
       </div>
 
       {/* Black Screen Effect */}
@@ -354,13 +344,13 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
             }}
           >
             <div style={{ fontSize: '8rem', marginBottom: '30px' }}>
-              {isWinner ? '🏆' : '😢'}
+              {isWinner ? '🏆' : '🚔'}
             </div>
             <div style={{ fontSize: '4rem', fontWeight: '900', lineHeight: '1.2' }}>
-              {isWinner ? 'WINNER WINNER' : 'LOSER LOSER'}
+              {isWinner ? 'SMOOTH TALKER' : 'BUSTED BUDDY'}
             </div>
             <div style={{ fontSize: '4rem', fontWeight: '900', lineHeight: '1.2' }}>
-              {isWinner ? 'CHICKEN DINNER!' : 'CHICKEN HOOSIER!'}
+              {isWinner ? 'FREEDOM FIGHTER!' : 'JAIL BIRD SPECIAL!'}
             </div>
             <div style={{ fontSize: '3rem', marginTop: '30px' }}>
               Score: {finalScore}
@@ -372,15 +362,15 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
   );
 }
 
-export default function AdviseTheChildGameComponent(props: GameProps) {
+export default function StallThePoliceGameComponent(props: GameProps) {
   return (
     <BaseGame
-      title="Advise The Child"
-      instructions="An AI game host will present a child's problem - give your best advice!"
+      title="Stall The Police"
+      instructions="A police officer will arrive at your door - convince them to leave!"
       duration={30}
       {...props}
     >
-      <AdviseTheChildGame />
+      <StallThePoliceGame />
     </BaseGame>
   );
 }

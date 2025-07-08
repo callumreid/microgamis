@@ -60,9 +60,9 @@ export default function Games() {
         }
       }
     } else {
-      // Default to Advise The Child
+      // Default to Stall The Police
       const defaultGame = allPlannedGames.find(
-        (g) => g.id === "advise-the-child"
+        (g) => g.id === "stall-the-police"
       );
       if (defaultGame) {
         setSelectedGame(defaultGame);

@@ -32,11 +32,11 @@ export const implementedGames = {
 
 // Implemented game metadata
 export const implementedGameMetadata: GameMetadata[] = [
+  stallThePoliceMetadata,
   pointTheTaskMetadata,
   evaluateYourselfMetadata,
   convinceTheAliensMetadata,
   adviseTheChildMetadata,
-  stallThePoliceMetadata,
   sellTheLemonMetadata,
 ];
 

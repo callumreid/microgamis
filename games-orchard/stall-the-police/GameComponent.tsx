@@ -19,6 +19,7 @@ interface GameControlProps {
   startTimer?: () => void;
   gameState?: any;
   playSound?: (soundId: string) => void;
+  isPTTUserSpeaking?: boolean;
 }
 
 function StallThePoliceGame(props: Partial<GameControlProps>) {
@@ -29,10 +30,10 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
     startTimer,
     sendPlayerText: _sendPlayerText,
     gameState,
+    isPTTUserSpeaking: nativeIsPTTUserSpeaking,
   } = props;
   const [hostFinishedSpeaking, setHostFinishedSpeaking] = useState(false);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
-  const [currentTranscriptionText, setCurrentTranscriptionText] = useState("");
   const pttStartTimeRef = useRef<number>(0);
 
   // Push-to-talk functionality
@@ -46,29 +47,6 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
 
   // Real-time transcription display
   const { transcriptItems } = useTranscript();
-  
-  // Monitor transcription items - only capture user speech during PTT
-  useEffect(() => {
-    if (!isPTTUserSpeaking) {
-      return;
-    }
-
-    // Find items that appeared since PTT started AND are marked as user role
-    const userItemsSincePTT = transcriptItems
-      .filter(item => 
-        item.title && 
-        item.title.trim() !== "" &&
-        item.role === "user" &&
-        item.createdAtMs > pttStartTimeRef.current
-      )
-      .sort((a, b) => b.createdAtMs - a.createdAtMs);
-
-    if (userItemsSincePTT.length > 0) {
-      const latestUserText = userItemsSincePTT[0].title;
-      console.log("User speech during PTT:", latestUserText);
-      setCurrentTranscriptionText(latestUserText || "");
-    }
-  }, [transcriptItems, isPTTUserSpeaking]);
 
   // Get latest host and user messages for speech bubble
   const getLatestTranscripts = useCallback(() => {
@@ -113,16 +91,16 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
     },
     onGameFinish: (result: GameFinishResult) => {
       console.log("🎮 StallThePolice onGameFinish called with result:", result);
-      
+
       // Use the actual result values, handle undefined properly
       const success = result.success === true; // Ensure boolean
       const score = result.score || 0;
       const message = result.message || "Game completed!";
-      
+
       console.log("🎮 Processed values:", { success, score, message });
-      
+
       updateScore?.(score);
-      
+
       // Let BaseGame handle the banner - just end the game
       console.log("🎮 Calling endGame with:", { success, message, score });
       endGame?.(success, message, score);
@@ -150,23 +128,22 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
     interrupt();
     pttStartTimeRef.current = Date.now(); // Mark when PTT started
     setIsPTTUserSpeaking(true);
-    setCurrentTranscriptionText(""); // Clear previous text
     await pushToTalkStartNative();
     console.log("PTT started at:", pttStartTimeRef.current);
-  }, [sessionStatus, isWebRTCReady, isPTTUserSpeaking, interrupt, pushToTalkStartNative]);
+  }, [
+    sessionStatus,
+    isWebRTCReady,
+    isPTTUserSpeaking,
+    interrupt,
+    pushToTalkStartNative,
+  ]);
 
   const handleTalkButtonUp = useCallback(async () => {
     if (sessionStatus !== "CONNECTED" || !isPTTUserSpeaking) return;
 
     setIsPTTUserSpeaking(false);
     await pushToTalkStopNative();
-    console.log("PTT stopped. Final text:", currentTranscriptionText);
-  }, [
-    sessionStatus,
-    isPTTUserSpeaking,
-    pushToTalkStopNative,
-    currentTranscriptionText,
-  ]);
+  }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative]);
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-red-900 via-gray-800 to-black">
@@ -196,7 +173,7 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
           )}
 
           {/* User Speech Bubble */}
-          {(latestUser || isPTTUserSpeaking) && (
+          {(latestUser || isPTTUserSpeaking || nativeIsPTTUserSpeaking) && (
             <div className="mb-2">
               <div className="flex justify-end">
                 <div className="bg-green-100 border-2 border-green-300 rounded-2xl rounded-br-none p-4 max-w-md text-black">
@@ -204,9 +181,11 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
                     👤 You:
                   </div>
                   <div className="text-green-900 text-lg">
-                    {isPTTUserSpeaking
-                      ? currentTranscriptionText || "🎤 Speaking..."
-                      : latestUser || "Press mic to speak"}
+                    {isPTTUserSpeaking || nativeIsPTTUserSpeaking
+                      ? "🎤 Speaking..."
+                      : latestUser.startsWith("Hello! I'm ready to play")
+                      ? "Got something to say?"
+                      : latestUser}
                   </div>
                 </div>
               </div>
@@ -259,7 +238,6 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
         <span>🤐</span>
         <span>🏃</span>
       </div>
-
     </div>
   );
 }

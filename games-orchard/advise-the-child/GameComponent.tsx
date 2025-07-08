@@ -117,16 +117,16 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     },
     onGameFinish: (result: GameFinishResult) => {
       console.log("🎮 AdviseTheChild onGameFinish called with result:", result);
-      
+
       // Use the actual result values, handle undefined properly
       const success = result.success === true; // Ensure boolean
       const score = result.score || 0;
       const message = result.message || "Game completed!";
-      
+
       console.log("🎮 Processed values:", { success, score, message });
-      
+
       updateScore?.(score);
-      
+
       // Let BaseGame handle the banner - just end the game
       console.log("🎮 Calling endGame with:", { success, message, score });
       endGame?.(success, message, score);
@@ -269,7 +269,6 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
         <span>💪</span>
         <span>🌟</span>
       </div>
-
     </div>
   );
 }

@@ -560,6 +560,7 @@ export default function Games() {
             <GameComponent
               onGameEnd={handleGameEnd}
               sendPlayerText={sendUserText}
+              isPTTUserSpeaking={isPTTUserSpeaking}
             />
           ) : (
             <div className="text-center max-w-2xl mx-auto flex flex-col justify-center h-full">

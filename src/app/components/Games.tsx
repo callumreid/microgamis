@@ -108,18 +108,18 @@ export default function Games() {
         setIsFlashing(true);
       }, 1000);
 
-      // After 6 seconds, fade out content and overlay (was 4 seconds)
+      // After 6 seconds, fade out content and overlay
       const fadeOutTimer = setTimeout(() => {
         setShowContent(false);
         setShowOverlay(false);
       }, 6000);
 
-      // After 10 seconds, start the game (was 8 seconds)
+      // After 8 seconds, start the game
       const startGameTimer = setTimeout(() => {
         if (selectedGame && GameComponent) {
           setGameState("playing");
         }
-      }, 10000);
+      }, 8000);
 
       return () => {
         clearTimeout(flashTimer);
@@ -270,7 +270,9 @@ export default function Games() {
       // Check if there's a next game in the sequence
       if (currentGameIndex < implementedGames.length - 1) {
         // Cycle to next transition video
-        setCurrentTransitionVideo((prev) => (prev + 1) % transitionVideos.length);
+        setCurrentTransitionVideo(
+          (prev) => (prev + 1) % transitionVideos.length
+        );
 
         // Start transition to next game
         setGameState("transition");
@@ -343,31 +345,104 @@ export default function Games() {
             showContent ? "opacity-100" : "opacity-0"
           }`}
         >
-          <h1 className={`text-8xl font-bold mb-12 text-center ${isFlashing ? 'animate-pulse' : ''}`} style={{
-            color: isFlashing ? '#ffffff' : '#ffffff',
-            animation: isFlashing ? 'flashText 0.3s infinite' : 'none'
-          }}>
-            <span className={isFlashing ? 'animate-bounce inline-block' : ''}>G</span>
-            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.1s'}}>a</span>
-            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.2s'}}>m</span>
-            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.3s'}}>e</span>
-            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.4s'}}>&nbsp;</span>
-            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.5s'}}>O</span>
-            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.6s'}}>r</span>
-            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.7s'}}>c</span>
-            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.8s'}}>h</span>
-            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '0.9s'}}>a</span>
-            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '1.0s'}}>r</span>
-            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '1.1s'}}>d</span>
-            <span className={isFlashing ? 'animate-bounce inline-block' : ''} style={{animationDelay: '1.2s'}}>!</span>
+          <h1
+            className={`text-8xl font-bold mb-12 text-center ${
+              isFlashing ? "animate-pulse" : ""
+            }`}
+            style={{
+              color: isFlashing ? "#ffffff" : "#ffffff",
+              animation: isFlashing ? "flashText 0.3s infinite" : "none",
+            }}
+          >
+            <span className={isFlashing ? "animate-bounce inline-block" : ""}>
+              G
+            </span>
+            <span
+              className={isFlashing ? "animate-bounce inline-block" : ""}
+              style={{ animationDelay: "0.1s" }}
+            >
+              a
+            </span>
+            <span
+              className={isFlashing ? "animate-bounce inline-block" : ""}
+              style={{ animationDelay: "0.2s" }}
+            >
+              m
+            </span>
+            <span
+              className={isFlashing ? "animate-bounce inline-block" : ""}
+              style={{ animationDelay: "0.3s" }}
+            >
+              e
+            </span>
+            <span
+              className={isFlashing ? "animate-bounce inline-block" : ""}
+              style={{ animationDelay: "0.4s" }}
+            >
+              &nbsp;
+            </span>
+            <span
+              className={isFlashing ? "animate-bounce inline-block" : ""}
+              style={{ animationDelay: "0.5s" }}
+            >
+              O
+            </span>
+            <span
+              className={isFlashing ? "animate-bounce inline-block" : ""}
+              style={{ animationDelay: "0.6s" }}
+            >
+              r
+            </span>
+            <span
+              className={isFlashing ? "animate-bounce inline-block" : ""}
+              style={{ animationDelay: "0.7s" }}
+            >
+              c
+            </span>
+            <span
+              className={isFlashing ? "animate-bounce inline-block" : ""}
+              style={{ animationDelay: "0.8s" }}
+            >
+              h
+            </span>
+            <span
+              className={isFlashing ? "animate-bounce inline-block" : ""}
+              style={{ animationDelay: "0.9s" }}
+            >
+              a
+            </span>
+            <span
+              className={isFlashing ? "animate-bounce inline-block" : ""}
+              style={{ animationDelay: "1.0s" }}
+            >
+              r
+            </span>
+            <span
+              className={isFlashing ? "animate-bounce inline-block" : ""}
+              style={{ animationDelay: "1.1s" }}
+            >
+              d
+            </span>
+            <span
+              className={isFlashing ? "animate-bounce inline-block" : ""}
+              style={{ animationDelay: "1.2s" }}
+            >
+              !
+            </span>
           </h1>
-          
+
           {/* CSS for flashing animation */}
           <style jsx>{`
             @keyframes flashText {
-              0% { color: #ffffff; }
-              50% { color: #000000; }
-              100% { color: #ffffff; }
+              0% {
+                color: #ffffff;
+              }
+              50% {
+                color: #000000;
+              }
+              100% {
+                color: #ffffff;
+              }
             }
           `}</style>
 

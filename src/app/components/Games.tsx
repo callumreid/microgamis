@@ -22,6 +22,13 @@ export default function Games() {
   const [GameComponent, setGameComponent] =
     useState<React.ComponentType<any> | null>(null);
 
+  // Auto-start sequence state
+  const [showContent, setShowContent] = useState(true);
+  const [showOverlay, setShowOverlay] = useState(true);
+
+  // Video control
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   // PTT state
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState<boolean>(false);
   const mKeyPressedRef = useRef(false);
@@ -42,6 +49,43 @@ export default function Games() {
       isWebRTCReady,
     });
   }, [sessionStatus, isWebRTCReady]);
+
+  // Control video playback based on ready state
+  useEffect(() => {
+    if (videoRef.current) {
+      const isReady = sessionStatus === "CONNECTED" && isWebRTCReady;
+      if (isReady) {
+        videoRef.current.play();
+      }
+    }
+  }, [sessionStatus, isWebRTCReady]);
+
+  // Auto-start sequence
+  useEffect(() => {
+    if (
+      gameState === "landing" &&
+      sessionStatus === "CONNECTED" &&
+      isWebRTCReady
+    ) {
+      // After 5 seconds, fade out content and overlay
+      const fadeOutTimer = setTimeout(() => {
+        setShowContent(false);
+        setShowOverlay(false);
+      }, 4000);
+
+      // After 8 seconds, start the game
+      const startGameTimer = setTimeout(() => {
+        if (selectedGame && GameComponent) {
+          setGameState("playing");
+        }
+      }, 8000);
+
+      return () => {
+        clearTimeout(fadeOutTimer);
+        clearTimeout(startGameTimer);
+      };
+    }
+  }, [gameState, sessionStatus, isWebRTCReady, selectedGame, GameComponent]);
 
   // Check for specific game in URL hash
   useEffect(() => {
@@ -139,7 +183,7 @@ export default function Games() {
     };
   }, [isPTTUserSpeaking, handleTalkButtonDown, handleTalkButtonUp]);
 
-  const handleStartGame = () => {
+  const _handleStartGame = () => {
     if (selectedGame && GameComponent) {
       setGameState("playing");
     }
@@ -150,7 +194,7 @@ export default function Games() {
     // Keep the selected game but don't reset it
   };
 
-  const handleVisitOrchard = () => {
+  const _handleVisitOrchard = () => {
     setGameState("orchard");
   };
 
@@ -188,77 +232,49 @@ export default function Games() {
     const isReady = sessionStatus === "CONNECTED" && isWebRTCReady;
 
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-purple-600 to-blue-600 text-white">
-        <h1 className="text-8xl font-bold mb-12 text-center">microgamis!</h1>
+      <div className="relative flex flex-col items-center justify-center h-full text-white">
+        {/* Background Video */}
+        <video
+          ref={videoRef}
+          loop
+          // muted
+          playsInline
+          preload="metadata"
+          poster="/video-frame-0.jpg"
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        >
+          <source src="/bg-video.mp4" type="video/mp4" />
+        </video>
 
-        {/* Connection Status */}
-        <div className="mb-8 text-center">
-          <div className="flex items-center justify-center mb-4">
-            {!isReady && (
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mr-3"></div>
-            )}
-            {isReady && (
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                <svg
-                  className="w-5 h-5 text-white"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-            )}
-            <span className="text-xl">{getConnectionStatus()}</span>
-          </div>
-        </div>
+        {/* Dark overlay for better text readability */}
+        <div
+          className={`absolute top-0 left-0 w-full h-full bg-black bg-opacity-40 z-10 transition-opacity duration-1000 ${
+            showOverlay ? "opacity-100" : "opacity-0"
+          }`}
+        ></div>
 
-        {/* Selected Game Display */}
-        {selectedGame && (
-          <div className="bg-white bg-opacity-20 rounded-lg p-6 mb-8 text-center max-w-md">
-            <h2 className="text-2xl font-bold mb-2">{selectedGame.name}</h2>
-            <p className="text-lg opacity-90 mb-4">
-              {selectedGame.description}
-            </p>
-          </div>
-        )}
+        {/* Content overlay */}
+        <div
+          className={`relative z-20 flex flex-col items-center justify-center transition-opacity duration-1000 ${
+            showContent ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <h1 className="text-8xl font-bold mb-12 text-center">
+            Game Orchard!
+          </h1>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col gap-4">
-          {isReady ? (
-            <>
-              <button
-                onClick={handleStartGame}
-                disabled={!selectedGame || !GameComponent}
-                className="bg-green-500 hover:bg-green-600 disabled:bg-gray-500 disabled:cursor-not-allowed text-white px-8 py-4 rounded-lg font-bold text-2xl transition-colors transform hover:scale-105 disabled:transform-none"
-              >
-                {selectedGame && GameComponent
-                  ? "START GAME"
-                  : "Game Not Available"}
-              </button>
-
-              {/* Push-to-Talk Button */}
-              <div className="text-center">
-                <div className="text-sm text-white opacity-75 mb-2">
-                  Hold to talk to AI Game Host
-                </div>
-              </div>
-
-              <button
-                onClick={handleVisitOrchard}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-lg font-bold text-xl transition-colors transform hover:scale-105"
-              >
-                browse all games
-              </button>
-            </>
-          ) : (
-            <div className="text-lg opacity-75">
-              Please wait while we connect...
+          {/* Connection Status */}
+          <div className="mb-8 text-center">
+            <div className="flex items-center justify-center mb-4">
+              {!isReady && (
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mr-3"></div>
+              )}
+              <span className="text-xl">
+                {getConnectionStatus() !== "Ready to play!" &&
+                  getConnectionStatus()}
+              </span>
             </div>
-          )}
+          </div>
         </div>
       </div>
     );

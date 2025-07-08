@@ -33,6 +33,8 @@ export default function Games() {
     "/bg-video.mp4",
     "/bg-video-1.mp4",
     "/bg-video-2.mp4",
+    "/bg-video-3.mp4",
+    "/bg-video-4.mp4",
   ];
 
   // Auto-start sequence state

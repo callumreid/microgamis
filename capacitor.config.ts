@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.microgamis.app",
-  appName: "microgamis",
+  appName: "Game Orchard",
   webDir: "out",
   server: {
     androidScheme: "http",

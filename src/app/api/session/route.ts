@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-export const dynamic = "force-static";
+// export const dynamic = "force-static";
 
 // CORS headers
 const corsHeaders = {

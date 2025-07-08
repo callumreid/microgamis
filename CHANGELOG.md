@@ -197,6 +197,38 @@
 - `games-orchard/index.ts` - Added death explanation game to registry
 - `src/app/hooks/useGameAgent.ts` - Added explain-death game type and daughter quote field
 
+### Recent Changes - 2025-07-08 (Sixth Game Implementation)
+
+#### Added
+- **New Game: "Attract the Turkey"**: Thanksgiving-themed vocal seduction micro game
+  - Player squats in leaves and must gobble seductively to lure a bashful wild turkey
+  - Thanksgiving urgency: only 3 days left and player needs protein
+  - Win condition: "Irresistibly thicc" gobbles with tempo changes, flirty clucks, tail-feather sounds
+  - Win outcome: Turkey prances out and nuzzles player's knee
+  - Lose conditions: Too timid (turkey skitters away, "dryer than aunt Carol's stuffing") or too aggressive (turkey dive-bombs face)
+  - Always ends with host whisper-gobbling "Gobble on, legend..." or "Gobble off, loser"
+  - 30-second timer for seductive gobbling performances
+
+#### Enhanced
+- **Game Registry**: Added "attract-the-turkey" as the FIRST game in play sequence
+  - Positioned at top of both `implementedGames` registry and metadata arrays
+  - Now plays first when randomly selected or during testing
+  - Thanksgiving entertainment theme with turkey vocal attraction mechanics
+
+#### Technical Implementation Details
+- **Game Theme**: Pre-Thanksgiving turkey hunt using only vocal seduction techniques
+- **UI Design**: Autumn/Thanksgiving theme with amber/orange/yellow gradient and turkey emojis (🦃, 🍂, 🌾, 🥧)
+- **Voice Integration**: 12-second delay for turkey scenario setup, then 30-second gobbling window
+- **Scoring Logic**: Rewards creative, rhythmic, seductive gobbles with tempo variation
+- **Agent Integration**: Uses "attract-the-turkey" game type with turkey quote scenarios
+- **Keywords**: Comprehensive good/bad turkey keywords for gobbling evaluation
+
+#### Files Modified
+- `games-orchard/attract-the-turkey/` - New game directory with complete implementation
+- `games-orchard/index.ts` - Added turkey game to registry as first game
+- `src/app/hooks/useGameAgent.ts` - Added attract-the-turkey game type and turkey quote field
+- `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added turkey scenarios, tools, and game rules
+
 ## Instructions for Future AI Agents
 
 When working on this codebase:

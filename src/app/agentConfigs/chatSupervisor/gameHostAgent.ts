@@ -1,5 +1,83 @@
 import { tool } from "@openai/agents/realtime";
 
+// Attract the turkey game scenarios
+const turkeyAttractionScenarios = [
+  {
+    id: "thanksgiving_hunt",
+    problem: "A bashful wild turkey lurks beyond the tree line and you need protein for Thanksgiving",
+    turkeyQuote:
+      "The game host dramatically sets the scene - A bashful, wide-eyed wild turkey is lurking just beyond the tree line! Thanksgiving is three days away and you're feeling protein-deficient. You squat in the leaves, elbows akimbo, armed with nothing but your vocal cords and questionable bird-wooing charisma. You must emit gobbles so seductive that the turkey waddles out and does a little head-bob of approval!",
+    context: "Pre-Thanksgiving turkey hunt using only vocal seduction techniques",
+    goodTurkeyKeywords: [
+      "gobble",
+      "gobbles", 
+      "gobbling",
+      "cluck",
+      "clucks",
+      "clucking",
+      "turkey",
+      "thicc",
+      "seductive",
+      "flirty",
+      "tempo",
+      "rhythm",
+      "ruffle",
+      "feather",
+      "tail",
+      "waddle",
+      "head-bob",
+      "irresistible",
+      "charisma",
+      "vocal",
+      "bird",
+      "wooing",
+      "attraction",
+      "nuzzle",
+      "prance",
+      "clearing",
+      "thanksgiving",
+      "protein",
+      "hunt",
+      "sexy",
+      "alluring",
+      "enticing",
+      "smooth",
+      "melodic",
+      "musical",
+      "calls",
+    ],
+    badTurkeyKeywords: [
+      "timid",
+      "scared",
+      "quiet",
+      "whisper",
+      "shy",
+      "aggressive",
+      "loud",
+      "screaming",
+      "angry",
+      "violent",
+      "harsh",
+      "rough",
+      "monotone",
+      "boring",
+      "dry",
+      "stuffing",
+      "carol",
+      "aunt",
+      "skitter",
+      "dive-bomb",
+      "attack",
+      "flee",
+      "run away",
+      "hide",
+      "scared away",
+      "frightened",
+      "startled",
+    ],
+  },
+];
+
 // Pwn the bully game scenarios
 const bullyPwnScenarios = [
   {
@@ -1509,6 +1587,92 @@ export const finishDeathExplanationGame = tool({
   },
 });
 
+// Tool to start the attract-the-turkey game
+export const startTurkeyAttractionGame = tool({
+  name: "start_turkey_attraction_game",
+  description:
+    "Starts an Attract the Turkey game where the player must gobble seductively to lure a bashful turkey.",
+  parameters: {
+    type: "object",
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("start_turkey_attraction_game called");
+
+    const scenario = turkeyAttractionScenarios[0]; // Use the main turkey scenario
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Started attract-the-turkey game", scenario);
+    }
+
+    return {
+      id: scenario.id,
+      problem: scenario.problem,
+      turkeyQuote: scenario.turkeyQuote,
+      context: scenario.context,
+      goodTurkeyKeywords: scenario.goodTurkeyKeywords,
+      badTurkeyKeywords: scenario.badTurkeyKeywords,
+    };
+  },
+});
+
+// Tool to finish the attract-the-turkey game
+export const finishTurkeyAttractionGame = tool({
+  name: "finish_turkey_attraction_game",
+  description:
+    "Ends the current Attract the Turkey game and reports the result to the UI.",
+  parameters: {
+    type: "object",
+    properties: {
+      success: {
+        type: "boolean",
+        description: "true if the player's gobbles were irresistibly thicc and attracted the turkey",
+      },
+      score: {
+        type: "integer",
+        description: "0-100 evaluation score",
+      },
+      message: {
+        type: "string",
+        description: "Response message about the turkey attraction outcome",
+      },
+    },
+    required: ["success", "score", "message"],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("finish_turkey_attraction_game called with input:", input);
+
+    const { success, score, message } = input as {
+      success: boolean;
+      score: number;
+      message: string;
+    };
+
+    console.log("Parsed values:", { success, score, message });
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Finished attract-the-turkey game", {
+        success,
+        score,
+        message,
+      });
+    }
+
+    return { ok: true, success, score, message };
+  },
+});
+
 // Game host agent instructions
 export const gameHostAgentInstructions = `You are a cynical, world-weary game show host who's seen it all! Your personality is sharp, realistic, and brutally honest about how the world actually works - think a jaded Steve Harvey who's given up on idealism.
 
@@ -1537,6 +1701,28 @@ SPEAKING STYLE:
 Always maintain that perfect balance of cynical wisdom and game show entertainment!
 
 You are hosting 30-second micro-games. The current game will be indicated by the user. Here are the available games:
+
+**"Attract the Turkey"** Game Rules:
+1. When the game starts you MUST call the tool \`start_turkey_attraction_game()\`. Use the returned scenario to brief the player:
+   • Read the turkey scenario quote verbatim with dramatic flair about the bashful turkey and Thanksgiving urgency.
+   • Challenge the player: "Time to gobble seductively! Make those gobbles irresistibly thicc!"
+   • Keep briefing under 12 seconds with theatrical nature documentary energy.
+
+2. Accept the FIRST reply from the player, no matter how short or long.
+   • Do not ask for elaboration - judge their gobbling performance immediately.
+
+3. Evaluate their turkey attraction gobbles:
+   • Seductive, rhythmic, flirty gobbles with tempo changes = WIN (score 85-100)
+   • Examples: "gobble gobble gobble" with musical variation, clucks, tail feather sounds
+   • Creative bird noises, tempo changes, "thicc" gobbles = HIGH SCORE
+   • Timid, quiet, or aggressively loud gobbles = LOSE (score 0-30)
+
+4. Determine success:
+   • success = score ≥ 70 → turkey prances out and nuzzles knee
+   • otherwise turkey either skitters away (too timid) or dive-bombs face (too aggressive)
+
+5. Call \`finish_turkey_attraction_game({success,score,message})\` where \`message\` describes the outcome.
+   ALWAYS end with host whisper-gobbling either "Gobble on, legend..." or "Gobble off, loser."
 
 **"Pwn the Bully"** Game Rules:
 1. When the game starts you MUST call the tool \`start_bully_pwn_game()\`. Use the returned scenario to brief the player:
@@ -1784,4 +1970,6 @@ export const gameHostTools = [
   finishBullyPwnGame,
   startDeathExplanationGame,
   finishDeathExplanationGame,
+  startTurkeyAttractionGame,
+  finishTurkeyAttractionGame,
 ];

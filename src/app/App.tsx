@@ -559,7 +559,7 @@ function App() {
             />
           </div>
           <div>
-            HUUUB <span className="text-gray-500">Agents</span>
+            HUUUUUB <span className="text-gray-500">Agents</span>
           </div>
         </div>
         <div className="flex items-center gap-4 flex-wrap">
@@ -661,6 +661,7 @@ function App() {
         setIsAudioPlaybackEnabled={setIsAudioPlaybackEnabled}
         codec={urlCodec}
         onCodecChange={handleCodecChange}
+        isPTTActive={isPTTActive}
       />
     </div>
   );

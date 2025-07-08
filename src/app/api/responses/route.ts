@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
-// export const dynamic = "force-static";
-
 // CORS headers
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

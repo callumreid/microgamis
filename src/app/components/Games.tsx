@@ -1,21 +1,151 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import {
   allPlannedGames,
   getGameById,
   isGameImplemented,
 } from "../../../games-orchard";
 import { GameMetadata } from "../../../games-orchard/types";
+import { useGameSession } from "../providers/GameSessionProvider";
+
+// Fire TV mic key plugin
+const MicKey = Capacitor.isNativePlatform()
+  ? registerPlugin<any>("MicKey")
+  : undefined;
 
 export default function Games() {
   const [gameState, setGameState] = useState<
-    "splash" | "spinning" | "playing" | "orchard"
-  >("splash");
+    "landing" | "spinning" | "playing" | "orchard"
+  >("landing");
   const [selectedGame, setSelectedGame] = useState<GameMetadata | null>(null);
   const [GameComponent, setGameComponent] =
     useState<React.ComponentType<any> | null>(null);
   const [spinRotation, setSpinRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
+
+  // PTT state
+  const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState<boolean>(false);
+  const mKeyPressedRef = useRef(false);
+
+  const {
+    sendUserText,
+    sessionStatus,
+    isWebRTCReady,
+    interrupt,
+    pushToTalkStartNative,
+    pushToTalkStopNative,
+  } = useGameSession();
+
+  // Debug logging for session state
+  useEffect(() => {
+    console.log("[Games] Session state update:", {
+      sessionStatus,
+      isWebRTCReady,
+    });
+  }, [sessionStatus, isWebRTCReady]);
+
+  // Check for specific game in URL hash
+  useEffect(() => {
+    const gameId = window.location.hash.replace("#", "");
+    if (gameId) {
+      const game = allPlannedGames.find((g) => g.id === gameId);
+      if (game) {
+        setSelectedGame(game);
+
+        // Load component if implemented
+        if (isGameImplemented(game.id)) {
+          const component = getGameById(game.id);
+          setGameComponent(() => component);
+        } else {
+          setGameComponent(null);
+        }
+      }
+    } else {
+      // Default to Advise The Child
+      const defaultGame = allPlannedGames.find(
+        (g) => g.id === "advise-the-child"
+      );
+      if (defaultGame) {
+        setSelectedGame(defaultGame);
+        if (isGameImplemented(defaultGame.id)) {
+          const component = getGameById(defaultGame.id);
+          setGameComponent(() => component);
+        }
+      }
+    }
+  }, []);
+
+  // PTT handlers
+  const handleTalkButtonDown = useCallback(() => {
+    console.log("[PTT] handleTalkButtonDown");
+    console.log("[PTT] sessionStatus", sessionStatus);
+    console.log("[PTT] isWebRTCReady", isWebRTCReady);
+    if (sessionStatus !== "CONNECTED" || !isWebRTCReady) return;
+
+    // Prevent multiple simultaneous PTT sessions
+    if (isPTTUserSpeaking) {
+      console.log("[PTT] Already speaking, ignoring additional keydown");
+      return;
+    }
+
+    interrupt();
+    setIsPTTUserSpeaking(true);
+    pushToTalkStartNative();
+    console.log("[PTT] Starting push-to-talk");
+  }, [
+    sessionStatus,
+    isWebRTCReady,
+    isPTTUserSpeaking,
+    interrupt,
+    pushToTalkStartNative,
+  ]);
+
+  const handleTalkButtonUp = useCallback(() => {
+    console.log("[PTT] handleTalkButtonUp");
+    if (sessionStatus !== "CONNECTED" || !isPTTUserSpeaking) return;
+
+    setIsPTTUserSpeaking(false);
+    pushToTalkStopNative();
+    console.log("[PTT] Stopping push-to-talk");
+  }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative]);
+
+  // Handle native Fire TV mic key events
+  useEffect(() => {
+    if (!MicKey) return; // Only run on native platforms
+
+    const handleNativeMicKey = (event: { type: string }) => {
+      console.log(
+        `[NativeMicKey] Event: ${event.type}, mKeyPressed: ${mKeyPressedRef.current}, isPTTUserSpeaking: ${isPTTUserSpeaking}`
+      );
+
+      if (event.type === "down") {
+        // Prevent multiple calls when key is held down
+        if (mKeyPressedRef.current) {
+          console.log("[NativeMicKey] Key already pressed, ignoring repeat");
+          return;
+        }
+
+        mKeyPressedRef.current = true;
+        handleTalkButtonDown();
+      } else if (event.type === "up") {
+        mKeyPressedRef.current = false;
+        handleTalkButtonUp();
+      }
+    };
+
+    const listener = MicKey.addListener("micKey", handleNativeMicKey);
+
+    return () => {
+      listener?.remove();
+    };
+  }, [isPTTUserSpeaking, handleTalkButtonDown, handleTalkButtonUp]);
+
+  const handleStartGame = () => {
+    if (selectedGame && GameComponent) {
+      setGameState("playing");
+    }
+  };
 
   const handleSpinToPlay = () => {
     setGameState("spinning");
@@ -46,11 +176,9 @@ export default function Games() {
     }, spinDuration);
   };
 
-  const handleBackToSplash = () => {
-    setGameState("splash");
-    setSelectedGame(null);
-    setGameComponent(null);
-    setSpinRotation(0);
+  const handleBackToLanding = () => {
+    setGameState("landing");
+    // Keep the selected game but don't reset it
   };
 
   const handleVisitOrchard = () => {
@@ -72,31 +200,127 @@ export default function Games() {
   };
 
   const handleGameEnd = (_result: any) => {
-    // Show result briefly then return to splash
+    // Show result briefly then return to landing
     setTimeout(() => {
-      handleBackToSplash();
+      handleBackToLanding();
     }, 3000);
   };
 
-  const renderSplashScreen = () => (
-    <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-purple-600 to-blue-600 text-white">
-      <h1 className="text-8xl font-bold mb-12 text-center">microgamis!</h1>
-      <div className="flex flex-col gap-4">
-        <button
-          onClick={handleSpinToPlay}
-          className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-bold text-2xl transition-colors transform hover:scale-105"
-        >
-          spin to play
-        </button>
-        <button
-          onClick={handleVisitOrchard}
-          className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-lg font-bold text-2xl transition-colors transform hover:scale-105"
-        >
-          visit the orchard
-        </button>
+  const renderLandingPage = () => {
+    const getConnectionStatus = () => {
+      if (sessionStatus === "DISCONNECTED")
+        return "Connecting to AI Game Host...";
+      if (sessionStatus === "CONNECTING") return "Establishing connection...";
+      if (sessionStatus === "CONNECTED" && !isWebRTCReady)
+        return "Preparing game engine...";
+      return "Ready to play!";
+    };
+
+    const isReady = sessionStatus === "CONNECTED" && isWebRTCReady;
+
+    return (
+      <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-purple-600 to-blue-600 text-white">
+        <h1 className="text-8xl font-bold mb-12 text-center">microgamis!</h1>
+
+        {/* Connection Status */}
+        <div className="mb-8 text-center">
+          <div className="flex items-center justify-center mb-4">
+            {!isReady && (
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mr-3"></div>
+            )}
+            {isReady && (
+              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            )}
+            <span className="text-xl">{getConnectionStatus()}</span>
+          </div>
+        </div>
+
+        {/* Selected Game Display */}
+        {selectedGame && (
+          <div className="bg-white bg-opacity-20 rounded-lg p-6 mb-8 text-center max-w-md">
+            <h2 className="text-2xl font-bold mb-2">{selectedGame.name}</h2>
+            <p className="text-lg opacity-90 mb-4">
+              {selectedGame.description}
+            </p>
+            <div className="text-sm opacity-75">
+              {selectedGame.requiresVoice && "🎤 Voice interaction • "}
+              Difficulty: {"★".repeat(selectedGame.difficulty)}
+              {"☆".repeat(5 - selectedGame.difficulty)}
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex flex-col gap-4">
+          {isReady ? (
+            <>
+              <button
+                onClick={handleStartGame}
+                disabled={!selectedGame || !GameComponent}
+                className="bg-green-500 hover:bg-green-600 disabled:bg-gray-500 disabled:cursor-not-allowed text-white px-8 py-4 rounded-lg font-bold text-2xl transition-colors transform hover:scale-105 disabled:transform-none"
+              >
+                {selectedGame && GameComponent
+                  ? "START GAME"
+                  : "Game Not Available"}
+              </button>
+
+              {/* Push-to-Talk Button */}
+              <div className="text-center">
+                <div className="text-sm text-white opacity-75 mb-2">
+                  Hold to talk to AI Game Host
+                </div>
+                <button
+                  onMouseDown={handleTalkButtonDown}
+                  onMouseUp={handleTalkButtonUp}
+                  onMouseLeave={handleTalkButtonUp}
+                  onTouchStart={handleTalkButtonDown}
+                  onTouchEnd={handleTalkButtonUp}
+                  className={`w-16 h-16 rounded-full border-4 border-white transition-all duration-150 ${
+                    isPTTUserSpeaking
+                      ? "bg-red-500 scale-110 shadow-lg"
+                      : "bg-white bg-opacity-20 hover:bg-opacity-30"
+                  }`}
+                >
+                  <div className="text-2xl">
+                    {isPTTUserSpeaking ? "🔴" : "🎤"}
+                  </div>
+                </button>
+              </div>
+
+              <button
+                onClick={handleSpinToPlay}
+                className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-bold text-xl transition-colors transform hover:scale-105"
+              >
+                spin for random game
+              </button>
+              <button
+                onClick={handleVisitOrchard}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-lg font-bold text-xl transition-colors transform hover:scale-105"
+              >
+                browse all games
+              </button>
+            </>
+          ) : (
+            <div className="text-lg opacity-75">
+              Please wait while we connect...
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderSpinner = () => (
     <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-green-600 to-teal-600 text-white">
@@ -130,7 +354,7 @@ export default function Games() {
   const renderOrchard = () => (
     <div className="h-full bg-gradient-to-br from-orange-600 to-amber-600 text-white p-8 overflow-y-auto">
       <button
-        onClick={handleBackToSplash}
+        onClick={handleBackToLanding}
         className="absolute top-4 left-4 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg font-medium transition-colors z-10"
       >
         ← Back to Games
@@ -200,7 +424,7 @@ export default function Games() {
   const renderGamePlay = () => (
     <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-red-600 to-pink-600 text-white p-8">
       <button
-        onClick={handleBackToSplash}
+        onClick={handleBackToLanding}
         className="absolute top-4 left-4 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg font-medium transition-colors"
       >
         ← Back to Games
@@ -209,7 +433,10 @@ export default function Games() {
       {selectedGame && (
         <div className="w-full h-full">
           {GameComponent ? (
-            <GameComponent onGameEnd={handleGameEnd} />
+            <GameComponent
+              onGameEnd={handleGameEnd}
+              sendPlayerText={sendUserText}
+            />
           ) : (
             <div className="text-center max-w-2xl mx-auto flex flex-col justify-center h-full">
               <h2 className="text-5xl font-bold mb-4">{selectedGame.name}</h2>
@@ -230,7 +457,7 @@ export default function Games() {
               </div>
 
               <button
-                onClick={handleBackToSplash}
+                onClick={handleBackToLanding}
                 className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-3 rounded-lg font-bold text-xl transition-colors"
               >
                 Play Another Game
@@ -244,7 +471,7 @@ export default function Games() {
 
   return (
     <div className="h-screen">
-      {gameState === "splash" && renderSplashScreen()}
+      {gameState === "landing" && renderLandingPage()}
       {gameState === "spinning" && renderSpinner()}
       {gameState === "orchard" && renderOrchard()}
       {gameState === "playing" && renderGamePlay()}

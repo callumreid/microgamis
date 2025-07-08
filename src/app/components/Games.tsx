@@ -9,6 +9,7 @@ import {
 } from "../../../games-orchard";
 import { GameMetadata } from "../../../games-orchard/types";
 import { useGameSession } from "../providers/GameSessionProvider";
+import PTTAnimation from "./PTTAnimation";
 
 // Fire TV mic key plugin
 const MicKey = Capacitor.isNativePlatform()
@@ -632,6 +633,9 @@ export default function Games() {
       <audio ref={audioRef} loop preload="auto" className="hidden">
         <source src="/bg-music-full.mp3" type="audio/mpeg" />
       </audio>
+
+      {/* PTT Animation */}
+      <PTTAnimation isActive={isPTTUserSpeaking} />
 
       {gameState === "landing" && renderLandingPage()}
       {gameState === "spinning" && renderSpinner()}

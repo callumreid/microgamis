@@ -5,6 +5,7 @@ import {
   allPlannedGames,
   getGameById,
   isGameImplemented,
+  getImplementedGames,
 } from "../../../games-orchard";
 import { GameMetadata } from "../../../games-orchard/types";
 import { useGameSession } from "../providers/GameSessionProvider";
@@ -16,11 +17,17 @@ const MicKey = Capacitor.isNativePlatform()
 
 export default function Games() {
   const [gameState, setGameState] = useState<
-    "landing" | "spinning" | "playing" | "orchard"
+    "landing" | "spinning" | "playing" | "orchard" | "transition"
   >("landing");
   const [selectedGame, setSelectedGame] = useState<GameMetadata | null>(null);
   const [GameComponent, setGameComponent] =
     useState<React.ComponentType<any> | null>(null);
+
+  // Multi-game sequence state
+  const [currentGameIndex, setCurrentGameIndex] = useState(0);
+  const [implementedGames] = useState<GameMetadata[]>(() =>
+    getImplementedGames()
+  );
 
   // Auto-start sequence state
   const [showContent, setShowContent] = useState(true);
@@ -50,15 +57,18 @@ export default function Games() {
     });
   }, [sessionStatus, isWebRTCReady]);
 
-  // Control video playback based on ready state
+  // Control video playback based on ready state and game state
   useEffect(() => {
     if (videoRef.current) {
       const isReady = sessionStatus === "CONNECTED" && isWebRTCReady;
-      if (isReady) {
+
+      // Play video during transition state or when ready on landing
+      if (gameState === "transition" || (gameState === "landing" && isReady)) {
+        videoRef.current.currentTime = 0;
         videoRef.current.play();
       }
     }
-  }, [sessionStatus, isWebRTCReady]);
+  }, [sessionStatus, isWebRTCReady, gameState]);
 
   // Auto-start sequence
   useEffect(() => {
@@ -87,36 +97,32 @@ export default function Games() {
     }
   }, [gameState, sessionStatus, isWebRTCReady, selectedGame, GameComponent]);
 
-  // Check for specific game in URL hash
+  // Initialize game sequence
   useEffect(() => {
+    if (implementedGames.length === 0) {
+      console.warn("No implemented games found!");
+      return;
+    }
+
+    // Check for specific game in URL hash
     const gameId = window.location.hash.replace("#", "");
     if (gameId) {
       const game = allPlannedGames.find((g) => g.id === gameId);
-      if (game) {
+      if (game && isGameImplemented(game.id)) {
         setSelectedGame(game);
-
-        // Load component if implemented
-        if (isGameImplemented(game.id)) {
-          const component = getGameById(game.id);
-          setGameComponent(() => component);
-        } else {
-          setGameComponent(null);
-        }
-      }
-    } else {
-      // Default to Stall The Police
-      const defaultGame = allPlannedGames.find(
-        (g) => g.id === "stall-the-police"
-      );
-      if (defaultGame) {
-        setSelectedGame(defaultGame);
-        if (isGameImplemented(defaultGame.id)) {
-          const component = getGameById(defaultGame.id);
-          setGameComponent(() => component);
-        }
+        const component = getGameById(game.id);
+        setGameComponent(() => component);
+        return;
       }
     }
-  }, []);
+
+    // Default to first implemented game for the sequence
+    const firstGame = implementedGames[0];
+    setSelectedGame(firstGame);
+    const component = getGameById(firstGame.id);
+    setGameComponent(() => component);
+    setCurrentGameIndex(0);
+  }, [implementedGames]);
 
   // PTT handlers
   const handleTalkButtonDown = useCallback(async () => {
@@ -191,7 +197,18 @@ export default function Games() {
 
   const handleBackToLanding = () => {
     setGameState("landing");
-    // Keep the selected game but don't reset it
+    // Reset game sequence
+    setCurrentGameIndex(0);
+    setShowContent(true);
+    setShowOverlay(true);
+
+    // Reset to first game
+    if (implementedGames.length > 0) {
+      const firstGame = implementedGames[0];
+      setSelectedGame(firstGame);
+      const component = getGameById(firstGame.id);
+      setGameComponent(() => component);
+    }
   };
 
   const _handleVisitOrchard = () => {
@@ -213,10 +230,38 @@ export default function Games() {
   };
 
   const handleGameEnd = (_result: any) => {
-    // Show result briefly then return to landing
-    setTimeout(() => {
-      handleBackToLanding();
-    }, 3000);
+    console.log("Game ended:", _result, "Current index:", currentGameIndex);
+
+    // Check if there's a next game in the sequence
+    if (currentGameIndex < implementedGames.length - 1) {
+      // Start transition to next game
+      setGameState("transition");
+
+      // Play transition video
+      if (videoRef.current) {
+        videoRef.current.currentTime = 0; // Rewind to start
+        videoRef.current.play();
+      }
+
+      // After 8 seconds, start next game
+      setTimeout(() => {
+        const nextIndex = currentGameIndex + 1;
+        const nextGame = implementedGames[nextIndex];
+
+        setCurrentGameIndex(nextIndex);
+        setSelectedGame(nextGame);
+
+        const component = getGameById(nextGame.id);
+        setGameComponent(() => component);
+
+        setGameState("playing");
+      }, 8000);
+    } else {
+      // All games completed, return to landing
+      setTimeout(() => {
+        handleBackToLanding();
+      }, 3000);
+    }
   };
 
   const renderLandingPage = () => {
@@ -409,12 +454,43 @@ export default function Games() {
     </div>
   );
 
+  const renderTransition = () => (
+    <div className="relative flex flex-col items-center justify-center h-full text-white">
+      {/* Background Video - Full screen during transition */}
+      <video
+        ref={videoRef}
+        loop
+        // muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover z-0"
+      >
+        <source src="/bg-video.mp4" type="video/mp4" />
+      </video>
+
+      {/* Dark overlay for better text readability */}
+      <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-60 z-10"></div>
+
+      {/* Transition content */}
+      <div className="relative z-20 flex flex-col items-center justify-center">
+        <h1 className="text-6xl font-bold mb-8 text-center animate-pulse">
+          Next Game Loading...
+        </h1>
+        <div className="text-xl opacity-90 text-center">
+          {currentGameIndex < implementedGames.length - 1 && (
+            <p>Up Next: {implementedGames[currentGameIndex + 1]?.name}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="h-screen">
       {gameState === "landing" && renderLandingPage()}
       {gameState === "spinning" && renderSpinner()}
       {gameState === "orchard" && renderOrchard()}
       {gameState === "playing" && renderGamePlay()}
+      {gameState === "transition" && renderTransition()}
     </div>
   );
 }

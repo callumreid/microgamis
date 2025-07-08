@@ -21,7 +21,7 @@ interface GameControlProps {
   playSound?: (soundId: string) => void;
 }
 
-function StallThePoliceGame(props: Partial<GameControlProps>) {
+function PointTheTaskGame(props: Partial<GameControlProps>) {
   const {
     endGame,
     updateMessage,
@@ -46,7 +46,7 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
 
   // Real-time transcription display
   const { transcriptItems } = useTranscript();
-  
+
   // Monitor transcription items - only capture user speech during PTT
   useEffect(() => {
     if (!isPTTUserSpeaking) {
@@ -55,11 +55,12 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
 
     // Find items that appeared since PTT started AND are marked as user role
     const userItemsSincePTT = transcriptItems
-      .filter(item => 
-        item.title && 
-        item.title.trim() !== "" &&
-        item.role === "user" &&
-        item.createdAtMs > pttStartTimeRef.current
+      .filter(
+        (item) =>
+          item.title &&
+          item.title.trim() !== "" &&
+          item.role === "user" &&
+          item.createdAtMs > pttStartTimeRef.current
       )
       .sort((a, b) => b.createdAtMs - a.createdAtMs);
 
@@ -98,26 +99,29 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
     sendPlayerText: _sendAgentText,
     isGameActive: _isGameActive,
   } = useGameAgent({
-    gameType: "stall-the-police",
+    gameType: "point-the-task",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
       updateMessage?.(
-        "The police officer is at your door! Listen carefully and convince them to leave!"
+        "The meeting facilitator is presenting an absurd engineering task. Listen carefully and give your point estimate!"
       );
 
-      // Start timer after host finishes speaking (estimated 8 seconds for host to speak)
+      // Start timer after host finishes speaking (estimated 10 seconds for host to speak)
       setTimeout(() => {
         setHostFinishedSpeaking(true);
         startTimer?.();
-      }, 8000);
+        updateMessage?.(
+          "Your turn! What's your fibonacci point estimate for this task?"
+        );
+      }, 10000);
     },
     onGameFinish: (result: GameFinishResult) => {
-      console.log("🎮 StallThePolice onGameFinish called with result:", result);
+      console.log("🎮 PointTheTask onGameFinish called with result:", result);
       
       // Use the actual result values, handle undefined properly
       const success = result.success === true; // Ensure boolean
       const score = result.score || 0;
-      const message = result.message || "Game completed!";
+      const message = result.message || "Meeting adjourned!";
       
       console.log("🎮 Processed values:", { success, score, message });
       
@@ -129,10 +133,10 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
     },
   });
 
-  // Start the game when component mounts (user has already clicked START GAME)
+  // Start the game when component mounts
   useEffect(() => {
     updateMessage?.(
-      "Welcome to Stall the Police! The AI police officer is preparing to knock on your door..."
+      "Welcome to Engineering Refinement! The meeting facilitator is preparing a task for you to point..."
     );
 
     // Start the game after a brief delay
@@ -153,7 +157,13 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
     setCurrentTranscriptionText(""); // Clear previous text
     await pushToTalkStartNative();
     console.log("PTT started at:", pttStartTimeRef.current);
-  }, [sessionStatus, isWebRTCReady, isPTTUserSpeaking, interrupt, pushToTalkStartNative]);
+  }, [
+    sessionStatus,
+    isWebRTCReady,
+    isPTTUserSpeaking,
+    interrupt,
+    pushToTalkStartNative,
+  ]);
 
   const handleTalkButtonUp = useCallback(async () => {
     if (sessionStatus !== "CONNECTED" || !isPTTUserSpeaking) return;
@@ -169,27 +179,32 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
   ]);
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-red-900 via-gray-800 to-black">
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mt-16">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-            🚔 Stall The Police
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500">
+      <div className="bg-white rounded-lg shadow-lg p-6 max-w-5xl w-full mt-16">
+        <div className="flex justify-between items-center mb-6">
+         
+          <h2 className="text-2xl font-bold text-center text-gray-800">
+            📊 Point the Engineering Task
           </h2>
           <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
             Time: {gameState?.timeRemaining || 30}s
           </div>
         </div>
-        {/* Speech Bubble - Centered and Prominent */}
-        <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 mb-4 min-h-[200px] flex flex-col justify-center">
+
+
+      
+
+        {/* Speech Bubble - Meeting Conversation */}
+        <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 mb-4 min-h-[250px] flex flex-col justify-center">
           {/* Host Speech Bubble */}
           {latestHost && (
             <div className="mb-4">
               <div className="flex justify-start">
-                <div className="bg-red-100 border-2 border-red-300 rounded-2xl rounded-bl-none p-4 max-w-md text-black">
-                  <div className="text-sm text-red-800 font-medium mb-1">
-                    🚔 Officer:
+                <div className="bg-blue-100 border-2 border-blue-300 rounded-2xl rounded-bl-none p-4 max-w-lg text-black">
+                  <div className="text-sm text-blue-800 font-medium mb-1">
+                    🎯 Meeting Facilitator:
                   </div>
-                  <div className="text-red-900 text-lg">{latestHost}</div>
+                  <div className="text-blue-900 text-lg">{latestHost}</div>
                 </div>
               </div>
             </div>
@@ -199,14 +214,14 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
           {(latestUser || isPTTUserSpeaking) && (
             <div className="mb-2">
               <div className="flex justify-end">
-                <div className="bg-green-100 border-2 border-green-300 rounded-2xl rounded-br-none p-4 max-w-md text-black">
+                <div className="bg-green-100 border-2 border-green-300 rounded-2xl rounded-br-none p-4 max-w-lg text-black">
                   <div className="text-sm text-green-800 font-medium mb-1">
-                    👤 You:
+                    👨‍💻 You:
                   </div>
                   <div className="text-green-900 text-lg">
                     {isPTTUserSpeaking
                       ? currentTranscriptionText || "🎤 Speaking..."
-                      : latestUser || "Press mic to speak"}
+                      : latestUser || "Press mic to give your point estimate"}
                   </div>
                 </div>
               </div>
@@ -216,7 +231,7 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
           {/* No conversation yet */}
           {!latestHost && !latestUser && !isPTTUserSpeaking && (
             <div className="text-center text-gray-500 text-lg">
-              Conversation will appear here...
+              Meeting will start here... prepare for mind-numbing corporate speak...
             </div>
           )}
         </div>
@@ -228,19 +243,19 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
         sessionStatus === "CONNECTED" &&
         isWebRTCReady && (
           <div className="fixed bottom-6 right-6 z-10">
-            <div className="bg-red-50 border-2 border-red-200 rounded-full p-4 shadow-lg">
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-full p-4 shadow-lg">
               <div className="text-center">
-                <div className="text-xs text-red-800 mb-1">Hold to Talk</div>
+                <div className="text-xs text-blue-800 mb-1">Hold to Point</div>
                 <button
                   onMouseDown={handleTalkButtonDown}
                   onMouseUp={handleTalkButtonUp}
                   onMouseLeave={handleTalkButtonUp}
                   onTouchStart={handleTalkButtonDown}
                   onTouchEnd={handleTalkButtonUp}
-                  className={`w-16 h-16 rounded-full border-4 border-red-400 transition-all duration-150 ${
+                  className={`w-16 h-16 rounded-full border-4 border-blue-400 transition-all duration-150 ${
                     isPTTUserSpeaking
                       ? "bg-red-500 scale-110 shadow-lg"
-                      : "bg-red-200 hover:bg-red-300"
+                      : "bg-blue-200 hover:bg-blue-300"
                   }`}
                 >
                   <div className="text-5xl">
@@ -252,27 +267,29 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
           </div>
         )}
 
-      {/* Decorative elements - Smaller */}
-      <div className="flex justify-center space-x-3 text-lg opacity-30 mt-4">
-        <span>🚨</span>
-        <span>⚖️</span>
-        <span>🤐</span>
-        <span>🏃</span>
+      {/* Decorative meeting elements */}
+      <div className="flex justify-center space-x-4 text-2xl opacity-30 mt-4">
+        <span>📊</span>
+        <span>💼</span>
+        <span>⏰</span>
+        <span>📈</span>
+        <span>🎯</span>
+        <span>📋</span>
+        <span>💤</span>
       </div>
-
     </div>
   );
 }
 
-export default function StallThePoliceGameComponent(props: GameProps) {
+export default function PointTheTaskGameComponent(props: GameProps) {
   return (
     <BaseGame
-      title="Stall The Police"
-      instructions="A police officer will arrive at your door - convince them to leave!"
+      title="Point the Engineering Task"
+      instructions="Participate in a soul-crushing engineering refinement meeting and point the absurd task!"
       duration={30}
       {...props}
     >
-      <StallThePoliceGame />
+      <PointTheTaskGame />
     </BaseGame>
   );
 }

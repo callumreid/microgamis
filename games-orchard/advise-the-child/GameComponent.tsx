@@ -182,9 +182,6 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-pink-200 via-blue-200 to-purple-200">
       <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mt-16">
         <div className="flex justify-between items-center">
-          <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
-            Score: {gameState?.score || 0}
-          </div>
           <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
             👶 Advise The Child
           </h2>

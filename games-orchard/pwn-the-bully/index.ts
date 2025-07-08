@@ -10,7 +10,7 @@ export const metadata: GameMetadata = {
   difficulty: 3,
   requiresVoice: true,
   requiresAudio: true,
-  estimatedDuration: 10,
+  estimatedDuration: 30,
 };
 
 export default GameComponent;

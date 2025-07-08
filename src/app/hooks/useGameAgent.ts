@@ -10,6 +10,7 @@ export interface GameScenario {
   alienQuote?: string;
   customerQuote?: string;
   bullyQuote?: string;
+  daughterQuote?: string;
   context: string;
   goodAdviceKeywords?: string[];
   badAdviceKeywords?: string[];
@@ -21,6 +22,8 @@ export interface GameScenario {
   badSaleKeywords?: string[];
   goodComebackKeywords?: string[];
   badComebackKeywords?: string[];
+  goodDeathKeywords?: string[];
+  badDeathKeywords?: string[];
 }
 
 export interface GameFinishResult {
@@ -34,6 +37,7 @@ export interface UseGameAgentOptions {
   onGameFinish?: (result: GameFinishResult) => void;
   gameType?:
     | "pwn-the-bully"
+    | "explain-death"
     | "advise-the-child"
     | "stall-the-police"
     | "convince-the-aliens"
@@ -284,6 +288,36 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             console.error("Failed to parse pwn-the-bully game finish result:", e);
           }
         }
+        // Handle explain-death game
+        else if (
+          item.title.includes("start_death_explanation_game") &&
+          item.data &&
+          gameType === "explain-death"
+        ) {
+          try {
+            const scenario = item.data as GameScenario;
+            setCurrentScenario(scenario);
+            setIsGameActive(true);
+            onGameStart?.(scenario);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse explain-death game start scenario:", e);
+          }
+        } else if (
+          item.title.includes("finish_death_explanation_game") &&
+          gameType === "explain-death"
+        ) {
+          try {
+            console.log("🔍 Found finish_death_explanation_game breadcrumb:", item);
+            const result = item.data as GameFinishResult;
+            console.log("🔍 Parsed result:", result);
+            setIsGameActive(false);
+            onGameFinish?.(result);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse explain-death game finish result:", e);
+          }
+        }
         // Handle lemon sale game
         else if (
           item.title.includes("start_lemon_sale_game") &&
@@ -335,6 +369,8 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
     const gameMessages = {
       "pwn-the-bully":
         "Hello! I'm ready to play Pwn the Bully. Please start the game!",
+      "explain-death":
+        "Hello! I'm ready to play Explain Death. Please start the game!",
       "advise-the-child":
         "Hello! I'm ready to play Advise the Child. Please start the game!",
       "stall-the-police":

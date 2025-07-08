@@ -12,6 +12,7 @@ export interface GameScenario {
   bullyQuote?: string;
   daughterQuote?: string;
   turkeyQuote?: string;
+  bossQuote?: string;
   context: string;
   goodAdviceKeywords?: string[];
   badAdviceKeywords?: string[];
@@ -27,6 +28,8 @@ export interface GameScenario {
   badDeathKeywords?: string[];
   goodTurkeyKeywords?: string[];
   badTurkeyKeywords?: string[];
+  goodExcuseKeywords?: string[];
+  badExcuseKeywords?: string[];
 }
 
 export interface GameFinishResult {
@@ -39,6 +42,7 @@ export interface UseGameAgentOptions {
   onGameStart?: (scenario: GameScenario) => void;
   onGameFinish?: (result: GameFinishResult) => void;
   gameType?:
+    | "excuse-the-boss"
     | "attract-the-turkey"
     | "pwn-the-bully"
     | "explain-death"
@@ -322,6 +326,36 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             console.error("Failed to parse explain-death game finish result:", e);
           }
         }
+        // Handle excuse-the-boss game
+        else if (
+          item.title.includes("start_boss_excuse_game") &&
+          item.data &&
+          gameType === "excuse-the-boss"
+        ) {
+          try {
+            const scenario = item.data as GameScenario;
+            setCurrentScenario(scenario);
+            setIsGameActive(true);
+            onGameStart?.(scenario);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse excuse-the-boss game start scenario:", e);
+          }
+        } else if (
+          item.title.includes("finish_boss_excuse_game") &&
+          gameType === "excuse-the-boss"
+        ) {
+          try {
+            console.log("🔍 Found finish_boss_excuse_game breadcrumb:", item);
+            const result = item.data as GameFinishResult;
+            console.log("🔍 Parsed result:", result);
+            setIsGameActive(false);
+            onGameFinish?.(result);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse excuse-the-boss game finish result:", e);
+          }
+        }
         // Handle attract-the-turkey game
         else if (
           item.title.includes("start_turkey_attraction_game") &&
@@ -401,6 +435,8 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
 
     // Send a message to trigger the game host agent to start the appropriate game
     const gameMessages = {
+      "excuse-the-boss":
+        "Hello! I'm ready to play Excuse the Boss. Please start the game!",
       "attract-the-turkey":
         "Hello! I'm ready to play Attract the Turkey. Please start the game!",
       "pwn-the-bully":

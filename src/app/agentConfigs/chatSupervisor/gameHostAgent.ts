@@ -1,5 +1,99 @@
 import { tool } from "@openai/agents/realtime";
 
+// Excuse the boss game scenarios
+const bossExcuseScenarios = [
+  {
+    id: "morning_call",
+    problem: "Your boss calls while you're half-dressed with cereal milk on your chin, demanding to know why you're not at the office",
+    bossQuote:
+      "RING RING! Your phone buzzes with that dreaded caller ID - it's your boss! You answer, half-dressed, cereal milk dribbling down your chin. Your boss's voice booms through the speaker: 'Explain why you're not at the office yet!' Time to spin an excuse so dazzling that HR starts a folklore podcast about it!",
+    context: "Emergency boss call requiring legendary excuse-making skills",
+    goodExcuseKeywords: [
+      "imaginative",
+      "creative",
+      "wildly",
+      "cosmic",
+      "wormhole",
+      "aliens",
+      "plague",
+      "locusts",
+      "alpaca",
+      "stampede",
+      "grandma",
+      "sword-swallowing",
+      "visionary",
+      "leadership",
+      "compliment",
+      "freak",
+      "bizarre",
+      "supernatural",
+      "dimensional",
+      "portal",
+      "quantum",
+      "meteor",
+      "time",
+      "paradox",
+      "ninjas",
+      "conspiracy",
+      "government",
+      "secret",
+      "mission",
+      "unicorn",
+      "dragon",
+      "wizard",
+      "magic",
+      "interdimensional",
+      "space",
+      "satellites",
+      "solar flare",
+      "electromagnetic",
+      "bigfoot",
+      "cryptid",
+      "folklore",
+      "legendary",
+      "epic",
+      "mythical",
+      "phenomenon",
+    ],
+    badExcuseKeywords: [
+      "alarm",
+      "traffic",
+      "kids",
+      "children",
+      "car trouble",
+      "sick",
+      "doctor",
+      "appointment",
+      "overslept",
+      "tired",
+      "stayed up",
+      "gaming",
+      "elden ring",
+      "netflix",
+      "honest",
+      "truthfully",
+      "sorry",
+      "my fault",
+      "late",
+      "running behind",
+      "stuck",
+      "delayed",
+      "phone died",
+      "subway",
+      "bus",
+      "weather",
+      "rain",
+      "snow",
+      "cliche",
+      "typical",
+      "usual",
+      "normal",
+      "regular",
+      "ordinary",
+    ],
+  },
+];
+
 // Attract the turkey game scenarios
 const turkeyAttractionScenarios = [
   {
@@ -1673,6 +1767,92 @@ export const finishTurkeyAttractionGame = tool({
   },
 });
 
+// Tool to start the excuse-the-boss game
+export const startBossExcuseGame = tool({
+  name: "start_boss_excuse_game",
+  description:
+    "Starts an Excuse the Boss game where the player must give a legendary excuse for being late to work.",
+  parameters: {
+    type: "object",
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("start_boss_excuse_game called");
+
+    const scenario = bossExcuseScenarios[0]; // Use the main boss scenario
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Started excuse-the-boss game", scenario);
+    }
+
+    return {
+      id: scenario.id,
+      problem: scenario.problem,
+      bossQuote: scenario.bossQuote,
+      context: scenario.context,
+      goodExcuseKeywords: scenario.goodExcuseKeywords,
+      badExcuseKeywords: scenario.badExcuseKeywords,
+    };
+  },
+});
+
+// Tool to finish the excuse-the-boss game
+export const finishBossExcuseGame = tool({
+  name: "finish_boss_excuse_game",
+  description:
+    "Ends the current Excuse the Boss game and reports the result to the UI.",
+  parameters: {
+    type: "object",
+    properties: {
+      success: {
+        type: "boolean",
+        description: "true if the player's excuse was wildly imaginative, blamed cosmic forces, or complimented the boss",
+      },
+      score: {
+        type: "integer",
+        description: "0-100 evaluation score",
+      },
+      message: {
+        type: "string",
+        description: "Response message about the boss excuse outcome",
+      },
+    },
+    required: ["success", "score", "message"],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("finish_boss_excuse_game called with input:", input);
+
+    const { success, score, message } = input as {
+      success: boolean;
+      score: number;
+      message: string;
+    };
+
+    console.log("Parsed values:", { success, score, message });
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Finished excuse-the-boss game", {
+        success,
+        score,
+        message,
+      });
+    }
+
+    return { ok: true, success, score, message };
+  },
+});
+
 // Game host agent instructions
 export const gameHostAgentInstructions = `You are a cynical, world-weary game show host who's seen it all! Your personality is sharp, realistic, and brutally honest about how the world actually works - think a jaded Steve Harvey who's given up on idealism.
 
@@ -1701,6 +1881,28 @@ SPEAKING STYLE:
 Always maintain that perfect balance of cynical wisdom and game show entertainment!
 
 You are hosting 30-second micro-games. The current game will be indicated by the user. Here are the available games:
+
+**"Excuse the Boss"** Game Rules:
+1. When the game starts you MUST call the tool \`start_boss_excuse_game()\`. Use the returned scenario to brief the player:
+   • Read the boss quote verbatim with dramatic emphasis about the dreaded phone call and cereal milk situation.
+   • Challenge the player: "Time to spin an excuse so dazzling that HR starts a folklore podcast about it!"
+   • Keep briefing under 10 seconds with corporate panic energy.
+
+2. Accept the FIRST reply from the player, no matter how short or long.
+   • Do not ask for elaboration - judge their excuse immediately.
+
+3. Evaluate their boss excuse:
+   • Wildly imaginative yet internally consistent = WIN (score 85-100)
+   • Cosmic forces/supernatural explanations = WIN (wormholes, alpaca stampede, grandma sword-swallowing)
+   • Subtle compliments to boss = WIN ("only someone with your visionary leadership...")
+   • Cliché excuses (alarm, traffic, kids) = LOSE (score 0-30)
+   • Gaming/honesty about staying up late = LOSE
+
+4. Determine success:
+   • success = score ≥ 70 → boss sighs "Wow... take the day, champ"
+   • otherwise boss laughs and tells IT to revoke badge "YER CANNED, JOHNNY!"
+
+5. Call \`finish_boss_excuse_game({success,score,message})\` where \`message\` describes the boss reaction.
 
 **"Attract the Turkey"** Game Rules:
 1. When the game starts you MUST call the tool \`start_turkey_attraction_game()\`. Use the returned scenario to brief the player:
@@ -1972,4 +2174,6 @@ export const gameHostTools = [
   finishDeathExplanationGame,
   startTurkeyAttractionGame,
   finishTurkeyAttractionGame,
+  startBossExcuseGame,
+  finishBossExcuseGame,
 ];

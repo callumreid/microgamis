@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import BaseGame from "../BaseGame";
 import { GameProps } from "../types";
 import {
@@ -7,6 +7,7 @@ import {
   GameScenario,
   GameFinishResult,
 } from "../../src/app/hooks/useGameAgent";
+import { useGameSession } from "../../src/app/providers/GameSessionProvider";
 
 interface GameControlProps {
   endGame: (success: boolean, message?: string, score?: number) => void;
@@ -31,6 +32,16 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     null
   );
   const [hostFinishedSpeaking, setHostFinishedSpeaking] = useState(false);
+  const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
+
+  // Push-to-talk functionality
+  const {
+    sessionStatus,
+    isWebRTCReady,
+    interrupt,
+    pushToTalkStartNative,
+    pushToTalkStopNative,
+  } = useGameSession();
 
   const {
     startGame,
@@ -73,10 +84,22 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [startGame, updateMessage]);
+  }, [startGame]);
 
-  // TODO: Need to integrate sendPlayerText with the agent
-  // For now, we'll rely on the realtime session to handle voice input directly
+  // Push-to-talk handlers
+  const handleTalkButtonDown = useCallback(() => {
+    if (sessionStatus !== "CONNECTED" || !isWebRTCReady) return;
+    if (isPTTUserSpeaking) return;
+    interrupt();
+    setIsPTTUserSpeaking(true);
+    pushToTalkStartNative();
+  }, [sessionStatus, isWebRTCReady, isPTTUserSpeaking, interrupt, pushToTalkStartNative]);
+
+  const handleTalkButtonUp = useCallback(() => {
+    if (sessionStatus !== "CONNECTED" || !isPTTUserSpeaking) return;
+    setIsPTTUserSpeaking(false);
+    pushToTalkStopNative();
+  }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative]);
 
   return (
     <div className="text-center max-w-2xl bg-gradient-to-br from-pink-200 via-blue-200 to-purple-200 rounded-lg p-8">
@@ -108,7 +131,7 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
         </div>
 
         {/* Instructions */}
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
           <div className="text-3xl mb-2">💡</div>
           <p className="text-lg font-semibold text-blue-800 mb-2">
             Give thoughtful advice to help the child!
@@ -118,6 +141,36 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
             your response.
           </p>
         </div>
+
+        {/* Push-to-Talk Button */}
+        {hostFinishedSpeaking && sessionStatus === "CONNECTED" && isWebRTCReady && (
+          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+            <div className="text-center">
+              <div className="text-sm text-yellow-800 mb-2">
+                Hold the button to give your advice
+              </div>
+              <button
+                onMouseDown={handleTalkButtonDown}
+                onMouseUp={handleTalkButtonUp}
+                onMouseLeave={handleTalkButtonUp}
+                onTouchStart={handleTalkButtonDown}
+                onTouchEnd={handleTalkButtonUp}
+                className={`w-20 h-20 rounded-full border-4 border-yellow-400 transition-all duration-150 ${
+                  isPTTUserSpeaking
+                    ? "bg-red-500 scale-110 shadow-lg"
+                    : "bg-yellow-200 hover:bg-yellow-300"
+                }`}
+              >
+                <div className="text-3xl">
+                  {isPTTUserSpeaking ? "🔴" : "🎤"}
+                </div>
+              </button>
+              <div className="text-xs text-yellow-700 mt-2">
+                {isPTTUserSpeaking ? "Speaking..." : "Click & Hold to Talk"}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Decorative elements */}

@@ -19,6 +19,7 @@ interface GameControlProps {
   startTimer?: () => void;
   gameState?: any;
   playSound?: (soundId: string) => void;
+  isPTTUserSpeaking?: boolean;
 }
 
 function ConvinceTheAliensGame(props: Partial<GameControlProps>) {
@@ -29,10 +30,10 @@ function ConvinceTheAliensGame(props: Partial<GameControlProps>) {
     startTimer,
     sendPlayerText: _sendPlayerText,
     gameState,
+    isPTTUserSpeaking: nativeIsPTTUserSpeaking,
   } = props;
   const [hostFinishedSpeaking, setHostFinishedSpeaking] = useState(false);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
-  const [currentTranscriptionText, setCurrentTranscriptionText] = useState("");
   const pttStartTimeRef = useRef<number>(0);
 
   // Push-to-talk functionality
@@ -46,30 +47,6 @@ function ConvinceTheAliensGame(props: Partial<GameControlProps>) {
 
   // Real-time transcription display
   const { transcriptItems } = useTranscript();
-
-  // Monitor transcription items - only capture user speech during PTT
-  useEffect(() => {
-    if (!isPTTUserSpeaking) {
-      return;
-    }
-
-    // Find items that appeared since PTT started AND are marked as user role
-    const userItemsSincePTT = transcriptItems
-      .filter(
-        (item) =>
-          item.title &&
-          item.title.trim() !== "" &&
-          item.role === "user" &&
-          item.createdAtMs > pttStartTimeRef.current
-      )
-      .sort((a, b) => b.createdAtMs - a.createdAtMs);
-
-    if (userItemsSincePTT.length > 0) {
-      const latestUserText = userItemsSincePTT[0].title;
-      console.log("User speech during PTT:", latestUserText);
-      setCurrentTranscriptionText(latestUserText || "");
-    }
-  }, [transcriptItems, isPTTUserSpeaking]);
 
   // Get latest host and user messages for speech bubble
   const getLatestTranscripts = useCallback(() => {
@@ -116,17 +93,15 @@ function ConvinceTheAliensGame(props: Partial<GameControlProps>) {
       }, 8000);
     },
     onGameFinish: (result: GameFinishResult) => {
-      console.log("🎮 ConvinceTheAliens onGameFinish called with result:", result);
-      
       // Use the actual result values, handle undefined properly
       const success = result.success === true; // Ensure boolean
       const score = result.score || 0;
       const message = result.message || "The aliens have made their decision!";
-      
+
       console.log("🎮 Processed values:", { success, score, message });
-      
+
       updateScore?.(score);
-      
+
       // Let BaseGame handle the banner - just end the game
       console.log("🎮 Calling endGame with:", { success, message, score });
       endGame?.(success, message, score);
@@ -154,7 +129,6 @@ function ConvinceTheAliensGame(props: Partial<GameControlProps>) {
     interrupt();
     pttStartTimeRef.current = Date.now(); // Mark when PTT started
     setIsPTTUserSpeaking(true);
-    setCurrentTranscriptionText(""); // Clear previous text
     await pushToTalkStartNative();
     console.log("PTT started at:", pttStartTimeRef.current);
   }, [
@@ -170,13 +144,7 @@ function ConvinceTheAliensGame(props: Partial<GameControlProps>) {
 
     setIsPTTUserSpeaking(false);
     await pushToTalkStopNative();
-    console.log("PTT stopped. Final text:", currentTranscriptionText);
-  }, [
-    sessionStatus,
-    isPTTUserSpeaking,
-    pushToTalkStopNative,
-    currentTranscriptionText,
-  ]);
+  }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative]);
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-purple-900 via-indigo-900 to-black">
@@ -189,7 +157,7 @@ function ConvinceTheAliensGame(props: Partial<GameControlProps>) {
             👽 Convince The Aliens 🛸
           </h2>
         </div>
-        
+
         {/* Speech Bubble - Centered and Prominent */}
         <div className="bg-black border-2 border-green-400 rounded-lg p-6 mb-4 min-h-[200px] flex flex-col justify-center">
           {/* Host Speech Bubble */}
@@ -215,9 +183,11 @@ function ConvinceTheAliensGame(props: Partial<GameControlProps>) {
                     🌍 Human Ambassador:
                   </div>
                   <div className="text-blue-100 text-lg">
-                    {isPTTUserSpeaking
-                      ? currentTranscriptionText || "🎤 Pleading for humanity..."
-                      : latestUser || "Press mic to speak"}
+                    {isPTTUserSpeaking || nativeIsPTTUserSpeaking
+                      ? "🎤 Pleading for humanity..."
+                      : latestUser.startsWith("Hello! I'm ready to play")
+                      ? "Press mic to plead for humanity"
+                      : latestUser}
                   </div>
                 </div>
               </div>
@@ -241,7 +211,9 @@ function ConvinceTheAliensGame(props: Partial<GameControlProps>) {
           <div className="fixed bottom-6 right-6 z-10">
             <div className="bg-green-900 border-2 border-green-400 rounded-full p-4 shadow-lg">
               <div className="text-center">
-                <div className="text-xs text-green-300 mb-1">Hold to Save Earth</div>
+                <div className="text-xs text-green-300 mb-1">
+                  Hold to Save Earth
+                </div>
                 <button
                   onMouseDown={handleTalkButtonDown}
                   onMouseUp={handleTalkButtonUp}
@@ -271,7 +243,6 @@ function ConvinceTheAliensGame(props: Partial<GameControlProps>) {
         <span>💫</span>
         <span>🚀</span>
       </div>
-
     </div>
   );
 }
@@ -284,7 +255,7 @@ export default function ConvinceTheAliensGameComponent(props: GameProps) {
       duration={30}
       {...props}
     >
-      <ConvinceTheAliensGame />
+      <ConvinceTheAliensGame isPTTUserSpeaking={props.isPTTUserSpeaking} />
     </BaseGame>
   );
 }

@@ -19,6 +19,7 @@ interface GameControlProps {
   startTimer?: () => void;
   gameState?: any;
   playSound?: (soundId: string) => void;
+  isPTTUserSpeaking?: boolean;
 }
 
 function PointTheTaskGame(props: Partial<GameControlProps>) {
@@ -29,10 +30,10 @@ function PointTheTaskGame(props: Partial<GameControlProps>) {
     startTimer,
     sendPlayerText: _sendPlayerText,
     gameState,
+    isPTTUserSpeaking: nativeIsPTTUserSpeaking,
   } = props;
   const [hostFinishedSpeaking, setHostFinishedSpeaking] = useState(false);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
-  const [currentTranscriptionText, setCurrentTranscriptionText] = useState("");
   const pttStartTimeRef = useRef<number>(0);
 
   // Push-to-talk functionality
@@ -47,30 +48,6 @@ function PointTheTaskGame(props: Partial<GameControlProps>) {
   // Real-time transcription display
   const { transcriptItems } = useTranscript();
 
-  // Monitor transcription items - only capture user speech during PTT
-  useEffect(() => {
-    if (!isPTTUserSpeaking) {
-      return;
-    }
-
-    // Find items that appeared since PTT started AND are marked as user role
-    const userItemsSincePTT = transcriptItems
-      .filter(
-        (item) =>
-          item.title &&
-          item.title.trim() !== "" &&
-          item.role === "user" &&
-          item.createdAtMs > pttStartTimeRef.current
-      )
-      .sort((a, b) => b.createdAtMs - a.createdAtMs);
-
-    if (userItemsSincePTT.length > 0) {
-      const latestUserText = userItemsSincePTT[0].title;
-      console.log("User speech during PTT:", latestUserText);
-      setCurrentTranscriptionText(latestUserText || "");
-    }
-  }, [transcriptItems, isPTTUserSpeaking]);
-
   // Get latest host and user messages for speech bubble
   const getLatestTranscripts = useCallback(() => {
     const hostItems = transcriptItems
@@ -82,7 +59,11 @@ function PointTheTaskGame(props: Partial<GameControlProps>) {
 
     const userItems = transcriptItems
       .filter(
-        (item) => item.role === "user" && item.title && item.title.trim() !== ""
+        (item) =>
+          item.role === "user" &&
+          item.title &&
+          item.title.trim() !== "" &&
+          item.title.trim() !== "[inaudible]"
       )
       .sort((a, b) => b.createdAtMs - a.createdAtMs);
 
@@ -117,16 +98,16 @@ function PointTheTaskGame(props: Partial<GameControlProps>) {
     },
     onGameFinish: (result: GameFinishResult) => {
       console.log("🎮 PointTheTask onGameFinish called with result:", result);
-      
+
       // Use the actual result values, handle undefined properly
       const success = result.success === true; // Ensure boolean
       const score = result.score || 0;
       const message = result.message || "Meeting adjourned!";
-      
+
       console.log("🎮 Processed values:", { success, score, message });
-      
+
       updateScore?.(score);
-      
+
       // Let BaseGame handle the banner - just end the game
       console.log("🎮 Calling endGame with:", { success, message, score });
       endGame?.(success, message, score);
@@ -154,7 +135,6 @@ function PointTheTaskGame(props: Partial<GameControlProps>) {
     interrupt();
     pttStartTimeRef.current = Date.now(); // Mark when PTT started
     setIsPTTUserSpeaking(true);
-    setCurrentTranscriptionText(""); // Clear previous text
     await pushToTalkStartNative();
     console.log("PTT started at:", pttStartTimeRef.current);
   }, [
@@ -170,19 +150,12 @@ function PointTheTaskGame(props: Partial<GameControlProps>) {
 
     setIsPTTUserSpeaking(false);
     await pushToTalkStopNative();
-    console.log("PTT stopped. Final text:", currentTranscriptionText);
-  }, [
-    sessionStatus,
-    isPTTUserSpeaking,
-    pushToTalkStopNative,
-    currentTranscriptionText,
-  ]);
+  }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative]);
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500">
       <div className="bg-white rounded-lg shadow-lg p-6 max-w-5xl w-full mt-16">
         <div className="flex justify-between items-center mb-6">
-         
           <h2 className="text-2xl font-bold text-center text-gray-800">
             📊 Point the Engineering Task
           </h2>
@@ -190,9 +163,6 @@ function PointTheTaskGame(props: Partial<GameControlProps>) {
             Time: {gameState?.timeRemaining || 30}s
           </div>
         </div>
-
-
-      
 
         {/* Speech Bubble - Meeting Conversation */}
         <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 mb-4 min-h-[250px] flex flex-col justify-center">
@@ -219,9 +189,11 @@ function PointTheTaskGame(props: Partial<GameControlProps>) {
                     👨‍💻 You:
                   </div>
                   <div className="text-green-900 text-lg">
-                    {isPTTUserSpeaking
-                      ? currentTranscriptionText || "🎤 Speaking..."
-                      : latestUser || "Press mic to give your point estimate"}
+                    {isPTTUserSpeaking || nativeIsPTTUserSpeaking
+                      ? "🎤 Estimating..."
+                      : latestUser.startsWith("Hello! I'm ready to play")
+                      ? "Press mic to give your point estimate"
+                      : latestUser}
                   </div>
                 </div>
               </div>
@@ -231,7 +203,8 @@ function PointTheTaskGame(props: Partial<GameControlProps>) {
           {/* No conversation yet */}
           {!latestHost && !latestUser && !isPTTUserSpeaking && (
             <div className="text-center text-gray-500 text-lg">
-              Meeting will start here... prepare for mind-numbing corporate speak...
+              Meeting will start here... prepare for mind-numbing corporate
+              speak...
             </div>
           )}
         </div>
@@ -289,7 +262,7 @@ export default function PointTheTaskGameComponent(props: GameProps) {
       duration={30}
       {...props}
     >
-      <PointTheTaskGame />
+      <PointTheTaskGame isPTTUserSpeaking={props.isPTTUserSpeaking} />
     </BaseGame>
   );
 }

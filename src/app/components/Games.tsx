@@ -42,8 +42,9 @@ export default function Games() {
   const [showContent, setShowContent] = useState(true);
   const [showOverlay, setShowOverlay] = useState(true);
 
-  // Video control
+  // Media refs
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   // PTT state
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState<boolean>(false);
@@ -78,6 +79,21 @@ export default function Games() {
       }
     }
   }, [sessionStatus, isWebRTCReady, gameState]);
+
+  // Control background music based on game state
+  useEffect(() => {
+    if (audioRef.current) {
+      // Play music during landing, spinning, orchard, and transition states
+      // Pause during playing state
+      if (gameState === "playing") {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch((error) => {
+          console.log("Audio play failed:", error);
+        });
+      }
+    }
+  }, [gameState]);
 
   // Auto-start sequence
   useEffect(() => {
@@ -503,6 +519,11 @@ export default function Games() {
 
   return (
     <div className="h-screen">
+      {/* Background Music */}
+      <audio ref={audioRef} loop preload="auto" className="hidden">
+        <source src="/bg-music-full.mp3" type="audio/mpeg" />
+      </audio>
+
       {gameState === "landing" && renderLandingPage()}
       {gameState === "spinning" && renderSpinner()}
       {gameState === "orchard" && renderOrchard()}

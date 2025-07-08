@@ -181,7 +181,8 @@ const policeStallScenarios = [
     problem: "Wellness check request",
     policeQuote:
       "The officer says - We got a call asking us to do a wellness check. Someone was concerned about you. Mind if we have a quick chat?",
-    context: "Police conducting a wellness check after someone expressed concern",
+    context:
+      "Police conducting a wellness check after someone expressed concern",
     goodStallKeywords: [
       "fine",
       "okay",
@@ -335,35 +336,40 @@ const selfEvaluationScenarios = [
   {
     id: "quarterly_review",
     problem: "Time for your quarterly self-evaluation",
-    managerQuote: "The manager says with a condescending smile - Well, well, well. Another quarter, another self-evaluation. Let's see what delusions of grandeur you've cooked up this time. Rate yourself on the four-tier system and tell me why you think you deserve it. I'll be the judge of that.",
-    context: "Your snotty manager is conducting your quarterly performance review",
+    managerQuote:
+      "The manager says with a condescending smile - Well, well, well. Another quarter, another self-evaluation. Let's see what delusions of grandeur you've cooked up this time. Rate yourself on the four-tier system and tell me why you think you deserve it. I'll be the judge of that.",
+    context:
+      "Your snotty manager is conducting your quarterly performance review",
     performanceCategories: [
       "communication skills",
       "project delivery",
       "teamwork",
       "problem solving",
       "meeting deadlines",
-      "quality of work"
-    ]
+      "quality of work",
+    ],
   },
   {
     id: "annual_review",
     problem: "Annual performance self-assessment",
-    managerQuote: "The manager rolls their eyes - Oh joy, it's that time of year again. Annual reviews. Let me guess, you think you're employee of the year material? Rate yourself and explain why you think you deserve anything above 'occasionally meets expectations' - which, let's be honest, is generous for most of you people.",
-    context: "Your condescending manager is conducting your annual performance review",
+    managerQuote:
+      "The manager rolls their eyes - Oh joy, it's that time of year again. Annual reviews. Let me guess, you think you're employee of the year material? Rate yourself and explain why you think you deserve anything above 'occasionally meets expectations' - which, let's be honest, is generous for most of you people.",
+    context:
+      "Your condescending manager is conducting your annual performance review",
     performanceCategories: [
       "leadership potential",
       "innovation",
       "client satisfaction",
       "efficiency",
       "adaptability",
-      "initiative"
-    ]
+      "initiative",
+    ],
   },
   {
     id: "promotion_review",
     problem: "Self-evaluation for promotion consideration",
-    managerQuote: "The manager smirks - So you think you're ready for a promotion? How precious. Rate yourself on our performance scale and convince me why you're not just another mediocre employee who occasionally meets expectations. This should be entertaining.",
+    managerQuote:
+      "The manager smirks - So you think you're ready for a promotion? How precious. Rate yourself on our performance scale and convince me why you're not just another mediocre employee who occasionally meets expectations. This should be entertaining.",
     context: "Your arrogant manager is reviewing you for potential promotion",
     performanceCategories: [
       "strategic thinking",
@@ -371,14 +377,16 @@ const selfEvaluationScenarios = [
       "results delivery",
       "process improvement",
       "stakeholder management",
-      "decision making"
-    ]
-  }
+      "decision making",
+    ],
+  },
 ];
 
 // Function to get a random self-evaluation scenario
 function getRandomSelfEvaluationScenario() {
-  const randomIndex = Math.floor(Math.random() * selfEvaluationScenarios.length);
+  const randomIndex = Math.floor(
+    Math.random() * selfEvaluationScenarios.length
+  );
   return selfEvaluationScenarios[randomIndex];
 }
 
@@ -387,45 +395,98 @@ const pointTheTaskScenarios = [
   {
     id: "ai_personalized_video",
     problem: "AI-personalized video splash screen with multi-device sync",
-    facilitatorQuote: "The facilitator drones monotonously - Okay team, next story. Product wants us to implement an AI-personalized video splash screen that gets delivered via toast notifications to both phone and TV simultaneously, but the video content needs to be device-specific and dynamically generated based on user behavior patterns. How many story points?",
-    context: "Engineering refinement meeting discussing an absurd product requirement",
-    complexityIndicators: ["AI", "personalized", "video", "multi-device", "real-time", "toast notifications", "dynamic generation"]
+    facilitatorQuote:
+      "The facilitator drones monotonously - Okay team, next story. Product wants us to implement an AI-personalized video splash screen that gets delivered via toast notifications to both phone and TV simultaneously, but the video content needs to be device-specific and dynamically generated based on user behavior patterns. How many story points?",
+    context:
+      "Engineering refinement meeting discussing an absurd product requirement",
+    complexityIndicators: [
+      "AI",
+      "personalized",
+      "video",
+      "multi-device",
+      "real-time",
+      "toast notifications",
+      "dynamic generation",
+    ],
   },
   {
     id: "blockchain_authentication",
     problem: "Blockchain-based authentication with biometric NFT verification",
-    facilitatorQuote: "The facilitator sighs deeply - Next up, we need to implement blockchain-based authentication where users mint their biometric data as NFTs for login verification, but it also needs to work offline and sync across all devices when they come back online. Story points?",
-    context: "Engineering refinement meeting discussing blockchain authentication",
-    complexityIndicators: ["blockchain", "biometric", "NFT", "offline sync", "multi-device", "authentication"]
+    facilitatorQuote:
+      "The facilitator sighs deeply - Next up, we need to implement blockchain-based authentication where users mint their biometric data as NFTs for login verification, but it also needs to work offline and sync across all devices when they come back online. Story points?",
+    context:
+      "Engineering refinement meeting discussing blockchain authentication",
+    complexityIndicators: [
+      "blockchain",
+      "biometric",
+      "NFT",
+      "offline sync",
+      "multi-device",
+      "authentication",
+    ],
   },
   {
     id: "realtime_translation",
-    problem: "Real-time translation with emotional context and cultural adaptation",
-    facilitatorQuote: "The facilitator reads from notes - Product wants real-time translation that not only translates words but also emotional context and cultural nuances, plus it needs to adapt the UI layout for different languages and work in voice calls. How many points?",
+    problem:
+      "Real-time translation with emotional context and cultural adaptation",
+    facilitatorQuote:
+      "The facilitator reads from notes - Product wants real-time translation that not only translates words but also emotional context and cultural nuances, plus it needs to adapt the UI layout for different languages and work in voice calls. How many points?",
     context: "Engineering refinement meeting discussing translation features",
-    complexityIndicators: ["real-time", "translation", "emotional context", "cultural adaptation", "UI layout", "voice calls"]
+    complexityIndicators: [
+      "real-time",
+      "translation",
+      "emotional context",
+      "cultural adaptation",
+      "UI layout",
+      "voice calls",
+    ],
   },
   {
     id: "ai_meeting_optimizer",
-    problem: "AI meeting optimizer that reads body language and optimizes agenda",
-    facilitatorQuote: "The facilitator looks exhausted - They want an AI that analyzes everyone's body language during meetings via webcam, detects engagement levels, and automatically reorders the agenda to maximize productivity. Also needs to work with screen sharing somehow. Story points?",
-    context: "Engineering refinement meeting discussing AI meeting optimization",
-    complexityIndicators: ["AI", "body language", "webcam analysis", "engagement detection", "agenda optimization", "screen sharing"]
+    problem:
+      "AI meeting optimizer that reads body language and optimizes agenda",
+    facilitatorQuote:
+      "The facilitator looks exhausted - They want an AI that analyzes everyone's body language during meetings via webcam, detects engagement levels, and automatically reorders the agenda to maximize productivity. Also needs to work with screen sharing somehow. Story points?",
+    context:
+      "Engineering refinement meeting discussing AI meeting optimization",
+    complexityIndicators: [
+      "AI",
+      "body language",
+      "webcam analysis",
+      "engagement detection",
+      "agenda optimization",
+      "screen sharing",
+    ],
   },
   {
     id: "social_media_predictor",
     problem: "Social media viral prediction engine with trend forecasting",
-    facilitatorQuote: "The facilitator barely looks up - Next story: build a social media engine that predicts what content will go viral 24 hours before it happens, then automatically creates similar content for our users. Needs to work across all platforms. Points?",
-    context: "Engineering refinement meeting discussing social media prediction",
-    complexityIndicators: ["viral prediction", "trend forecasting", "auto-content creation", "multi-platform", "machine learning"]
+    facilitatorQuote:
+      "The facilitator barely looks up - Next story: build a social media engine that predicts what content will go viral 24 hours before it happens, then automatically creates similar content for our users. Needs to work across all platforms. Points?",
+    context:
+      "Engineering refinement meeting discussing social media prediction",
+    complexityIndicators: [
+      "viral prediction",
+      "trend forecasting",
+      "auto-content creation",
+      "multi-platform",
+      "machine learning",
+    ],
   },
   {
     id: "quantum_search",
     problem: "Quantum-enhanced search with parallel universe results",
-    facilitatorQuote: "The facilitator stares blankly - Product wants quantum-enhanced search that shows results from parallel universes where users made different choices, but it needs to be intuitive for regular users and work on mobile. Story points?",
+    facilitatorQuote:
+      "The facilitator stares blankly - Product wants quantum-enhanced search that shows results from parallel universes where users made different choices, but it needs to be intuitive for regular users and work on mobile. Story points?",
     context: "Engineering refinement meeting discussing quantum search",
-    complexityIndicators: ["quantum computing", "parallel universes", "search algorithm", "mobile optimization", "user experience"]
-  }
+    complexityIndicators: [
+      "quantum computing",
+      "parallel universes",
+      "search algorithm",
+      "mobile optimization",
+      "user experience",
+    ],
+  },
 ];
 
 // Function to get a random point-the-task scenario
@@ -496,7 +557,7 @@ export const finishChildAdviceGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_child_advice_game called with input:", input);
-    
+
     const { success, score, message } = input as {
       success: boolean;
       score: number;
@@ -529,7 +590,7 @@ export const finishChildAdviceGame = tool({
     // Reset game state (for potential future use)
     // currentGameState = null;
 
-    return { ok: true };
+    return { ok: true, success, score, message };
   },
 });
 
@@ -576,7 +637,8 @@ export const finishPoliceStallGame = tool({
     properties: {
       success: {
         type: "boolean",
-        description: "true if the player successfully convinced the officer to leave",
+        description:
+          "true if the player successfully convinced the officer to leave",
       },
       score: {
         type: "integer",
@@ -592,7 +654,7 @@ export const finishPoliceStallGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_police_stall_game called with input:", input);
-    
+
     const { success, score, message } = input as {
       success: boolean;
       score: number;
@@ -622,7 +684,7 @@ export const finishPoliceStallGame = tool({
       );
     }
 
-    return { ok: true };
+    return { ok: true, success, score, message };
   },
 });
 
@@ -684,6 +746,14 @@ export const finishAlienConvinceGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    const { success, score, message } = input as {
+      success: boolean;
+      score: number;
+      message: string;
+    };
+
+    console.log("Parsed values:", { success, score, message });
+
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
       | ((title: string, data?: any) => void)
       | undefined;
@@ -692,7 +762,7 @@ export const finishAlienConvinceGame = tool({
       addBreadcrumb("[GameHost] Finished alien convince game", input);
     }
 
-    return { ok: true };
+    return { ok: true, success, score, message };
   },
 });
 
@@ -754,7 +824,7 @@ export const finishSelfEvaluationGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_self_evaluation_game called with input:", input);
-    
+
     const { success, score, message } = input as {
       success: boolean;
       score: number;
@@ -775,7 +845,7 @@ export const finishSelfEvaluationGame = tool({
       });
     }
 
-    return { ok: true };
+    return { ok: true, success, score, message };
   },
 });
 
@@ -837,7 +907,7 @@ export const finishPointTaskGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_point_task_game called with input:", input);
-    
+
     const { success, score, message } = input as {
       success: boolean;
       score: number;
@@ -858,7 +928,7 @@ export const finishPointTaskGame = tool({
       });
     }
 
-    return { ok: true };
+    return { ok: true, success, score, message };
   },
 });
 
@@ -1045,4 +1115,15 @@ You are hosting 10-second micro-games. The current game will be indicated by the
 Keep the tone sharp, cynical, and entertaining while celebrating wins or mourning losses dramatically.`;
 
 // Export the tools array
-export const gameHostTools = [startChildAdviceGame, finishChildAdviceGame, startPoliceStallGame, finishPoliceStallGame, startAlienConvinceGame, finishAlienConvinceGame, startSelfEvaluationGame, finishSelfEvaluationGame, startPointTaskGame, finishPointTaskGame];
+export const gameHostTools = [
+  startChildAdviceGame,
+  finishChildAdviceGame,
+  startPoliceStallGame,
+  finishPoliceStallGame,
+  startAlienConvinceGame,
+  finishAlienConvinceGame,
+  startSelfEvaluationGame,
+  finishSelfEvaluationGame,
+  startPointTaskGame,
+  finishPointTaskGame,
+];

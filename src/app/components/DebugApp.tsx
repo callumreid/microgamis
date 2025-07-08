@@ -593,6 +593,7 @@ function DebugApp() {
         setIsAudioPlaybackEnabled={setIsAudioPlaybackEnabled}
         codec={urlCodec}
         onCodecChange={handleCodecChange}
+        isPTTActive={isPTTActive}
       />
     </div>
   );

@@ -21,8 +21,7 @@ export default function Games() {
   const [selectedGame, setSelectedGame] = useState<GameMetadata | null>(null);
   const [GameComponent, setGameComponent] =
     useState<React.ComponentType<any> | null>(null);
-  const [spinRotation, setSpinRotation] = useState(0);
-  const [isSpinning, setIsSpinning] = useState(false);
+
 
   // PTT state
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState<boolean>(false);

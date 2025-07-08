@@ -69,7 +69,7 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     if (userItemsSincePTT.length > 0) {
       const latestUserText = userItemsSincePTT[0].title;
       console.log("User speech during PTT:", latestUserText);
-      setCurrentTranscriptionText(latestUserText);
+      setCurrentTranscriptionText(latestUserText || "");
     }
   }, [transcriptItems, isPTTUserSpeaking]);
 

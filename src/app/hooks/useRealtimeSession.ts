@@ -177,12 +177,18 @@ export function useRealtimeSession(callbacks: RealtimeSessionCallbacks = {}) {
           changePeerConnection: async (pc: RTCPeerConnection) => {
             applyCodec(pc);
 
-            // If native audio is available, disable WebRTC microphone to avoid conflicts
-            if (nativeAudioInput.isAvailable) {
+            // For web (when native audio is not available), we need to set up the connection
+            // to support audio but initially mute it to prevent automatic transcription
+            if (!nativeAudioInput.isAvailable) {
+              console.log(
+                "[RealtimeSession] Setting up WebRTC with muted microphone initially - will unmute on PTT"
+              );
+              // We'll handle muting/unmuting via the session.mute() method instead of removing tracks
+            } else {
               console.log(
                 "[RealtimeSession] Disabling WebRTC microphone - using native audio"
               );
-              // Remove audio tracks from the connection to prevent microphone conflicts
+              // For native audio, we can safely disable WebRTC microphone
               pc.getTransceivers().forEach((transceiver) => {
                 if (
                   transceiver.sender &&
@@ -210,6 +216,13 @@ export function useRealtimeSession(callbacks: RealtimeSessionCallbacks = {}) {
       });
 
       await sessionRef.current.connect({ apiKey: ek });
+      
+      // For web users, initially mute the session to prevent automatic transcription
+      if (!nativeAudioInput.isAvailable) {
+        console.log("[RealtimeSession] Muting WebRTC session initially");
+        sessionRef.current.mute(true);
+      }
+      
       updateStatus("CONNECTED");
     },
     [callbacks, updateStatus, checkSecureContext, requestMicrophonePermission]
@@ -244,82 +257,110 @@ export function useRealtimeSession(callbacks: RealtimeSessionCallbacks = {}) {
     sessionRef.current?.mute(m);
   }, []);
 
-  const pushToTalkStart = useCallback(() => {
+  const pushToTalkStart = useCallback(async () => {
     if (!sessionRef.current) return;
+
+    // For web (when native audio is not available), unmute the session
+    if (!nativeAudioInput.isAvailable) {
+      console.log("[PTT] Unmuting WebRTC session for web");
+      sessionRef.current.mute(false);
+    }
+
     sessionRef.current.transport.sendEvent({
       type: "input_audio_buffer.clear",
     } as any);
-  }, []);
+  }, [nativeAudioInput.isAvailable]);
 
-  const pushToTalkStop = useCallback(() => {
+  const pushToTalkStop = useCallback(async () => {
     if (!sessionRef.current) return;
+
+    // For web (when native audio is not available), mute the session again
+    if (!nativeAudioInput.isAvailable) {
+      console.log("[PTT] Muting WebRTC session for web");
+      sessionRef.current.mute(true);
+    }
+
     sessionRef.current.transport.sendEvent({
       type: "input_audio_buffer.commit",
     } as any);
     sessionRef.current.transport.sendEvent({ type: "response.create" } as any);
-  }, []);
+  }, [nativeAudioInput.isAvailable]);
 
   // Native audio push-to-talk methods
   const pushToTalkStartNative = useCallback(async () => {
     if (!sessionRef.current) return false;
 
-    // Clear the audio buffer first
-    sessionRef.current.transport.sendEvent({
-      type: "input_audio_buffer.clear",
-    } as any);
+    // Check if native audio is available
+    if (nativeAudioInput.isAvailable) {
+      // Clear the audio buffer first
+      sessionRef.current.transport.sendEvent({
+        type: "input_audio_buffer.clear",
+      } as any);
 
-    // Start native audio recording at 24kHz (OpenAI Realtime API expects 24kHz for PCM16)
-    console.log(
-      "[NativeAudio] Starting recording at 24kHz for OpenAI Realtime API"
-    );
-    const success = await nativeAudioInput.startRecording(
-      24000,
-      (audioData: ArrayBuffer) => {
-        if (sessionRef.current) {
-          // Convert ArrayBuffer to base64 string (required by OpenAI Realtime API)
-          const uint8Array = new Uint8Array(audioData);
+      // Start native audio recording at 24kHz (OpenAI Realtime API expects 24kHz for PCM16)
+      console.log(
+        "[NativeAudio] Starting recording at 24kHz for OpenAI Realtime API"
+      );
+      const success = await nativeAudioInput.startRecording(
+        24000,
+        (audioData: ArrayBuffer) => {
+          if (sessionRef.current) {
+            // Convert ArrayBuffer to base64 string (required by OpenAI Realtime API)
+            const uint8Array = new Uint8Array(audioData);
 
-          // Debug: Check if audio data contains actual sound (not silence)
-          const samples = new Int16Array(audioData);
-          const maxAmplitude = Math.max(...Array.from(samples).map(Math.abs));
-          const hasSound = maxAmplitude > 100; // Threshold for detecting sound
+            // Debug: Check if audio data contains actual sound (not silence)
+            const samples = new Int16Array(audioData);
+            const maxAmplitude = Math.max(...Array.from(samples).map(Math.abs));
+            const hasSound = maxAmplitude > 100; // Threshold for detecting sound
 
-          console.log(
-            `[NativeAudio] Chunk: ${samples.length} samples, max amplitude: ${maxAmplitude}, has sound: ${hasSound}`
-          );
+            console.log(
+              `[NativeAudio] Chunk: ${samples.length} samples, max amplitude: ${maxAmplitude}, has sound: ${hasSound}`
+            );
 
-          const base64Audio = btoa(
-            String.fromCharCode.apply(null, Array.from(uint8Array))
-          );
+            const base64Audio = btoa(
+              String.fromCharCode.apply(null, Array.from(uint8Array))
+            );
 
-          // Send base64-encoded PCM16 audio to OpenAI
-          sessionRef.current.transport.sendEvent({
-            type: "input_audio_buffer.append",
-            audio: base64Audio,
-          } as any);
+            // Send base64-encoded PCM16 audio to OpenAI
+            sessionRef.current.transport.sendEvent({
+              type: "input_audio_buffer.append",
+              audio: base64Audio,
+            } as any);
 
-          console.log(
-            `[NativeAudio] Sent ${base64Audio.length} chars of base64 audio to OpenAI`
-          );
+            console.log(
+              `[NativeAudio] Sent ${base64Audio.length} chars of base64 audio to OpenAI`
+            );
+          }
         }
-      }
-    );
+      );
 
-    return success;
-  }, [nativeAudioInput]);
+      return success;
+    } else {
+      // Use WebRTC PTT for web
+      console.log('push to start no native')
+      await pushToTalkStart();
+      return true;
+    }
+  }, [nativeAudioInput, pushToTalkStart]);
 
   const pushToTalkStopNative = useCallback(async () => {
     if (!sessionRef.current) return;
 
-    // Stop native audio recording
-    await nativeAudioInput.stopRecording();
+    // Check if native audio is available
+    if (nativeAudioInput.isAvailable) {
+      // Stop native audio recording
+      await nativeAudioInput.stopRecording();
 
-    // Commit the audio buffer and create response
-    sessionRef.current.transport.sendEvent({
-      type: "input_audio_buffer.commit",
-    } as any);
-    sessionRef.current.transport.sendEvent({ type: "response.create" } as any);
-  }, [nativeAudioInput]);
+      // Commit the audio buffer and create response
+      sessionRef.current.transport.sendEvent({
+        type: "input_audio_buffer.commit",
+      } as any);
+      sessionRef.current.transport.sendEvent({ type: "response.create" } as any);
+    } else {
+      // Use WebRTC PTT for web
+      await pushToTalkStop();
+    }
+  }, [nativeAudioInput, pushToTalkStop]);
 
   return {
     status,

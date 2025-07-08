@@ -20,8 +20,8 @@ interface GameSessionContextValue {
   sendUserText: (text: string) => void;
   mute: (muted: boolean) => void;
   interrupt: () => void;
-  pushToTalkStartNative: () => void;
-  pushToTalkStopNative: () => void;
+  pushToTalkStartNative: () => Promise<boolean>;
+  pushToTalkStopNative: () => Promise<void>;
 }
 
 const GameSessionContext = createContext<GameSessionContextValue | undefined>(

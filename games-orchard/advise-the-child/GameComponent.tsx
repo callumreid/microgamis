@@ -117,18 +117,18 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
   }, [startGame]);
 
   // Push-to-talk handlers
-  const handleTalkButtonDown = useCallback(() => {
+  const handleTalkButtonDown = useCallback(async () => {
     if (sessionStatus !== "CONNECTED" || !isWebRTCReady) return;
     if (isPTTUserSpeaking) return;
     interrupt();
     pttStartTimeRef.current = Date.now(); // Mark when PTT started
     setIsPTTUserSpeaking(true);
     setCurrentTranscriptionText(""); // Clear previous text
-    pushToTalkStartNative();
+    await pushToTalkStartNative();
     console.log("PTT started at:", pttStartTimeRef.current);
   }, [sessionStatus, isWebRTCReady, isPTTUserSpeaking, interrupt, pushToTalkStartNative]);
 
-  const handleTalkButtonUp = useCallback(() => {
+  const handleTalkButtonUp = useCallback(async () => {
     if (sessionStatus !== "CONNECTED" || !isPTTUserSpeaking) return;
     
     // Save the current transcription text before stopping PTT
@@ -137,7 +137,7 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     }
     
     setIsPTTUserSpeaking(false);
-    pushToTalkStopNative();
+    await pushToTalkStopNative();
     console.log("PTT stopped. Final text:", currentTranscriptionText);
   }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative, currentTranscriptionText]);
 

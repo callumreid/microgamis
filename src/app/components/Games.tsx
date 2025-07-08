@@ -76,7 +76,7 @@ export default function Games() {
   }, []);
 
   // PTT handlers
-  const handleTalkButtonDown = useCallback(() => {
+  const handleTalkButtonDown = useCallback(async () => {
     console.log("[PTT] handleTalkButtonDown");
     console.log("[PTT] sessionStatus", sessionStatus);
     console.log("[PTT] isWebRTCReady", isWebRTCReady);
@@ -90,7 +90,7 @@ export default function Games() {
 
     interrupt();
     setIsPTTUserSpeaking(true);
-    pushToTalkStartNative();
+    await pushToTalkStartNative();
     console.log("[PTT] Starting push-to-talk");
   }, [
     sessionStatus,
@@ -100,12 +100,12 @@ export default function Games() {
     pushToTalkStartNative,
   ]);
 
-  const handleTalkButtonUp = useCallback(() => {
+  const handleTalkButtonUp = useCallback(async () => {
     console.log("[PTT] handleTalkButtonUp");
     if (sessionStatus !== "CONNECTED" || !isPTTUserSpeaking) return;
 
     setIsPTTUserSpeaking(false);
-    pushToTalkStopNative();
+    await pushToTalkStopNative();
     console.log("[PTT] Stopping push-to-talk");
   }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative]);
 

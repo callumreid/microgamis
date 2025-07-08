@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Capacitor } from "@capacitor/core";
 import BaseGame from "../BaseGame";
 import { GameProps } from "../types";
 import {
@@ -27,15 +28,11 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
     updateScore,
     startTimer,
     sendPlayerText: _sendPlayerText,
+    gameState,
   } = props;
-  const [gameStarted, setGameStarted] = useState(false);
-  const [currentScenario, setCurrentScenario] = useState<GameScenario | null>(
-    null
-  );
   const [hostFinishedSpeaking, setHostFinishedSpeaking] = useState(false);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
   const [currentTranscriptionText, setCurrentTranscriptionText] = useState("");
-  const [lastCapturedText, setLastCapturedText] = useState("");
   const pttStartTimeRef = useRef<number>(0);
   const [blackScreen, setBlackScreen] = useState(false);
   const [flashWhite, setFlashWhite] = useState(false);
@@ -78,6 +75,29 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
     }
   }, [transcriptItems, isPTTUserSpeaking]);
 
+  // Get latest host and user messages for speech bubble
+  const getLatestTranscripts = useCallback(() => {
+    const hostItems = transcriptItems
+      .filter(
+        (item) =>
+          item.role === "assistant" && item.title && item.title.trim() !== ""
+      )
+      .sort((a, b) => b.createdAtMs - a.createdAtMs);
+
+    const userItems = transcriptItems
+      .filter(
+        (item) => item.role === "user" && item.title && item.title.trim() !== ""
+      )
+      .sort((a, b) => b.createdAtMs - a.createdAtMs);
+
+    return {
+      latestHost: hostItems[0]?.title || "",
+      latestUser: userItems[0]?.title || "",
+    };
+  }, [transcriptItems]);
+
+  const { latestHost, latestUser } = getLatestTranscripts();
+
   const {
     startGame,
     sendPlayerText: _sendAgentText,
@@ -86,8 +106,6 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
     gameType: "stall-the-police",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
-      setCurrentScenario(scenario);
-      setGameStarted(true);
       updateMessage?.(
         "The police officer is at your door! Listen carefully and convince them to leave!"
       );
@@ -96,9 +114,6 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
       setTimeout(() => {
         setHostFinishedSpeaking(true);
         startTimer?.();
-        updateMessage?.(
-          "Now convince the officer to leave! You have 30 seconds to talk your way out!"
-        );
       }, 8000);
     },
     onGameFinish: (result: GameFinishResult) => {
@@ -172,109 +187,106 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
 
   const handleTalkButtonUp = useCallback(async () => {
     if (sessionStatus !== "CONNECTED" || !isPTTUserSpeaking) return;
-    
-    // Save the current transcription text before stopping PTT
-    if (currentTranscriptionText.trim()) {
-      setLastCapturedText(currentTranscriptionText);
-    }
-    
+
     setIsPTTUserSpeaking(false);
     await pushToTalkStopNative();
     console.log("PTT stopped. Final text:", currentTranscriptionText);
-  }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative, currentTranscriptionText]);
+  }, [
+    sessionStatus,
+    isPTTUserSpeaking,
+    pushToTalkStopNative,
+    currentTranscriptionText,
+  ]);
 
   return (
-    <div className="text-center max-w-2xl bg-gradient-to-br from-red-900 via-gray-800 to-black rounded-lg p-8">
-      <div className="bg-gray-900 rounded-lg shadow-lg p-6 mb-6 border-4 border-red-600">
-        <h2 className="text-3xl font-bold mb-6 text-red-400">
-          🚔 Stall The Police
-        </h2>
-
-        {/* Game status display */}
-        <div className="bg-red-100 rounded-lg p-6 mb-6 border-4 border-red-600">
-          <div className="text-6xl mb-4">🐷</div>
-          <div className="text-lg font-bold text-red-800 mb-2">
-            Police Officer at Your Door
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-red-900 via-gray-800 to-black">
+      <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mt-16">
+        <div className="flex justify-between items-center">
+          <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
+            Score: {gameState?.score || 0}
           </div>
-          <div className="text-md text-red-700 mb-4">
-            {!gameStarted
-              ? "The police officer is approaching your door..."
-              : !hostFinishedSpeaking
-              ? "🔊 Officer is speaking... Listen carefully!"
-              : "⚠️ Your turn! Convince them to leave!"}
+          <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
+            🚔 Stall The Police
+          </h2>
+          <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
+            Time: {gameState?.timeRemaining || 30}s
           </div>
-          {currentScenario && (
-            <div className="bg-red-50 border-2 border-red-400 rounded-lg p-4 mt-4">
-              <div className="text-sm text-red-900 font-medium">
-                Officer Says: {currentScenario.policeQuote || currentScenario.problem}
+        </div>
+        {/* Speech Bubble - Centered and Prominent */}
+        <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 mb-4 min-h-[200px] flex flex-col justify-center">
+          {/* Host Speech Bubble */}
+          {latestHost && (
+            <div className="mb-4">
+              <div className="flex justify-start">
+                <div className="bg-red-100 border-2 border-red-300 rounded-2xl rounded-bl-none p-4 max-w-md text-black">
+                  <div className="text-sm text-red-800 font-medium mb-1">
+                    🚔 Officer:
+                  </div>
+                  <div className="text-red-900 text-lg">{latestHost}</div>
+                </div>
               </div>
             </div>
           )}
-        </div>
 
-        {/* Instructions */}
-        <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4 mb-6">
-          <div className="text-3xl mb-2">🗣️</div>
-          <p className="text-lg font-semibold text-yellow-800 mb-2">
-            Talk your way out of trouble!
-          </p>
-          <p className="text-sm text-yellow-700">
-            Be clever, convincing, and stay calm. The AI officer will decide if you succeed.
-          </p>
-        </div>
-
-        {/* Push-to-Talk Button */}
-        {hostFinishedSpeaking && sessionStatus === "CONNECTED" && isWebRTCReady && (
-          <div className="bg-red-50 border-2 border-red-400 rounded-lg p-4">
-            <div className="text-center">
-              <div className="text-sm text-red-800 mb-2">
-                Hold the button to speak to the officer
-              </div>
-              <button
-                onMouseDown={handleTalkButtonDown}
-                onMouseUp={handleTalkButtonUp}
-                onMouseLeave={handleTalkButtonUp}
-                onTouchStart={handleTalkButtonDown}
-                onTouchEnd={handleTalkButtonUp}
-                className={`w-20 h-20 rounded-full border-4 border-red-600 transition-all duration-150 ${
-                  isPTTUserSpeaking
-                    ? "bg-red-600 scale-110 shadow-lg"
-                    : "bg-red-200 hover:bg-red-300"
-                }`}
-              >
-                <div className="text-3xl">
-                  {isPTTUserSpeaking ? "🔴" : "🎤"}
+          {/* User Speech Bubble */}
+          {(latestUser || isPTTUserSpeaking) && (
+            <div className="mb-2">
+              <div className="flex justify-end">
+                <div className="bg-green-100 border-2 border-green-300 rounded-2xl rounded-br-none p-4 max-w-md text-black">
+                  <div className="text-sm text-green-800 font-medium mb-1">
+                    👤 You:
+                  </div>
+                  <div className="text-green-900 text-lg">
+                    {isPTTUserSpeaking
+                      ? currentTranscriptionText || "🎤 Speaking..."
+                      : latestUser || "Press mic to speak"}
+                  </div>
                 </div>
-              </button>
-              <div className="text-xs text-red-700 mt-2">
-                {isPTTUserSpeaking ? "Speaking..." : "Click & Hold to Talk"}
+              </div>
+            </div>
+          )}
+
+          {/* No conversation yet */}
+          {!latestHost && !latestUser && !isPTTUserSpeaking && (
+            <div className="text-center text-gray-500 text-lg">
+              Conversation will appear here...
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Push-to-Talk Button - Only on Web, Fixed Position */}
+      {!Capacitor.isNativePlatform() &&
+        hostFinishedSpeaking &&
+        sessionStatus === "CONNECTED" &&
+        isWebRTCReady && (
+          <div className="fixed bottom-6 right-6 z-10">
+            <div className="bg-red-50 border-2 border-red-200 rounded-full p-4 shadow-lg">
+              <div className="text-center">
+                <div className="text-xs text-red-800 mb-1">Hold to Talk</div>
+                <button
+                  onMouseDown={handleTalkButtonDown}
+                  onMouseUp={handleTalkButtonUp}
+                  onMouseLeave={handleTalkButtonUp}
+                  onTouchStart={handleTalkButtonDown}
+                  onTouchEnd={handleTalkButtonUp}
+                  className={`w-16 h-16 rounded-full border-4 border-red-400 transition-all duration-150 ${
+                    isPTTUserSpeaking
+                      ? "bg-red-500 scale-110 shadow-lg"
+                      : "bg-red-200 hover:bg-red-300"
+                  }`}
+                >
+                  <div className="text-5xl">
+                    {isPTTUserSpeaking ? "🔴" : "🎤"}
+                  </div>
+                </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* FORCED TRANSCRIPTION DISPLAY - ALWAYS SHOWS */}
-        <div className="bg-gray-50 border-2 border-gray-400 rounded-lg p-4 mt-4">
-          <div className="text-sm text-gray-800 font-medium mb-2">
-            SPEECH TRANSCRIPTION:
-          </div>
-          <div className="text-lg text-gray-900 bg-white rounded p-2 border border-gray-300">
-            {isPTTUserSpeaking 
-              ? (currentTranscriptionText || "🎤 LISTENING...") 
-              : (lastCapturedText || "Press mic button to speak")}
-          </div>
-          <div className="text-xs text-gray-600 mt-2">
-            <div>PTT Active: {isPTTUserSpeaking.toString()}</div>
-            <div>Current: &quot;{currentTranscriptionText}&quot;</div>
-            <div>Last: &quot;{lastCapturedText}&quot;</div>
-            <div>Total transcripts: {transcriptItems.length}</div>
-            <div>User items only: {transcriptItems.filter(item => item.role === "user").slice(-2).map(item => item.title).filter(Boolean).join(" | ")}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Decorative elements */}
-      <div className="flex justify-center space-x-4 text-2xl opacity-50">
+      {/* Decorative elements - Smaller */}
+      <div className="flex justify-center space-x-3 text-lg opacity-30 mt-4">
         <span>🚨</span>
         <span>⚖️</span>
         <span>🤐</span>

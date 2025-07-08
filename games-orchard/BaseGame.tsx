@@ -220,67 +220,60 @@ export default function BaseGame({
                 transition: "background-color 0.05s",
               }}
             >
-              {horrorFlickerCount > 8 &&
-                (() => {
-                  console.log("🎬 SHOWING FINAL BANNER");
-                  return (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <div
-                        style={{
-                          backgroundColor: finalResult.success
-                            ? "#00ff00"
-                            : "#ff0000",
-                          color: "#000000",
-                          fontSize: "4rem",
-                          fontWeight: "900",
-                          border: "10px solid #000000",
-                          borderRadius: "20px",
-                          minWidth: "800px",
-                          minHeight: "500px",
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          textAlign: "center",
-                          padding: "40px",
-                        }}
-                      >
-                        <div style={{ fontSize: "8rem", marginBottom: "30px" }}>
-                          {finalResult.success ? "🏆" : "😢"}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "4rem",
-                            fontWeight: "900",
-                            lineHeight: "1.2",
-                          }}
-                        >
-                          {finalResult.success
-                            ? "WINNER WINNER"
-                            : "LOSER LOSER"}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "4rem",
-                            fontWeight: "900",
-                            lineHeight: "1.2",
-                          }}
-                        >
-                          {finalResult.success
-                            ? "CHICKEN DINNER!"
-                            : "CHICKEN HOOSIER!"}
-                        </div>
-                        <div style={{ fontSize: "3rem", marginTop: "30px" }}>
-                          Score: {finalResult.score}
-                        </div>
-                      </div>
+              {horrorFlickerCount >= 8 && (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div
+                    style={{
+                      backgroundColor: finalResult.success
+                        ? "#00ff00"
+                        : "#ff0000",
+                      color: "#000000",
+                      fontSize: "4rem",
+                      fontWeight: "900",
+                      border: "10px solid #000000",
+                      borderRadius: "20px",
+                      minWidth: "800px",
+                      minHeight: "500px",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      textAlign: "center",
+                      padding: "40px",
+                    }}
+                  >
+                    <div style={{ fontSize: "8rem", marginBottom: "30px" }}>
+                      {finalResult.success ? "🏆" : "😢"}
                     </div>
-                  );
-                })()}
+                    <div
+                      style={{
+                        fontSize: "4rem",
+                        fontWeight: "900",
+                        lineHeight: "1.2",
+                      }}
+                    >
+                      {finalResult.success ? "WINNER WINNER" : "LOSER LOSER"}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "4rem",
+                        fontWeight: "900",
+                        lineHeight: "1.2",
+                      }}
+                    >
+                      {finalResult.success
+                        ? "CHICKEN DINNER!"
+                        : "CHICKEN HOOSIER!"}
+                    </div>
+                    <div style={{ fontSize: "3rem", marginTop: "30px" }}>
+                      Score: {finalResult.score}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}
-
     </div>
   );
 }

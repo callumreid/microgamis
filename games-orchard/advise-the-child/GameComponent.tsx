@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Capacitor } from "@capacitor/core";
 import BaseGame from "../BaseGame";
 import { GameProps } from "../types";
 import {
@@ -27,15 +28,11 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     updateScore,
     startTimer,
     sendPlayerText: _sendPlayerText,
+    gameState,
   } = props;
-  const [gameStarted, setGameStarted] = useState(false);
-  const [currentScenario, setCurrentScenario] = useState<GameScenario | null>(
-    null
-  );
   const [hostFinishedSpeaking, setHostFinishedSpeaking] = useState(false);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
   const [currentTranscriptionText, setCurrentTranscriptionText] = useState("");
-  const [lastCapturedText, setLastCapturedText] = useState("");
   const pttStartTimeRef = useRef<number>(0);
   const [blackScreen, setBlackScreen] = useState(false);
   const [flashWhite, setFlashWhite] = useState(false);
@@ -54,7 +51,7 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
 
   // Real-time transcription display
   const { transcriptItems } = useTranscript();
-  
+
   // Monitor transcription items - only capture user speech during PTT
   useEffect(() => {
     if (!isPTTUserSpeaking) {
@@ -63,11 +60,12 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
 
     // Find items that appeared since PTT started AND are marked as user role
     const userItemsSincePTT = transcriptItems
-      .filter(item => 
-        item.title && 
-        item.title.trim() !== "" &&
-        item.role === "user" &&
-        item.createdAtMs > pttStartTimeRef.current
+      .filter(
+        (item) =>
+          item.title &&
+          item.title.trim() !== "" &&
+          item.role === "user" &&
+          item.createdAtMs > pttStartTimeRef.current
       )
       .sort((a, b) => b.createdAtMs - a.createdAtMs);
 
@@ -78,6 +76,29 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     }
   }, [transcriptItems, isPTTUserSpeaking]);
 
+  // Get latest host and user messages for speech bubble
+  const getLatestTranscripts = useCallback(() => {
+    const hostItems = transcriptItems
+      .filter(
+        (item) =>
+          item.role === "assistant" && item.title && item.title.trim() !== ""
+      )
+      .sort((a, b) => b.createdAtMs - a.createdAtMs);
+
+    const userItems = transcriptItems
+      .filter(
+        (item) => item.role === "user" && item.title && item.title.trim() !== ""
+      )
+      .sort((a, b) => b.createdAtMs - a.createdAtMs);
+
+    return {
+      latestHost: hostItems[0]?.title || "",
+      latestUser: userItems[0]?.title || "",
+    };
+  }, [transcriptItems]);
+
+  const { latestHost, latestUser } = getLatestTranscripts();
+
   const {
     startGame,
     sendPlayerText: _sendAgentText,
@@ -85,8 +106,6 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
   } = useGameAgent({
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
-      setCurrentScenario(scenario);
-      setGameStarted(true);
       updateMessage?.(
         "The AI host is presenting your scenario. Listen carefully and give your best advice!"
       );
@@ -167,114 +186,116 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     setCurrentTranscriptionText(""); // Clear previous text
     await pushToTalkStartNative();
     console.log("PTT started at:", pttStartTimeRef.current);
-  }, [sessionStatus, isWebRTCReady, isPTTUserSpeaking, interrupt, pushToTalkStartNative]);
+  }, [
+    sessionStatus,
+    isWebRTCReady,
+    isPTTUserSpeaking,
+    interrupt,
+    pushToTalkStartNative,
+  ]);
 
   const handleTalkButtonUp = useCallback(async () => {
     if (sessionStatus !== "CONNECTED" || !isPTTUserSpeaking) return;
-    
-    // Save the current transcription text before stopping PTT
-    if (currentTranscriptionText.trim()) {
-      setLastCapturedText(currentTranscriptionText);
-    }
-    
+
     setIsPTTUserSpeaking(false);
     await pushToTalkStopNative();
     console.log("PTT stopped. Final text:", currentTranscriptionText);
-  }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative, currentTranscriptionText]);
+  }, [
+    sessionStatus,
+    isPTTUserSpeaking,
+    pushToTalkStopNative,
+    currentTranscriptionText,
+  ]);
 
   return (
-    <div className="text-center max-w-2xl bg-gradient-to-br from-pink-200 via-blue-200 to-purple-200 rounded-lg p-8">
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800">
-          👶 Advise The Child
-        </h2>
-
-        {/* Game status display */}
-        <div className="bg-yellow-100 rounded-lg p-6 mb-6 border-4 border-yellow-300">
-          <div className="text-6xl mb-4">🎤</div>
-          <div className="text-lg font-bold text-gray-700 mb-2">
-            AI Game Host Active
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-pink-200 via-blue-200 to-purple-200">
+      <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mt-16">
+        <div className="flex justify-between items-center">
+          <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
+            Score: {gameState?.score || 0}
           </div>
-          <div className="text-md text-gray-600 mb-4">
-            {!gameStarted
-              ? "The AI host is preparing your scenario..."
-              : !hostFinishedSpeaking
-              ? "🎙️ AI host is speaking... Listen carefully!"
-              : "⏰ Your turn! Give your advice now!"}
+          <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
+            👶 Advise The Child
+          </h2>
+          <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
+            Time: {gameState?.timeRemaining || 30}s
           </div>
-          {currentScenario && (
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mt-4">
-              <div className="text-sm text-blue-800 font-medium">
-                Current Scenario: {currentScenario.problem}
+        </div>
+        {/* Speech Bubble - Centered and Prominent */}
+        <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 mb-4 min-h-[200px] flex flex-col justify-center">
+          {/* Host Speech Bubble */}
+          {latestHost && (
+            <div className="mb-4">
+              <div className="flex justify-start">
+                <div className="bg-blue-100 border-2 border-blue-300 rounded-2xl rounded-bl-none p-4 max-w-md text-black">
+                  <div className="text-sm text-blue-800 font-medium mb-1">
+                    🎭 Host:
+                  </div>
+                  <div className="text-blue-900 text-lg">{latestHost}</div>
+                </div>
               </div>
             </div>
           )}
-        </div>
 
-        {/* Instructions */}
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
-          <div className="text-3xl mb-2">💡</div>
-          <p className="text-lg font-semibold text-blue-800 mb-2">
-            Give thoughtful advice to help the child!
-          </p>
-          <p className="text-sm text-blue-600">
-            Be empathetic, helpful, and age-appropriate. The AI will evaluate
-            your response.
-          </p>
-        </div>
-
-        {/* Push-to-Talk Button */}
-        {hostFinishedSpeaking && sessionStatus === "CONNECTED" && isWebRTCReady && (
-          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
-            <div className="text-center">
-              <div className="text-sm text-yellow-800 mb-2">
-                Hold the button to give your advice
-              </div>
-              <button
-                onMouseDown={handleTalkButtonDown}
-                onMouseUp={handleTalkButtonUp}
-                onMouseLeave={handleTalkButtonUp}
-                onTouchStart={handleTalkButtonDown}
-                onTouchEnd={handleTalkButtonUp}
-                className={`w-20 h-20 rounded-full border-4 border-yellow-400 transition-all duration-150 ${
-                  isPTTUserSpeaking
-                    ? "bg-red-500 scale-110 shadow-lg"
-                    : "bg-yellow-200 hover:bg-yellow-300"
-                }`}
-              >
-                <div className="text-3xl">
-                  {isPTTUserSpeaking ? "🔴" : "🎤"}
+          {/* User Speech Bubble */}
+          {(latestUser || isPTTUserSpeaking) && (
+            <div className="mb-2">
+              <div className="flex justify-end">
+                <div className="bg-green-100 border-2 border-green-300 rounded-2xl rounded-br-none p-4 max-w-md text-black">
+                  <div className="text-sm text-green-800 font-medium mb-1">
+                    👤 You:
+                  </div>
+                  <div className="text-green-900 text-lg">
+                    {isPTTUserSpeaking
+                      ? currentTranscriptionText || "🎤 Speaking..."
+                      : latestUser || "Press mic to speak"}
+                  </div>
                 </div>
-              </button>
-              <div className="text-xs text-yellow-700 mt-2">
-                {isPTTUserSpeaking ? "Speaking..." : "Click & Hold to Talk"}
+              </div>
+            </div>
+          )}
+
+          {/* No conversation yet */}
+          {!latestHost && !latestUser && !isPTTUserSpeaking && (
+            <div className="text-center text-gray-500 text-lg">
+              Conversation will appear here...
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Push-to-Talk Button - Only on Web, Fixed Position */}
+      {!Capacitor.isNativePlatform() &&
+        hostFinishedSpeaking &&
+        sessionStatus === "CONNECTED" &&
+        isWebRTCReady && (
+          <div className="fixed bottom-6 right-6 z-10">
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-full p-4 shadow-lg">
+              <div className="text-center">
+                <div className="text-xs text-yellow-800 mb-1">Hold to Talk</div>
+                <button
+                  onMouseDown={handleTalkButtonDown}
+                  onMouseUp={handleTalkButtonUp}
+                  onMouseLeave={handleTalkButtonUp}
+                  onTouchStart={handleTalkButtonDown}
+                  onTouchEnd={handleTalkButtonUp}
+                  className={`w-16 h-16 rounded-full border-4 border-yellow-400 transition-all duration-150 ${
+                    isPTTUserSpeaking
+                      ? "bg-red-500 scale-110 shadow-lg"
+                      : "bg-yellow-200 hover:bg-yellow-300"
+                  }`}
+                >
+                  <div className="text-5xl">
+                    {isPTTUserSpeaking ? "🔴" : "🎤"}
+                  </div>
+                </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* FORCED TRANSCRIPTION DISPLAY - ALWAYS SHOWS */}
-        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mt-4">
-          <div className="text-sm text-green-800 font-medium mb-2">
-            SPEECH TRANSCRIPTION:
-          </div>
-          <div className="text-lg text-green-900 bg-white rounded p-2 border border-green-300">
-            {isPTTUserSpeaking 
-              ? (currentTranscriptionText || "🎤 LISTENING...") 
-              : (lastCapturedText || "Press mic button to speak")}
-          </div>
-          <div className="text-xs text-green-600 mt-2">
-            <div>PTT Active: {isPTTUserSpeaking.toString()}</div>
-            <div>Current: &quot;{currentTranscriptionText}&quot;</div>
-            <div>Last: &quot;{lastCapturedText}&quot;</div>
-            <div>Total transcripts: {transcriptItems.length}</div>
-            <div>User items only: {transcriptItems.filter(item => item.role === "user").slice(-2).map(item => item.title).filter(Boolean).join(" | ")}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Decorative elements */}
-      <div className="flex justify-center space-x-4 text-2xl opacity-50">
+      {/* Decorative elements - Smaller */}
+      <div className="flex justify-center space-x-3 text-lg opacity-30 mt-4">
         <span>❤️</span>
         <span>🤗</span>
         <span>💪</span>

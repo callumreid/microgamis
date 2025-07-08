@@ -59,11 +59,12 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             console.error("Failed to parse game start scenario:", e);
           }
         } else if (
-          item.title.includes("finish_child_advice_game") &&
-          item.data
+          item.title.includes("finish_child_advice_game")
         ) {
           try {
+            console.log("🔍 Found finish_child_advice_game breadcrumb:", item);
             const result = item.data as GameFinishResult;
+            console.log("🔍 Parsed result:", result);
             setIsGameActive(false);
             onGameFinish?.(result);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));

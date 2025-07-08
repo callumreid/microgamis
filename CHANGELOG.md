@@ -62,6 +62,48 @@
 - PTT handlers follow same pattern as main Games.tsx component
 - Button conditional rendering based on game state and connection status
 
+### Recent Changes - 2025-07-08 (Second Game Implementation)
+
+#### Added
+- **New Game: "Stall the Police"**: Second micro game following the same mechanisms as "Advise the Child"
+  - Police-themed scenario where user must convince officer to leave after noise complaint
+  - Uses identical UI framework as child advice game but with police-specific styling and messaging
+  - Dark red/black color scheme with police emojis (🚔, 🐷) for thematic consistency
+  - Custom win/lose banners: "SMOOTH TALKER/FREEDOM FIGHTER!" vs "BUSTED BUDDY/JAIL BIRD SPECIAL!"
+  - 30-second timer and same push-to-talk functionality
+
+#### Enhanced
+- **Dynamic Game Agent System**: Updated game host agent to handle multiple games dynamically
+  - Added police stall scenarios with appropriate keywords for success/failure evaluation
+  - New tools: `start_police_stall_game()` and `finish_police_stall_game()`
+  - Game host instructions now include rules for both "Advise the Child" and "Stall the Police"
+  - Agent evaluates police responses based on cooperation and respect vs confrontation
+
+- **Game Registry and Selection**: 
+  - Updated `games-orchard/index.ts` to include both games in registry
+  - Changed default game on launch from "advise-the-child" to "stall-the-police" in Games.tsx
+  - Both games now available in orchard browser
+
+- **useGameAgent Hook**: Made game agent system generic to support multiple game types
+  - Added `gameType` parameter to distinguish between games
+  - Updated scenario interface to handle both child and police game data structures
+  - Dynamic tool call detection based on game type
+  - Separate message handling for different game types
+
+#### Technical Implementation Details
+- **Game Structure**: Follow established pattern with `index.ts`, `GameComponent.tsx` files
+- **Event System**: Each game has its own finish event type (`finish_child_advice_game`, `finish_police_stall_game`)
+- **Scenario Types**: GameScenario interface expanded to handle both childQuote and policeQuote properties
+- **Agent Tools**: Game host now exports 4 tools total (start/finish for each game)
+- **UI Consistency**: Maintains same base game wrapper while allowing thematic customization
+
+#### Files Modified
+- `games-orchard/stall-the-police/` - New game directory with complete implementation
+- `games-orchard/index.ts` - Updated game registry
+- `src/app/components/Games.tsx` - Changed default game selection
+- `src/app/hooks/useGameAgent.ts` - Made generic for multiple game types
+- `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added police game scenarios and tools
+
 ## Instructions for Future AI Agents
 
 When working on this codebase:

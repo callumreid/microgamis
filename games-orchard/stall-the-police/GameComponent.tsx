@@ -20,7 +20,7 @@ interface GameControlProps {
   playSound?: (soundId: string) => void;
 }
 
-function AdviseTheChildGame(props: Partial<GameControlProps>) {
+function StallThePoliceGame(props: Partial<GameControlProps>) {
   const {
     endGame,
     updateMessage,
@@ -83,13 +83,13 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     sendPlayerText: _sendAgentText,
     isGameActive: _isGameActive,
   } = useGameAgent({
-    gameType: "advise-the-child",
+    gameType: "stall-the-police",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
       setCurrentScenario(scenario);
       setGameStarted(true);
       updateMessage?.(
-        "The AI host is presenting your scenario. Listen carefully and give your best advice!"
+        "The police officer is at your door! Listen carefully and convince them to leave!"
       );
 
       // Start timer after host finishes speaking (estimated 8 seconds for host to speak)
@@ -97,12 +97,12 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
         setHostFinishedSpeaking(true);
         startTimer?.();
         updateMessage?.(
-          "Now give your advice! You have 30 seconds to respond thoughtfully."
+          "Now convince the officer to leave! You have 30 seconds to talk your way out!"
         );
       }, 8000);
     },
     onGameFinish: (result: GameFinishResult) => {
-      console.log("🎮 AdviseTheChild onGameFinish called with result:", result);
+      console.log("🎮 StallThePolice onGameFinish called with result:", result);
       
       // Handle undefined/null results - default to success if no clear failure
       const success = result.success !== undefined ? result.success : true;
@@ -147,7 +147,7 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
   // Start the game when component mounts (user has already clicked START GAME)
   useEffect(() => {
     updateMessage?.(
-      "Welcome to Advise the Child! The AI game host is preparing a scenario for you..."
+      "Welcome to Stall the Police! The AI police officer is preparing to knock on your door..."
     );
 
     // Start the game after a brief delay
@@ -184,52 +184,51 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
   }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative, currentTranscriptionText]);
 
   return (
-    <div className="text-center max-w-2xl bg-gradient-to-br from-pink-200 via-blue-200 to-purple-200 rounded-lg p-8">
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800">
-          👶 Advise The Child
+    <div className="text-center max-w-2xl bg-gradient-to-br from-red-900 via-gray-800 to-black rounded-lg p-8">
+      <div className="bg-gray-900 rounded-lg shadow-lg p-6 mb-6 border-4 border-red-600">
+        <h2 className="text-3xl font-bold mb-6 text-red-400">
+          🚔 Stall The Police
         </h2>
 
         {/* Game status display */}
-        <div className="bg-yellow-100 rounded-lg p-6 mb-6 border-4 border-yellow-300">
-          <div className="text-6xl mb-4">🎤</div>
-          <div className="text-lg font-bold text-gray-700 mb-2">
-            AI Game Host Active
+        <div className="bg-red-100 rounded-lg p-6 mb-6 border-4 border-red-600">
+          <div className="text-6xl mb-4">🐷</div>
+          <div className="text-lg font-bold text-red-800 mb-2">
+            Police Officer at Your Door
           </div>
-          <div className="text-md text-gray-600 mb-4">
+          <div className="text-md text-red-700 mb-4">
             {!gameStarted
-              ? "The AI host is preparing your scenario..."
+              ? "The police officer is approaching your door..."
               : !hostFinishedSpeaking
-              ? "🎙️ AI host is speaking... Listen carefully!"
-              : "⏰ Your turn! Give your advice now!"}
+              ? "🔊 Officer is speaking... Listen carefully!"
+              : "⚠️ Your turn! Convince them to leave!"}
           </div>
           {currentScenario && (
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mt-4">
-              <div className="text-sm text-blue-800 font-medium">
-                Current Scenario: {currentScenario.problem}
+            <div className="bg-red-50 border-2 border-red-400 rounded-lg p-4 mt-4">
+              <div className="text-sm text-red-900 font-medium">
+                Officer Says: {currentScenario.policeQuote || currentScenario.problem}
               </div>
             </div>
           )}
         </div>
 
         {/* Instructions */}
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
-          <div className="text-3xl mb-2">💡</div>
-          <p className="text-lg font-semibold text-blue-800 mb-2">
-            Give thoughtful advice to help the child!
+        <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4 mb-6">
+          <div className="text-3xl mb-2">🗣️</div>
+          <p className="text-lg font-semibold text-yellow-800 mb-2">
+            Talk your way out of trouble!
           </p>
-          <p className="text-sm text-blue-600">
-            Be empathetic, helpful, and age-appropriate. The AI will evaluate
-            your response.
+          <p className="text-sm text-yellow-700">
+            Be clever, convincing, and stay calm. The AI officer will decide if you succeed.
           </p>
         </div>
 
         {/* Push-to-Talk Button */}
         {hostFinishedSpeaking && sessionStatus === "CONNECTED" && isWebRTCReady && (
-          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+          <div className="bg-red-50 border-2 border-red-400 rounded-lg p-4">
             <div className="text-center">
-              <div className="text-sm text-yellow-800 mb-2">
-                Hold the button to give your advice
+              <div className="text-sm text-red-800 mb-2">
+                Hold the button to speak to the officer
               </div>
               <button
                 onMouseDown={handleTalkButtonDown}
@@ -237,17 +236,17 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
                 onMouseLeave={handleTalkButtonUp}
                 onTouchStart={handleTalkButtonDown}
                 onTouchEnd={handleTalkButtonUp}
-                className={`w-20 h-20 rounded-full border-4 border-yellow-400 transition-all duration-150 ${
+                className={`w-20 h-20 rounded-full border-4 border-red-600 transition-all duration-150 ${
                   isPTTUserSpeaking
-                    ? "bg-red-500 scale-110 shadow-lg"
-                    : "bg-yellow-200 hover:bg-yellow-300"
+                    ? "bg-red-600 scale-110 shadow-lg"
+                    : "bg-red-200 hover:bg-red-300"
                 }`}
               >
                 <div className="text-3xl">
                   {isPTTUserSpeaking ? "🔴" : "🎤"}
                 </div>
               </button>
-              <div className="text-xs text-yellow-700 mt-2">
+              <div className="text-xs text-red-700 mt-2">
                 {isPTTUserSpeaking ? "Speaking..." : "Click & Hold to Talk"}
               </div>
             </div>
@@ -255,16 +254,16 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
         )}
 
         {/* FORCED TRANSCRIPTION DISPLAY - ALWAYS SHOWS */}
-        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mt-4">
-          <div className="text-sm text-green-800 font-medium mb-2">
+        <div className="bg-gray-50 border-2 border-gray-400 rounded-lg p-4 mt-4">
+          <div className="text-sm text-gray-800 font-medium mb-2">
             SPEECH TRANSCRIPTION:
           </div>
-          <div className="text-lg text-green-900 bg-white rounded p-2 border border-green-300">
+          <div className="text-lg text-gray-900 bg-white rounded p-2 border border-gray-300">
             {isPTTUserSpeaking 
               ? (currentTranscriptionText || "🎤 LISTENING...") 
               : (lastCapturedText || "Press mic button to speak")}
           </div>
-          <div className="text-xs text-green-600 mt-2">
+          <div className="text-xs text-gray-600 mt-2">
             <div>PTT Active: {isPTTUserSpeaking.toString()}</div>
             <div>Current: &quot;{currentTranscriptionText}&quot;</div>
             <div>Last: &quot;{lastCapturedText}&quot;</div>
@@ -276,10 +275,10 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
 
       {/* Decorative elements */}
       <div className="flex justify-center space-x-4 text-2xl opacity-50">
-        <span>❤️</span>
-        <span>🤗</span>
-        <span>💪</span>
-        <span>🌟</span>
+        <span>🚨</span>
+        <span>⚖️</span>
+        <span>🤐</span>
+        <span>🏃</span>
       </div>
 
       {/* Black Screen Effect */}
@@ -333,13 +332,13 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
             }}
           >
             <div style={{ fontSize: '8rem', marginBottom: '30px' }}>
-              {isWinner ? '🏆' : '😢'}
+              {isWinner ? '🏆' : '🚔'}
             </div>
             <div style={{ fontSize: '4rem', fontWeight: '900', lineHeight: '1.2' }}>
-              {isWinner ? 'WINNER WINNER' : 'LOSER LOSER'}
+              {isWinner ? 'SMOOTH TALKER' : 'BUSTED BUDDY'}
             </div>
             <div style={{ fontSize: '4rem', fontWeight: '900', lineHeight: '1.2' }}>
-              {isWinner ? 'CHICKEN DINNER!' : 'CHICKEN HOOSIER!'}
+              {isWinner ? 'FREEDOM FIGHTER!' : 'JAIL BIRD SPECIAL!'}
             </div>
             <div style={{ fontSize: '3rem', marginTop: '30px' }}>
               Score: {finalScore}
@@ -351,15 +350,15 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
   );
 }
 
-export default function AdviseTheChildGameComponent(props: GameProps) {
+export default function StallThePoliceGameComponent(props: GameProps) {
   return (
     <BaseGame
-      title="Advise The Child"
-      instructions="An AI game host will present a child's problem - give your best advice!"
+      title="Stall The Police"
+      instructions="A police officer will arrive at your door - convince them to leave!"
       duration={30}
       {...props}
     >
-      <AdviseTheChildGame />
+      <StallThePoliceGame />
     </BaseGame>
   );
 }

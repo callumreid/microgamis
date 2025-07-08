@@ -1345,6 +1345,7 @@ export const startBullyPwnGame = tool({
   parameters: {
     type: "object",
     properties: {},
+    required: [],
     additionalProperties: false,
   },
   execute: async (input, details) => {
@@ -1430,6 +1431,7 @@ export const startDeathExplanationGame = tool({
   parameters: {
     type: "object",
     properties: {},
+    required: [],
     additionalProperties: false,
   },
   execute: async (input, details) => {

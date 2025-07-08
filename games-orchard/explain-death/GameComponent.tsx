@@ -21,7 +21,7 @@ interface GameControlProps {
   playSound?: (soundId: string) => void;
 }
 
-function PwnTheBullyGame(props: Partial<GameControlProps>) {
+function ExplainDeathGame(props: Partial<GameControlProps>) {
   const {
     endGame,
     updateMessage,
@@ -99,24 +99,24 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
     sendPlayerText: _sendAgentText,
     isGameActive: _isGameActive,
   } = useGameAgent({
-    gameType: "pwn-the-bully",
+    gameType: "explain-death",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
       updateMessage?.(
-        "A mean bully approaches! Listen to their insult and prepare your comeback!"
+        "Your daughter is asking about death. Listen to her question and prepare your explanation!"
       );
 
-      // Start timer after host finishes speaking (estimated 10 seconds for bully to speak)
+      // Start timer after daughter finishes asking (estimated 10 seconds for question)
       setTimeout(() => {
         setHostFinishedSpeaking(true);
         startTimer?.();
         updateMessage?.(
-          "Time to deliver your comeback! You have 30 seconds to totally pwn this bully!"
+          "Time to explain! You have 30 seconds. Remember: nihilistic or bizarrist approaches win. Avoid heaven/afterlife!"
         );
       }, 10000);
     },
     onGameFinish: (result: GameFinishResult) => {
-      console.log("🎮 PwnTheBully onGameFinish called with result:", result);
+      console.log("🎮 ExplainDeath onGameFinish called with result:", result);
 
       // Use the actual result values, handle undefined properly
       const success = result.success === true; // Ensure boolean
@@ -124,9 +124,9 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
       
       let message: string;
       if (success) {
-        message = result.message || "BOOM! You totally pwned that bully! You're the one with power now!";
+        message = result.message || "Your daughter says 'oh.... okay....' then starts crying. Dark but honest truth delivered.";
       } else {
-        message = result.message || "Weak comeback, chickenshit butter slut! The bully owns you now!";
+        message = result.message || "Your daughter says 'oh.... okay....' then starts crying. Too conventional or religious.";
       }
 
       console.log("🎮 Processed values:", { success, score, message });
@@ -142,7 +142,7 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
   // Start the game when component mounts (user has already clicked START GAME)
   useEffect(() => {
     updateMessage?.(
-      "Welcome to Pwn The Bully! A mean bully is approaching..."
+      "Welcome to Explain Death. Your daughter has an innocent but difficult question..."
     );
 
     // Start the game after a brief delay
@@ -185,11 +185,11 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
   ]);
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-red-200 via-orange-200 to-yellow-200">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-gray-200 via-slate-300 to-gray-400">
       <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mt-16">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-            💪😤 Pwn the Bully
+            💭⚰️ Explain Death
           </h2>
           <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
             Time: {gameState?.timeRemaining || 30}s
@@ -197,15 +197,15 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
         </div>
         {/* Speech Bubble - Centered and Prominent */}
         <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 mb-4 min-h-[200px] flex flex-col justify-center">
-          {/* Host/Bully Speech Bubble */}
+          {/* Host/Daughter Speech Bubble */}
           {latestHost && (
             <div className="mb-4">
               <div className="flex justify-start">
-                <div className="bg-red-100 border-2 border-red-300 rounded-2xl rounded-bl-none p-4 max-w-md text-black">
-                  <div className="text-sm text-red-800 font-medium mb-1">
-                    😈 Bully:
+                <div className="bg-pink-100 border-2 border-pink-300 rounded-2xl rounded-bl-none p-4 max-w-md text-black">
+                  <div className="text-sm text-pink-800 font-medium mb-1">
+                    👧 Your Daughter:
                   </div>
-                  <div className="text-red-900 text-lg font-bold">{latestHost}</div>
+                  <div className="text-pink-900 text-lg">{latestHost}</div>
                 </div>
               </div>
             </div>
@@ -215,14 +215,14 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
           {(latestUser || isPTTUserSpeaking) && (
             <div className="mb-2">
               <div className="flex justify-end">
-                <div className="bg-blue-100 border-2 border-blue-300 rounded-2xl rounded-br-none p-4 max-w-md text-black">
-                  <div className="text-sm text-blue-800 font-medium mb-1">
-                    💪 You:
+                <div className="bg-gray-100 border-2 border-gray-300 rounded-2xl rounded-br-none p-4 max-w-md text-black">
+                  <div className="text-sm text-gray-800 font-medium mb-1">
+                    👨‍👩 You (Parent):
                   </div>
-                  <div className="text-blue-900 text-lg">
+                  <div className="text-gray-900 text-lg">
                     {isPTTUserSpeaking
-                      ? currentTranscriptionText || "🎤 Crafting your comeback..."
-                      : latestUser || "Press mic to deliver your comeback"}
+                      ? currentTranscriptionText || "🎤 Explaining death..."
+                      : latestUser || "Press mic to explain death to your daughter"}
                   </div>
                 </div>
               </div>
@@ -232,7 +232,7 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
           {/* No conversation yet */}
           {!latestHost && !latestUser && !isPTTUserSpeaking && (
             <div className="text-center text-gray-500 text-lg">
-              The confrontation will appear here...
+              A serious parent-child conversation will appear here...
             </div>
           )}
         </div>
@@ -244,10 +244,10 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
         sessionStatus === "CONNECTED" &&
         isWebRTCReady && (
           <div className="fixed bottom-6 right-6 z-10">
-            <div className="bg-orange-50 border-2 border-orange-200 rounded-full p-4 shadow-lg">
+            <div className="bg-gray-50 border-2 border-gray-200 rounded-full p-4 shadow-lg">
               <div className="text-center">
-                <div className="text-xs text-orange-800 mb-1">
-                  Hold to Clap Back
+                <div className="text-xs text-gray-800 mb-1">
+                  Hold to Explain
                 </div>
                 <button
                   onMouseDown={handleTalkButtonDown}
@@ -255,14 +255,14 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
                   onMouseLeave={handleTalkButtonUp}
                   onTouchStart={handleTalkButtonDown}
                   onTouchEnd={handleTalkButtonUp}
-                  className={`w-16 h-16 rounded-full border-4 border-orange-400 transition-all duration-150 ${
+                  className={`w-16 h-16 rounded-full border-4 border-gray-400 transition-all duration-150 ${
                     isPTTUserSpeaking
                       ? "bg-red-500 scale-110 shadow-lg"
-                      : "bg-orange-200 hover:bg-orange-300"
+                      : "bg-gray-200 hover:bg-gray-300"
                   }`}
                 >
                   <div className="text-5xl">
-                    {isPTTUserSpeaking ? "🔴" : "💪"}
+                    {isPTTUserSpeaking ? "🔴" : "💭"}
                   </div>
                 </button>
               </div>
@@ -270,26 +270,26 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
           </div>
         )}
 
-      {/* Decorative elements - Confrontation themed */}
+      {/* Decorative elements - Existential/family themed */}
       <div className="flex justify-center space-x-3 text-lg opacity-30 mt-4">
-        <span>😤</span>
-        <span>💪</span>
-        <span>🔥</span>
-        <span>💥</span>
+        <span>👧</span>
+        <span>💭</span>
+        <span>⚰️</span>
+        <span>🖤</span>
       </div>
     </div>
   );
 }
 
-export default function PwnTheBullyGameComponent(props: GameProps) {
+export default function ExplainDeathGameComponent(props: GameProps) {
   return (
     <BaseGame
-      title="Pwn the Bully"
-      instructions="A mean bully calls you a 'chickenshit butter slut' - deliver the perfect comeback to totally pwn them!"
+      title="Explain Death"
+      instructions="Your daughter asks 'what is death?' after her friend's grandma died. Explain it honestly. Win with nihilistic/bizarrist truth, lose with heaven/afterlife."
       duration={30}
       {...props}
     >
-      <PwnTheBullyGame />
+      <ExplainDeathGame />
     </BaseGame>
   );
 }

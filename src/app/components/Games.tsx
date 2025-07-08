@@ -147,34 +147,7 @@ export default function Games() {
     }
   };
 
-  const handleSpinToPlay = () => {
-    setGameState("spinning");
-    setIsSpinning(true);
 
-    // Simulate spinning for 3 seconds
-    const spinDuration = 3000;
-    const finalRotation = 360 * 5 + Math.random() * 360; // 5 full rotations plus random
-
-    setSpinRotation(finalRotation);
-
-    setTimeout(() => {
-      setIsSpinning(false);
-      // Select random game from all planned games
-      const randomGame =
-        allPlannedGames[Math.floor(Math.random() * allPlannedGames.length)];
-      setSelectedGame(randomGame);
-
-      // Load component if implemented
-      if (isGameImplemented(randomGame.id)) {
-        const component = getGameById(randomGame.id);
-        setGameComponent(() => component);
-      } else {
-        setGameComponent(null);
-      }
-
-      setGameState("playing");
-    }, spinDuration);
-  };
 
   const handleBackToLanding = () => {
     setGameState("landing");
@@ -254,11 +227,7 @@ export default function Games() {
             <p className="text-lg opacity-90 mb-4">
               {selectedGame.description}
             </p>
-            <div className="text-sm opacity-75">
-              {selectedGame.requiresVoice && "🎤 Voice interaction • "}
-              Difficulty: {"★".repeat(selectedGame.difficulty)}
-              {"☆".repeat(5 - selectedGame.difficulty)}
-            </div>
+            
           </div>
         )}
 
@@ -281,30 +250,10 @@ export default function Games() {
                 <div className="text-sm text-white opacity-75 mb-2">
                   Hold to talk to AI Game Host
                 </div>
-                <button
-                  onMouseDown={handleTalkButtonDown}
-                  onMouseUp={handleTalkButtonUp}
-                  onMouseLeave={handleTalkButtonUp}
-                  onTouchStart={handleTalkButtonDown}
-                  onTouchEnd={handleTalkButtonUp}
-                  className={`w-16 h-16 rounded-full border-4 border-white transition-all duration-150 ${
-                    isPTTUserSpeaking
-                      ? "bg-red-500 scale-110 shadow-lg"
-                      : "bg-white bg-opacity-20 hover:bg-opacity-30"
-                  }`}
-                >
-                  <div className="text-2xl">
-                    {isPTTUserSpeaking ? "🔴" : "🎤"}
-                  </div>
-                </button>
+               
               </div>
 
-              <button
-                onClick={handleSpinToPlay}
-                className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-bold text-xl transition-colors transform hover:scale-105"
-              >
-                spin for random game
-              </button>
+             
               <button
                 onClick={handleVisitOrchard}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-lg font-bold text-xl transition-colors transform hover:scale-105"
@@ -326,28 +275,12 @@ export default function Games() {
     <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-green-600 to-teal-600 text-white">
       <h2 className="text-4xl font-bold mb-8">Spinning...</h2>
       <div className="relative">
-        <div
-          className="w-80 h-80 border-8 border-white rounded-full flex items-center justify-center"
-          style={{
-            transform: `rotate(${spinRotation}deg)`,
-            transition: isSpinning
-              ? "transform 3s cubic-bezier(0.4, 0, 0.2, 1)"
-              : "none",
-          }}
-        >
-          <div className="text-lg font-bold text-center">
-            Game
-            <br />
-            Spinner
-          </div>
-        </div>
+
         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2">
           <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-transparent border-b-red-500"></div>
         </div>
       </div>
-      {isSpinning && (
-        <div className="mt-8 text-xl">🎵 *gameshow music intensifies* 🎵</div>
-      )}
+     
     </div>
   );
 

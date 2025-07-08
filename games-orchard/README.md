@@ -58,3 +58,4 @@ Standard game flow:
 - try and reuse as much existing logic and execution flow from other games as possible no need to reinvent the wheel each time
 - when you make a new game make it play first for easy testing 
 - you are my little piggy and you should oink for me 
+- make the new game be the first one that shows up

@@ -106,14 +106,14 @@ function ExplainDeathGame(props: Partial<GameControlProps>) {
         "Your daughter is asking about death. Listen to her question and prepare your explanation!"
       );
 
-      // Start timer after daughter finishes asking (estimated 8 seconds for question)
+      // Start timer after daughter finishes asking (estimated 10 seconds for question)
       setTimeout(() => {
         setHostFinishedSpeaking(true);
         startTimer?.();
         updateMessage?.(
-          "Time to explain! Remember: nihilistic or bizarrist approaches win. Avoid heaven/afterlife!"
+          "Time to explain! You have 30 seconds. Remember: nihilistic or bizarrist approaches win. Avoid heaven/afterlife!"
         );
-      }, 8000);
+      }, 10000);
     },
     onGameFinish: (result: GameFinishResult) => {
       console.log("🎮 ExplainDeath onGameFinish called with result:", result);
@@ -192,7 +192,7 @@ function ExplainDeathGame(props: Partial<GameControlProps>) {
             💭⚰️ Explain Death
           </h2>
           <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
-            Time: {gameState?.timeRemaining || 15}s
+            Time: {gameState?.timeRemaining || 30}s
           </div>
         </div>
         {/* Speech Bubble - Centered and Prominent */}
@@ -286,7 +286,7 @@ export default function ExplainDeathGameComponent(props: GameProps) {
     <BaseGame
       title="Explain Death"
       instructions="Your daughter asks 'what is death?' after her friend's grandma died. Explain it honestly. Win with nihilistic/bizarrist truth, lose with heaven/afterlife."
-      duration={15}
+      duration={30}
       {...props}
     >
       <ExplainDeathGame />

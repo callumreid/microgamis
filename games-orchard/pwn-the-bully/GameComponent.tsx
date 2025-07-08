@@ -106,14 +106,14 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
         "A mean bully approaches! Listen to their insult and prepare your comeback!"
       );
 
-      // Start timer after host finishes speaking (estimated 8 seconds for bully to speak)
+      // Start timer after host finishes speaking (estimated 10 seconds for bully to speak)
       setTimeout(() => {
         setHostFinishedSpeaking(true);
         startTimer?.();
         updateMessage?.(
           "Time to deliver your comeback! You have 30 seconds to totally pwn this bully!"
         );
-      }, 8000);
+      }, 10000);
     },
     onGameFinish: (result: GameFinishResult) => {
       console.log("🎮 PwnTheBully onGameFinish called with result:", result);

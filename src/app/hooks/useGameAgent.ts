@@ -7,11 +7,14 @@ export interface GameScenario {
   problem: string;
   childQuote?: string;
   policeQuote?: string;
+  alienQuote?: string;
   context: string;
   goodAdviceKeywords?: string[];
   badAdviceKeywords?: string[];
   goodStallKeywords?: string[];
   badStallKeywords?: string[];
+  goodConvinceKeywords?: string[];
+  badConvinceKeywords?: string[];
 }
 
 export interface GameFinishResult {
@@ -23,11 +26,11 @@ export interface GameFinishResult {
 export interface UseGameAgentOptions {
   onGameStart?: (scenario: GameScenario) => void;
   onGameFinish?: (result: GameFinishResult) => void;
-  gameType?: "advise-the-child" | "stall-the-police";
+  gameType?: "advise-the-child" | "stall-the-police" | "convince-the-aliens";
 }
 
 export function useGameAgent(options: UseGameAgentOptions = {}) {
-  const { onGameStart, onGameFinish, gameType = "stall-the-police" } = options;
+  const { onGameStart, onGameFinish, gameType = "convince-the-aliens" } = options;
   const { sendUserText, isWebRTCReady } = useGameSession();
   const { transcriptItems } = useTranscript();
   const [isGameActive, setIsGameActive] = useState(false);
@@ -98,6 +101,29 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             console.error("Failed to parse police stall game finish result:", e);
           }
         }
+        // Handle alien convince game
+        else if (item.title.includes("start_alien_convince_game") && item.data && gameType === "convince-the-aliens") {
+          try {
+            const scenario = item.data as GameScenario;
+            setCurrentScenario(scenario);
+            setIsGameActive(true);
+            onGameStart?.(scenario);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse alien convince game start scenario:", e);
+          }
+        } else if (item.title.includes("finish_alien_convince_game") && gameType === "convince-the-aliens") {
+          try {
+            console.log("🔍 Found finish_alien_convince_game breadcrumb:", item);
+            const result = item.data as GameFinishResult;
+            console.log("🔍 Parsed result:", result);
+            setIsGameActive(false);
+            onGameFinish?.(result);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse alien convince game finish result:", e);
+          }
+        }
       }
     }
   }, [transcriptItems, onGameStart, onGameFinish, processedItemIds, gameType]);
@@ -118,7 +144,8 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
     // Send a message to trigger the game host agent to start the appropriate game
     const gameMessages = {
       "advise-the-child": "Hello! I'm ready to play Advise the Child. Please start the game!",
-      "stall-the-police": "Hello! I'm ready to play Stall the Police. Please start the game!"
+      "stall-the-police": "Hello! I'm ready to play Stall the Police. Please start the game!",
+      "convince-the-aliens": "Hello! I'm ready to play Convince the Aliens. Please start the game!"
     };
     
     sendUserText(gameMessages[gameType]);

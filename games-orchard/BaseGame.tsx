@@ -34,20 +34,6 @@ export default function BaseGame({
     success: boolean;
     score: number;
   }>({ success: false, score: 0 });
-  const [testBanner, setTestBanner] = useState(false);
-
-  // Test banner after 5 seconds to verify banner system works
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      console.log("🧪 ACTIVATING TEST BANNER");
-      setTestBanner(true);
-      setTimeout(() => {
-        setTestBanner(false);
-        console.log("🧪 HIDING TEST BANNER");
-      }, 3000);
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Countdown before game starts
   useEffect(() => {
@@ -295,29 +281,6 @@ export default function BaseGame({
           );
         })()}
 
-      {/* Test Banner */}
-      {testBanner && (
-        <div
-          className="fixed inset-0 w-screen h-screen flex items-center justify-center"
-          style={{
-            zIndex: 999999,
-            backgroundColor: "#ff00ff",
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "#ffffff",
-              color: "#000000",
-              fontSize: "4rem",
-              fontWeight: "900",
-              padding: "40px",
-              textAlign: "center",
-            }}
-          >
-            🧪 TEST BANNER WORKING!
-          </div>
-        </div>
-      )}
     </div>
   );
 }

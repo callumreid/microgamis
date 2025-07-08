@@ -265,39 +265,42 @@ export default function Games() {
   const handleGameEnd = (_result: any) => {
     console.log("Game ended:", _result, "Current index:", currentGameIndex);
 
-    // Check if there's a next game in the sequence
-    if (currentGameIndex < implementedGames.length - 1) {
-      // Cycle to next transition video
-      setCurrentTransitionVideo((prev) => (prev + 1) % transitionVideos.length);
+    // Wait for BaseGame banner to finish (6 seconds) before starting transition
+    setTimeout(() => {
+      // Check if there's a next game in the sequence
+      if (currentGameIndex < implementedGames.length - 1) {
+        // Cycle to next transition video
+        setCurrentTransitionVideo((prev) => (prev + 1) % transitionVideos.length);
 
-      // Start transition to next game
-      setGameState("transition");
+        // Start transition to next game
+        setGameState("transition");
 
-      // Play transition video
-      if (videoRef.current) {
-        videoRef.current.currentTime = 0; // Rewind to start
-        videoRef.current.play();
+        // Play transition video
+        if (videoRef.current) {
+          videoRef.current.currentTime = 0; // Rewind to start
+          videoRef.current.play();
+        }
+
+        // After 8 seconds, start next game
+        setTimeout(() => {
+          const nextIndex = currentGameIndex + 1;
+          const nextGame = implementedGames[nextIndex];
+
+          setCurrentGameIndex(nextIndex);
+          setSelectedGame(nextGame);
+
+          const component = getGameById(nextGame.id);
+          setGameComponent(() => component);
+
+          setGameState("playing");
+        }, 8000);
+      } else {
+        // All games completed, return to landing
+        setTimeout(() => {
+          handleBackToLanding();
+        }, 3000);
       }
-
-      // After 8 seconds, start next game
-      setTimeout(() => {
-        const nextIndex = currentGameIndex + 1;
-        const nextGame = implementedGames[nextIndex];
-
-        setCurrentGameIndex(nextIndex);
-        setSelectedGame(nextGame);
-
-        const component = getGameById(nextGame.id);
-        setGameComponent(() => component);
-
-        setGameState("playing");
-      }, 8000);
-    } else {
-      // All games completed, return to landing
-      setTimeout(() => {
-        handleBackToLanding();
-      }, 3000);
-    }
+    }, 6000); // Wait for BaseGame banner to complete
   };
 
   const renderLandingPage = () => {

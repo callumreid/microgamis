@@ -1,6 +1,7 @@
 import { GameMetadata } from "./types";
 import AdviseTheChildGame, { metadata as adviseTheChildMetadata } from "./advise-the-child";
 import StallThePoliceGame, { metadata as stallThePoliceMetadata } from "./stall-the-police";
+import ConvinceTheAliensGame, { metadata as convinceTheAliensMetadata } from "./convince-the-aliens";
 
 // Minimal export for build - no actual games imported
 
@@ -8,10 +9,11 @@ import StallThePoliceGame, { metadata as stallThePoliceMetadata } from "./stall-
 export const implementedGames = {
   "advise-the-child": AdviseTheChildGame,
   "stall-the-police": StallThePoliceGame,
+  "convince-the-aliens": ConvinceTheAliensGame,
 };
 
 // Implemented game metadata
-export const implementedGameMetadata: GameMetadata[] = [adviseTheChildMetadata, stallThePoliceMetadata];
+export const implementedGameMetadata: GameMetadata[] = [convinceTheAliensMetadata, adviseTheChildMetadata, stallThePoliceMetadata];
 
 // Complete list of all planned games (implemented + planned)
 export const allPlannedGames: GameMetadata[] = [

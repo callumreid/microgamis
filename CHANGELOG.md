@@ -104,6 +104,43 @@
 - `src/app/hooks/useGameAgent.ts` - Made generic for multiple game types
 - `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added police game scenarios and tools
 
+### Recent Changes - 2025-07-08 (Third Game Implementation)
+
+#### Added
+- **New Game: "Convince The Aliens"**: Third micro game with space/sci-fi theme
+  - Aliens have invaded Earth and are considering destroying humanity
+  - Player must convince alien overlords to spare Earth through creative diplomacy
+  - Dark purple/green alien-themed UI with space emojis (👽, 🛸, 🌍, 💫, 🚀)
+  - Custom win/lose scenarios based on creativity and humor in arguments
+  - 30-second timer with same push-to-talk functionality as other games
+
+#### Enhanced
+- **Game Agent System**: Extended to support alien convince game
+  - Added `"convince-the-aliens"` to game type options
+  - New tools: `start_alien_convince_game()` and `finish_alien_convince_game()`
+  - Added alien scenarios with funny/weird humor: resource shortage, intelligence test, entertainment value
+  - Scoring based on creativity, humor, and unique human value (pizza, dogs, Netflix content)
+
+- **Game Registry**: Updated to include alien game in random play sequence
+  - Added `convince-the-aliens` to `implementedGames` registry
+  - Game now appears in orchard browser and random game selection
+  - Maintains same 10-second gameplay philosophy with voice-first interaction
+
+#### Technical Implementation Details
+- **Alien Scenarios**: 3 different alien invasion scenarios with distinct personalities
+  - Resource shortage: Alien commander seeking energy sources
+  - Intelligence test: Alien scientist questioning human worth
+  - Entertainment value: Alien entertainment officer finding humans boring
+- **Scoring Logic**: Rewards creativity, humor, cultural contributions over aggression
+- **UI Theming**: Space-themed with dark backgrounds, green accents, alien emojis
+- **Agent Integration**: Full integration with game host agent personality and tools
+
+#### Files Modified
+- `games-orchard/convince-the-aliens/` - New game directory with complete implementation
+- `games-orchard/index.ts` - Added alien game to registry
+- `src/app/hooks/useGameAgent.ts` - Added alien game type and logic
+- `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added alien scenarios and tools
+
 ## Instructions for Future AI Agents
 
 When working on this codebase:

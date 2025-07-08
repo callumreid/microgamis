@@ -229,6 +229,38 @@
 - `src/app/hooks/useGameAgent.ts` - Added attract-the-turkey game type and turkey quote field
 - `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added turkey scenarios, tools, and game rules
 
+### Recent Changes - 2025-07-08 (Seventh Game Implementation)
+
+#### Added
+- **New Game: "Excuse the Boss"**: Corporate emergency call micro game with legendary excuse-making
+  - RING RING! Boss calls while you're half-dressed with cereal milk dribbling down your chin
+  - Boss demands: "Explain why you're not at the office yet!" - you must spin a dazzling excuse
+  - Win conditions: 1) Wildly imaginative yet internally consistent, 2) Blame cosmic forces (wormholes, alpaca stampede, grandma's sword-swallowing), 3) Subtle boss compliments
+  - Win outcome: Boss sighs "Wow... take the day, champ" - HR starts folklore podcast
+  - Lose conditions: Cliché excuses (alarm, traffic), mention kids, gaming honesty ("stayed up till 4am grinding Elden Ring")
+  - Lose outcome: Boss laughs, tells IT to revoke badge - "YER CANNED, JOHNNY!"
+  - 30-second timer for corporate crisis management
+
+#### Enhanced
+- **Game Registry**: Added "excuse-the-boss" as the NEW FIRST game in play sequence
+  - Now positioned at top of both `implementedGames` registry and metadata arrays
+  - Replaces turkey game as the first to play when randomly selected or testing
+  - Corporate comedy theme with boss call crisis mechanics
+
+#### Technical Implementation Details
+- **Game Theme**: Emergency boss call requiring legendary excuse-making skills to avoid termination
+- **UI Design**: Corporate theme with blue/indigo/purple gradient and office panic emojis (📞, 💼, 🥛, 😰)
+- **Voice Integration**: 10-second delay for boss demand, then 30-second excuse-crafting window
+- **Scoring Logic**: Rewards creativity, cosmic blame-shifting, and strategic boss flattery
+- **Agent Integration**: Uses "excuse-the-boss" game type with boss quote scenarios
+- **Keywords**: Comprehensive good/bad excuse keywords focusing on imagination vs clichés
+
+#### Files Modified
+- `games-orchard/excuse-the-boss/` - New game directory with complete implementation
+- `games-orchard/index.ts` - Added boss excuse game to registry as new first game
+- `src/app/hooks/useGameAgent.ts` - Added excuse-the-boss game type and boss quote field
+- `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added boss excuse scenarios, tools, and game rules
+
 ## Instructions for Future AI Agents
 
 When working on this codebase:

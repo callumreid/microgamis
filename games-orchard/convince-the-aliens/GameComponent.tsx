@@ -188,9 +188,6 @@ function ConvinceTheAliensGame(props: Partial<GameControlProps>) {
           <h2 className="text-2xl font-bold mb-4 text-center text-green-400">
             👽 Convince The Aliens 🛸
           </h2>
-          <div className="text-lg font-semibold text-green-400 p-3 bg-black rounded-lg border border-green-400">
-            Time: {gameState?.timeRemaining || 30}s
-          </div>
         </div>
         
         {/* Speech Bubble - Centered and Prominent */}

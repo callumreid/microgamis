@@ -26,11 +26,11 @@ export interface GameFinishResult {
 export interface UseGameAgentOptions {
   onGameStart?: (scenario: GameScenario) => void;
   onGameFinish?: (result: GameFinishResult) => void;
-  gameType?: "advise-the-child" | "stall-the-police" | "convince-the-aliens";
+  gameType?: "advise-the-child" | "stall-the-police" | "convince-the-aliens" | "evaluate-yourself" | "point-the-task";
 }
 
 export function useGameAgent(options: UseGameAgentOptions = {}) {
-  const { onGameStart, onGameFinish, gameType = "convince-the-aliens" } = options;
+  const { onGameStart, onGameFinish, gameType = "point-the-task" } = options;
   const { sendUserText, isWebRTCReady } = useGameSession();
   const { transcriptItems } = useTranscript();
   const [isGameActive, setIsGameActive] = useState(false);
@@ -124,6 +124,52 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             console.error("Failed to parse alien convince game finish result:", e);
           }
         }
+        // Handle self-evaluation game
+        else if (item.title.includes("start_self_evaluation_game") && item.data && gameType === "evaluate-yourself") {
+          try {
+            const scenario = item.data as GameScenario;
+            setCurrentScenario(scenario);
+            setIsGameActive(true);
+            onGameStart?.(scenario);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse self-evaluation game start scenario:", e);
+          }
+        } else if (item.title.includes("finish_self_evaluation_game") && gameType === "evaluate-yourself") {
+          try {
+            console.log("🔍 Found finish_self_evaluation_game breadcrumb:", item);
+            const result = item.data as GameFinishResult;
+            console.log("🔍 Parsed result:", result);
+            setIsGameActive(false);
+            onGameFinish?.(result);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse self-evaluation game finish result:", e);
+          }
+        }
+        // Handle point-the-task game
+        else if (item.title.includes("start_point_task_game") && item.data && gameType === "point-the-task") {
+          try {
+            const scenario = item.data as GameScenario;
+            setCurrentScenario(scenario);
+            setIsGameActive(true);
+            onGameStart?.(scenario);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse point-the-task game start scenario:", e);
+          }
+        } else if (item.title.includes("finish_point_task_game") && gameType === "point-the-task") {
+          try {
+            console.log("🔍 Found finish_point_task_game breadcrumb:", item);
+            const result = item.data as GameFinishResult;
+            console.log("🔍 Parsed result:", result);
+            setIsGameActive(false);
+            onGameFinish?.(result);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse point-the-task game finish result:", e);
+          }
+        }
       }
     }
   }, [transcriptItems, onGameStart, onGameFinish, processedItemIds, gameType]);
@@ -145,7 +191,9 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
     const gameMessages = {
       "advise-the-child": "Hello! I'm ready to play Advise the Child. Please start the game!",
       "stall-the-police": "Hello! I'm ready to play Stall the Police. Please start the game!",
-      "convince-the-aliens": "Hello! I'm ready to play Convince the Aliens. Please start the game!"
+      "convince-the-aliens": "Hello! I'm ready to play Convince the Aliens. Please start the game!",
+      "evaluate-yourself": "Hello! I'm ready to play Evaluate Yourself. Please start the game!",
+      "point-the-task": "Hello! I'm ready to play Point the Engineering Task. Please start the game!"
     };
     
     sendUserText(gameMessages[gameType]);

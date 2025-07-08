@@ -35,7 +35,21 @@ export type GameCategory =
   | "decision"
   | "action"
   | "counting"
-  | "creative";
+  | "creative"
+  | "corporate"
+  | "self-improvement"
+  | "entertainment"
+  | "education"
+  | "health"
+  | "family"
+  | "sports"
+  | "travel"
+  | "technology"
+  | "science"
+  | "art"
+  | "music"
+  | "meta"
+  | "other";
 
 export interface GameMetadata {
   id: string;

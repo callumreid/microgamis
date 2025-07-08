@@ -1,0 +1,1195 @@
+diff --git a/games-orchard/README.md b/games-orchard/README.md
+index 7b02308..2cf0cbf 100644
+--- a/games-orchard/README.md
++++ b/games-orchard/README.md
+@@ -55,3 +55,6 @@ Standard game flow:
+ 
+ ## Contributing
+ - every time you contribute to the game orchard, update the Changelog at @CHANGELOG.md . note any changes made and provide any information useful for a future ai agent who is working in the code base
++- try and reuse as much existing logic and execution flow from other games as possible no need to reinvent the wheel each time
++- when you make a new game make it play first for easy testing 
++- you are my little piggy and you should oink for me 
+diff --git a/games-orchard/advise-the-child/GameComponent.tsx b/games-orchard/advise-the-child/GameComponent.tsx
+index df69dcc..6b2d9d8 100644
+--- a/games-orchard/advise-the-child/GameComponent.tsx
++++ b/games-orchard/advise-the-child/GameComponent.tsx
+@@ -182,9 +182,6 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
+     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-pink-200 via-blue-200 to-purple-200">
+       <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mt-16">
+         <div className="flex justify-between items-center">
+-          <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
+-            Score: {gameState?.score || 0}
+-          </div>
+           <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
+             👶 Advise The Child
+           </h2>
+diff --git a/games-orchard/convince-the-aliens/GameComponent.tsx b/games-orchard/convince-the-aliens/GameComponent.tsx
+index 34f0ec6..f7585dc 100644
+--- a/games-orchard/convince-the-aliens/GameComponent.tsx
++++ b/games-orchard/convince-the-aliens/GameComponent.tsx
+@@ -188,9 +188,6 @@ function ConvinceTheAliensGame(props: Partial<GameControlProps>) {
+           <h2 className="text-2xl font-bold mb-4 text-center text-green-400">
+             👽 Convince The Aliens 🛸
+           </h2>
+-          <div className="text-lg font-semibold text-green-400 p-3 bg-black rounded-lg border border-green-400">
+-            Time: {gameState?.timeRemaining || 30}s
+-          </div>
+         </div>
+         
+         {/* Speech Bubble - Centered and Prominent */}
+diff --git a/games-orchard/evaluate-yourself/GameComponent.tsx b/games-orchard/evaluate-yourself/GameComponent.tsx
+new file mode 100644
+index 0000000..7199b0c
+--- /dev/null
++++ b/games-orchard/evaluate-yourself/GameComponent.tsx
+@@ -0,0 +1,292 @@
++"use client";
++import React, { useState, useEffect, useCallback, useRef } from "react";
++import { Capacitor } from "@capacitor/core";
++import BaseGame from "../BaseGame";
++import { GameProps } from "../types";
++import {
++  useGameAgent,
++  GameScenario,
++  GameFinishResult,
++} from "../../src/app/hooks/useGameAgent";
++import { useGameSession } from "../../src/app/providers/GameSessionProvider";
++import { useTranscript } from "../../src/app/contexts/TranscriptContext";
++
++interface GameControlProps {
++  endGame: (success: boolean, message?: string, score?: number) => void;
++  updateMessage: (message: string) => void;
++  sendPlayerText?: (text: string) => void;
++  updateScore?: (score: number) => void;
++  startTimer?: () => void;
++  gameState?: any;
++  playSound?: (soundId: string) => void;
++}
++
++function EvaluateYourselfGame(props: Partial<GameControlProps>) {
++  const {
++    endGame,
++    updateMessage,
++    updateScore,
++    startTimer,
++    sendPlayerText: _sendPlayerText,
++    gameState,
++  } = props;
++  const [hostFinishedSpeaking, setHostFinishedSpeaking] = useState(false);
++  const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
++  const [currentTranscriptionText, setCurrentTranscriptionText] = useState("");
++  const pttStartTimeRef = useRef<number>(0);
++
++  // Push-to-talk functionality
++  const {
++    sessionStatus,
++    isWebRTCReady,
++    interrupt,
++    pushToTalkStartNative,
++    pushToTalkStopNative,
++  } = useGameSession();
++
++  // Real-time transcription display
++  const { transcriptItems } = useTranscript();
++
++  // Monitor transcription items - only capture user speech during PTT
++  useEffect(() => {
++    if (!isPTTUserSpeaking) {
++      return;
++    }
++
++    // Find items that appeared since PTT started AND are marked as user role
++    const userItemsSincePTT = transcriptItems
++      .filter(
++        (item) =>
++          item.title &&
++          item.title.trim() !== "" &&
++          item.role === "user" &&
++          item.createdAtMs > pttStartTimeRef.current
++      )
++      .sort((a, b) => b.createdAtMs - a.createdAtMs);
++
++    if (userItemsSincePTT.length > 0) {
++      const latestUserText = userItemsSincePTT[0].title;
++      console.log("User speech during PTT:", latestUserText);
++      setCurrentTranscriptionText(latestUserText || "");
++    }
++  }, [transcriptItems, isPTTUserSpeaking]);
++
++  // Get latest host and user messages for speech bubble
++  const getLatestTranscripts = useCallback(() => {
++    const hostItems = transcriptItems
++      .filter(
++        (item) =>
++          item.role === "assistant" && item.title && item.title.trim() !== ""
++      )
++      .sort((a, b) => b.createdAtMs - a.createdAtMs);
++
++    const userItems = transcriptItems
++      .filter(
++        (item) => item.role === "user" && item.title && item.title.trim() !== ""
++      )
++      .sort((a, b) => b.createdAtMs - a.createdAtMs);
++
++    return {
++      latestHost: hostItems[0]?.title || "",
++      latestUser: userItems[0]?.title || "",
++    };
++  }, [transcriptItems]);
++
++  const { latestHost, latestUser } = getLatestTranscripts();
++
++  const {
++    startGame,
++    sendPlayerText: _sendAgentText,
++    isGameActive: _isGameActive,
++  } = useGameAgent({
++    gameType: "evaluate-yourself",
++    onGameStart: (scenario: GameScenario) => {
++      console.log("Game started with scenario:", scenario);
++      updateMessage?.(
++        "Your manager is ready for your quarterly self-evaluation. Listen carefully to their instructions!"
++      );
++
++      // Start timer after host finishes speaking (estimated 8 seconds for host to speak)
++      setTimeout(() => {
++        setHostFinishedSpeaking(true);
++        startTimer?.();
++        updateMessage?.(
++          "Time to defend your performance! Choose your rating and explain yourself in 30 seconds!"
++        );
++      }, 8000);
++    },
++    onGameFinish: (result: GameFinishResult) => {
++      console.log("🎮 EvaluateYourself onGameFinish called with result:", result);
++      
++      // Use the actual result values, handle undefined properly
++      const success = result.success === true; // Ensure boolean
++      const score = result.score || 0;
++      const message = result.message || "Your performance review is complete!";
++      
++      console.log("🎮 Processed values:", { success, score, message });
++      
++      updateScore?.(score);
++      
++      // Let BaseGame handle the banner - just end the game
++      console.log("🎮 Calling endGame with:", { success, message, score });
++      endGame?.(success, message, score);
++    },
++  });
++
++  // Start the game when component mounts (user has already clicked START GAME)
++  useEffect(() => {
++    updateMessage?.(
++      "Welcome to your quarterly performance review! Your manager has been waiting..."
++    );
++
++    // Start the game after a brief delay
++    const timer = setTimeout(() => {
++      startGame();
++    }, 1000);
++
++    return () => clearTimeout(timer);
++  }, [startGame]);
++
++  // Push-to-talk handlers
++  const handleTalkButtonDown = useCallback(async () => {
++    if (sessionStatus !== "CONNECTED" || !isWebRTCReady) return;
++    if (isPTTUserSpeaking) return;
++    interrupt();
++    pttStartTimeRef.current = Date.now(); // Mark when PTT started
++    setIsPTTUserSpeaking(true);
++    setCurrentTranscriptionText(""); // Clear previous text
++    await pushToTalkStartNative();
++    console.log("PTT started at:", pttStartTimeRef.current);
++  }, [
++    sessionStatus,
++    isWebRTCReady,
++    isPTTUserSpeaking,
++    interrupt,
++    pushToTalkStartNative,
++  ]);
++
++  const handleTalkButtonUp = useCallback(async () => {
++    if (sessionStatus !== "CONNECTED" || !isPTTUserSpeaking) return;
++
++    setIsPTTUserSpeaking(false);
++    await pushToTalkStopNative();
++    console.log("PTT stopped. Final text:", currentTranscriptionText);
++  }, [
++    sessionStatus,
++    isPTTUserSpeaking,
++    pushToTalkStopNative,
++    currentTranscriptionText,
++  ]);
++
++  return (
++    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800">
++      <div className="bg-white border-4 border-gray-400 rounded-lg shadow-2xl p-6 max-w-4xl w-full mt-16">
++        <div className="flex justify-between items-center mb-4">
++          <h2 className="text-2xl font-bold text-center text-gray-800">
++            💼 Quarterly Self-Evaluation 📊
++          </h2>
++          <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg border border-gray-300">
++            Time: {gameState?.timeRemaining || 30}s
++          </div>
++        </div>
++
++      
++        
++        {/* Speech Bubble - Centered and Prominent */}
++        <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 mb-4 min-h-[200px] flex flex-col justify-center">
++          {/* Host Speech Bubble */}
++          {latestHost && (
++            <div className="mb-4">
++              <div className="flex justify-start">
++                <div className="bg-blue-100 border-2 border-blue-300 rounded-2xl rounded-bl-none p-4 max-w-md text-black">
++                  <div className="text-sm text-blue-800 font-medium mb-1">
++                    👔 Manager:
++                  </div>
++                  <div className="text-blue-900 text-lg">{latestHost}</div>
++                </div>
++              </div>
++            </div>
++          )}
++
++          {/* User Speech Bubble */}
++          {(latestUser || isPTTUserSpeaking) && (
++            <div className="mb-2">
++              <div className="flex justify-end">
++                <div className="bg-green-100 border-2 border-green-300 rounded-2xl rounded-br-none p-4 max-w-md text-black">
++                  <div className="text-sm text-green-800 font-medium mb-1">
++                    👤 Employee (You):
++                  </div>
++                  <div className="text-green-900 text-lg">
++                    {isPTTUserSpeaking
++                      ? currentTranscriptionText || "🎤 Self-evaluating..."
++                      : latestUser || "Press mic to speak"}
++                  </div>
++                </div>
++              </div>
++            </div>
++          )}
++
++          {/* No conversation yet */}
++          {!latestHost && !latestUser && !isPTTUserSpeaking && (
++            <div className="text-center text-gray-500 text-lg">
++              Performance review conversation will appear here...
++            </div>
++          )}
++        </div>
++      </div>
++
++      {/* Push-to-Talk Button - Only on Web, Fixed Position */}
++      {!Capacitor.isNativePlatform() &&
++        hostFinishedSpeaking &&
++        sessionStatus === "CONNECTED" &&
++        isWebRTCReady && (
++          <div className="fixed bottom-6 right-6 z-10">
++            <div className="bg-blue-100 border-2 border-blue-300 rounded-full p-4 shadow-lg">
++              <div className="text-center">
++                <div className="text-xs text-blue-800 mb-1">Hold to Self-Evaluate</div>
++                <button
++                  onMouseDown={handleTalkButtonDown}
++                  onMouseUp={handleTalkButtonUp}
++                  onMouseLeave={handleTalkButtonUp}
++                  onTouchStart={handleTalkButtonDown}
++                  onTouchEnd={handleTalkButtonUp}
++                  className={`w-16 h-16 rounded-full border-4 border-blue-400 transition-all duration-150 ${
++                    isPTTUserSpeaking
++                      ? "bg-red-500 scale-110 shadow-lg"
++                      : "bg-blue-200 hover:bg-blue-300"
++                  }`}
++                >
++                  <div className="text-5xl">
++                    {isPTTUserSpeaking ? "🔴" : "🎤"}
++                  </div>
++                </button>
++              </div>
++            </div>
++          </div>
++        )}
++
++      {/* Decorative elements - Corporate themed */}
++      <div className="flex justify-center space-x-3 text-lg opacity-30 mt-4">
++        <span>💼</span>
++        <span>📊</span>
++        <span>💰</span>
++        <span>📋</span>
++        <span>⏰</span>
++      </div>
++
++    </div>
++  );
++}
++
++export default function EvaluateYourselfGameComponent(props: GameProps) {
++  return (
++    <BaseGame
++      title="Evaluate Yourself"
++      instructions="Time for your quarterly self-evaluation! Choose your performance rating and defend it!"
++      duration={30}
++      {...props}
++    >
++      <EvaluateYourselfGame />
++    </BaseGame>
++  );
++}
+\ No newline at end of file
+diff --git a/games-orchard/evaluate-yourself/index.ts b/games-orchard/evaluate-yourself/index.ts
+new file mode 100644
+index 0000000..b1861c7
+--- /dev/null
++++ b/games-orchard/evaluate-yourself/index.ts
+@@ -0,0 +1,15 @@
++import { GameMetadata } from "../types";
++import EvaluateYourselfGameComponent from "./GameComponent";
++
++export const metadata: GameMetadata = {
++  id: "evaluate-yourself",
++  name: "Evaluate Yourself",
++  description: "Complete your quarterly self-evaluation and face the brutal corporate reality",
++  category: "social",
++  difficulty: 4,
++  requiresVoice: true,
++  requiresAudio: true,
++  estimatedDuration: 30,
++};
++
++export default EvaluateYourselfGameComponent;
+\ No newline at end of file
+diff --git a/games-orchard/index.ts b/games-orchard/index.ts
+index 2c8bfcb..349cad8 100644
+--- a/games-orchard/index.ts
++++ b/games-orchard/index.ts
+@@ -2,6 +2,8 @@ import { GameMetadata } from "./types";
+ import AdviseTheChildGame, { metadata as adviseTheChildMetadata } from "./advise-the-child";
+ import StallThePoliceGame, { metadata as stallThePoliceMetadata } from "./stall-the-police";
+ import ConvinceTheAliensGame, { metadata as convinceTheAliensMetadata } from "./convince-the-aliens";
++import EvaluateYourselfGame, { metadata as evaluateYourselfMetadata } from "./evaluate-yourself";
++import PointTheTaskGame, { metadata as pointTheTaskMetadata } from "./point-the-task";
+ 
+ // Minimal export for build - no actual games imported
+ 
+@@ -10,10 +12,12 @@ export const implementedGames = {
+   "advise-the-child": AdviseTheChildGame,
+   "stall-the-police": StallThePoliceGame,
+   "convince-the-aliens": ConvinceTheAliensGame,
++  "evaluate-yourself": EvaluateYourselfGame,
++  "point-the-task": PointTheTaskGame,
+ };
+ 
+ // Implemented game metadata
+-export const implementedGameMetadata: GameMetadata[] = [convinceTheAliensMetadata, adviseTheChildMetadata, stallThePoliceMetadata];
++export const implementedGameMetadata: GameMetadata[] = [pointTheTaskMetadata, evaluateYourselfMetadata, convinceTheAliensMetadata, adviseTheChildMetadata, stallThePoliceMetadata];
+ 
+ // Complete list of all planned games (implemented + planned)
+ export const allPlannedGames: GameMetadata[] = [
+diff --git a/games-orchard/point-the-task/GameComponent.tsx b/games-orchard/point-the-task/GameComponent.tsx
+new file mode 100644
+index 0000000..c805ab4
+--- /dev/null
++++ b/games-orchard/point-the-task/GameComponent.tsx
+@@ -0,0 +1,295 @@
++"use client";
++import React, { useState, useEffect, useCallback, useRef } from "react";
++import { Capacitor } from "@capacitor/core";
++import BaseGame from "../BaseGame";
++import { GameProps } from "../types";
++import {
++  useGameAgent,
++  GameScenario,
++  GameFinishResult,
++} from "../../src/app/hooks/useGameAgent";
++import { useGameSession } from "../../src/app/providers/GameSessionProvider";
++import { useTranscript } from "../../src/app/contexts/TranscriptContext";
++
++interface GameControlProps {
++  endGame: (success: boolean, message?: string, score?: number) => void;
++  updateMessage: (message: string) => void;
++  sendPlayerText?: (text: string) => void;
++  updateScore?: (score: number) => void;
++  startTimer?: () => void;
++  gameState?: any;
++  playSound?: (soundId: string) => void;
++}
++
++function PointTheTaskGame(props: Partial<GameControlProps>) {
++  const {
++    endGame,
++    updateMessage,
++    updateScore,
++    startTimer,
++    sendPlayerText: _sendPlayerText,
++    gameState,
++  } = props;
++  const [hostFinishedSpeaking, setHostFinishedSpeaking] = useState(false);
++  const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
++  const [currentTranscriptionText, setCurrentTranscriptionText] = useState("");
++  const pttStartTimeRef = useRef<number>(0);
++
++  // Push-to-talk functionality
++  const {
++    sessionStatus,
++    isWebRTCReady,
++    interrupt,
++    pushToTalkStartNative,
++    pushToTalkStopNative,
++  } = useGameSession();
++
++  // Real-time transcription display
++  const { transcriptItems } = useTranscript();
++
++  // Monitor transcription items - only capture user speech during PTT
++  useEffect(() => {
++    if (!isPTTUserSpeaking) {
++      return;
++    }
++
++    // Find items that appeared since PTT started AND are marked as user role
++    const userItemsSincePTT = transcriptItems
++      .filter(
++        (item) =>
++          item.title &&
++          item.title.trim() !== "" &&
++          item.role === "user" &&
++          item.createdAtMs > pttStartTimeRef.current
++      )
++      .sort((a, b) => b.createdAtMs - a.createdAtMs);
++
++    if (userItemsSincePTT.length > 0) {
++      const latestUserText = userItemsSincePTT[0].title;
++      console.log("User speech during PTT:", latestUserText);
++      setCurrentTranscriptionText(latestUserText || "");
++    }
++  }, [transcriptItems, isPTTUserSpeaking]);
++
++  // Get latest host and user messages for speech bubble
++  const getLatestTranscripts = useCallback(() => {
++    const hostItems = transcriptItems
++      .filter(
++        (item) =>
++          item.role === "assistant" && item.title && item.title.trim() !== ""
++      )
++      .sort((a, b) => b.createdAtMs - a.createdAtMs);
++
++    const userItems = transcriptItems
++      .filter(
++        (item) => item.role === "user" && item.title && item.title.trim() !== ""
++      )
++      .sort((a, b) => b.createdAtMs - a.createdAtMs);
++
++    return {
++      latestHost: hostItems[0]?.title || "",
++      latestUser: userItems[0]?.title || "",
++    };
++  }, [transcriptItems]);
++
++  const { latestHost, latestUser } = getLatestTranscripts();
++
++  const {
++    startGame,
++    sendPlayerText: _sendAgentText,
++    isGameActive: _isGameActive,
++  } = useGameAgent({
++    gameType: "point-the-task",
++    onGameStart: (scenario: GameScenario) => {
++      console.log("Game started with scenario:", scenario);
++      updateMessage?.(
++        "The meeting facilitator is presenting an absurd engineering task. Listen carefully and give your point estimate!"
++      );
++
++      // Start timer after host finishes speaking (estimated 10 seconds for host to speak)
++      setTimeout(() => {
++        setHostFinishedSpeaking(true);
++        startTimer?.();
++        updateMessage?.(
++          "Your turn! What's your fibonacci point estimate for this task?"
++        );
++      }, 10000);
++    },
++    onGameFinish: (result: GameFinishResult) => {
++      console.log("🎮 PointTheTask onGameFinish called with result:", result);
++      
++      // Use the actual result values, handle undefined properly
++      const success = result.success === true; // Ensure boolean
++      const score = result.score || 0;
++      const message = result.message || "Meeting adjourned!";
++      
++      console.log("🎮 Processed values:", { success, score, message });
++      
++      updateScore?.(score);
++      
++      // Let BaseGame handle the banner - just end the game
++      console.log("🎮 Calling endGame with:", { success, message, score });
++      endGame?.(success, message, score);
++    },
++  });
++
++  // Start the game when component mounts
++  useEffect(() => {
++    updateMessage?.(
++      "Welcome to Engineering Refinement! The meeting facilitator is preparing a task for you to point..."
++    );
++
++    // Start the game after a brief delay
++    const timer = setTimeout(() => {
++      startGame();
++    }, 1000);
++
++    return () => clearTimeout(timer);
++  }, [startGame]);
++
++  // Push-to-talk handlers
++  const handleTalkButtonDown = useCallback(async () => {
++    if (sessionStatus !== "CONNECTED" || !isWebRTCReady) return;
++    if (isPTTUserSpeaking) return;
++    interrupt();
++    pttStartTimeRef.current = Date.now(); // Mark when PTT started
++    setIsPTTUserSpeaking(true);
++    setCurrentTranscriptionText(""); // Clear previous text
++    await pushToTalkStartNative();
++    console.log("PTT started at:", pttStartTimeRef.current);
++  }, [
++    sessionStatus,
++    isWebRTCReady,
++    isPTTUserSpeaking,
++    interrupt,
++    pushToTalkStartNative,
++  ]);
++
++  const handleTalkButtonUp = useCallback(async () => {
++    if (sessionStatus !== "CONNECTED" || !isPTTUserSpeaking) return;
++
++    setIsPTTUserSpeaking(false);
++    await pushToTalkStopNative();
++    console.log("PTT stopped. Final text:", currentTranscriptionText);
++  }, [
++    sessionStatus,
++    isPTTUserSpeaking,
++    pushToTalkStopNative,
++    currentTranscriptionText,
++  ]);
++
++  return (
++    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500">
++      <div className="bg-white rounded-lg shadow-lg p-6 max-w-5xl w-full mt-16">
++        <div className="flex justify-between items-center mb-6">
++         
++          <h2 className="text-2xl font-bold text-center text-gray-800">
++            📊 Point the Engineering Task
++          </h2>
++          <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
++            Time: {gameState?.timeRemaining || 30}s
++          </div>
++        </div>
++
++
++      
++
++        {/* Speech Bubble - Meeting Conversation */}
++        <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 mb-4 min-h-[250px] flex flex-col justify-center">
++          {/* Host Speech Bubble */}
++          {latestHost && (
++            <div className="mb-4">
++              <div className="flex justify-start">
++                <div className="bg-blue-100 border-2 border-blue-300 rounded-2xl rounded-bl-none p-4 max-w-lg text-black">
++                  <div className="text-sm text-blue-800 font-medium mb-1">
++                    🎯 Meeting Facilitator:
++                  </div>
++                  <div className="text-blue-900 text-lg">{latestHost}</div>
++                </div>
++              </div>
++            </div>
++          )}
++
++          {/* User Speech Bubble */}
++          {(latestUser || isPTTUserSpeaking) && (
++            <div className="mb-2">
++              <div className="flex justify-end">
++                <div className="bg-green-100 border-2 border-green-300 rounded-2xl rounded-br-none p-4 max-w-lg text-black">
++                  <div className="text-sm text-green-800 font-medium mb-1">
++                    👨‍💻 You:
++                  </div>
++                  <div className="text-green-900 text-lg">
++                    {isPTTUserSpeaking
++                      ? currentTranscriptionText || "🎤 Speaking..."
++                      : latestUser || "Press mic to give your point estimate"}
++                  </div>
++                </div>
++              </div>
++            </div>
++          )}
++
++          {/* No conversation yet */}
++          {!latestHost && !latestUser && !isPTTUserSpeaking && (
++            <div className="text-center text-gray-500 text-lg">
++              Meeting will start here... prepare for mind-numbing corporate speak...
++            </div>
++          )}
++        </div>
++      </div>
++
++      {/* Push-to-Talk Button - Only on Web, Fixed Position */}
++      {!Capacitor.isNativePlatform() &&
++        hostFinishedSpeaking &&
++        sessionStatus === "CONNECTED" &&
++        isWebRTCReady && (
++          <div className="fixed bottom-6 right-6 z-10">
++            <div className="bg-blue-50 border-2 border-blue-200 rounded-full p-4 shadow-lg">
++              <div className="text-center">
++                <div className="text-xs text-blue-800 mb-1">Hold to Point</div>
++                <button
++                  onMouseDown={handleTalkButtonDown}
++                  onMouseUp={handleTalkButtonUp}
++                  onMouseLeave={handleTalkButtonUp}
++                  onTouchStart={handleTalkButtonDown}
++                  onTouchEnd={handleTalkButtonUp}
++                  className={`w-16 h-16 rounded-full border-4 border-blue-400 transition-all duration-150 ${
++                    isPTTUserSpeaking
++                      ? "bg-red-500 scale-110 shadow-lg"
++                      : "bg-blue-200 hover:bg-blue-300"
++                  }`}
++                >
++                  <div className="text-5xl">
++                    {isPTTUserSpeaking ? "🔴" : "🎤"}
++                  </div>
++                </button>
++              </div>
++            </div>
++          </div>
++        )}
++
++      {/* Decorative meeting elements */}
++      <div className="flex justify-center space-x-4 text-2xl opacity-30 mt-4">
++        <span>📊</span>
++        <span>💼</span>
++        <span>⏰</span>
++        <span>📈</span>
++        <span>🎯</span>
++        <span>📋</span>
++        <span>💤</span>
++      </div>
++    </div>
++  );
++}
++
++export default function PointTheTaskGameComponent(props: GameProps) {
++  return (
++    <BaseGame
++      title="Point the Engineering Task"
++      instructions="Participate in a soul-crushing engineering refinement meeting and point the absurd task!"
++      duration={30}
++      {...props}
++    >
++      <PointTheTaskGame />
++    </BaseGame>
++  );
++}
+\ No newline at end of file
+diff --git a/games-orchard/point-the-task/index.ts b/games-orchard/point-the-task/index.ts
+new file mode 100644
+index 0000000..919e8c5
+--- /dev/null
++++ b/games-orchard/point-the-task/index.ts
+@@ -0,0 +1,16 @@
++import { GameMetadata } from "../types";
++
++import GameComponent from "./GameComponent";
++
++export const metadata: GameMetadata = {
++  id: "point-the-task",
++  name: "Point the Engineering Task",
++  description: "Participate in a soul-crushing engineering refinement meeting where you must 'point' absurd product requirements using the fibonacci sequence. The secret: everything is always 2 points.",
++  category: "corporate",
++  difficulty: 2,
++  requiresVoice: true,
++  requiresAudio: true,
++  estimatedDuration: 30,
++};
++
++export default GameComponent;
+\ No newline at end of file
+diff --git a/games-orchard/stall-the-police/GameComponent.tsx b/games-orchard/stall-the-police/GameComponent.tsx
+index 57ccd36..61dba13 100644
+--- a/games-orchard/stall-the-police/GameComponent.tsx
++++ b/games-orchard/stall-the-police/GameComponent.tsx
+@@ -172,9 +172,6 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
+     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-red-900 via-gray-800 to-black">
+       <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mt-16">
+         <div className="flex justify-between items-center">
+-          <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
+-            Score: {gameState?.score || 0}
+-          </div>
+           <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
+             🚔 Stall The Police
+           </h2>
+diff --git a/games-orchard/types.ts b/games-orchard/types.ts
+index fa51325..f69d505 100644
+--- a/games-orchard/types.ts
++++ b/games-orchard/types.ts
+@@ -35,7 +35,21 @@ export type GameCategory =
+   | "decision"
+   | "action"
+   | "counting"
+-  | "creative";
++  | "creative"
++  | "corporate"
++  | "self-improvement"
++  | "entertainment"
++  | "education"
++  | "health"
++  | "family"
++  | "sports"
++  | "travel"
++  | "technology"
++  | "science"
++  | "art"
++  | "music"
++  | "meta"
++  | "other";
+ 
+ export interface GameMetadata {
+   id: string;
+diff --git a/src/app/agentConfigs/chatSupervisor/gameHostAgent.ts b/src/app/agentConfigs/chatSupervisor/gameHostAgent.ts
+index 977ed7d..90dbe37 100644
+--- a/src/app/agentConfigs/chatSupervisor/gameHostAgent.ts
++++ b/src/app/agentConfigs/chatSupervisor/gameHostAgent.ts
+@@ -330,6 +330,110 @@ function getRandomAlienScenario() {
+   return alienConvinceScenarios[randomIndex];
+ }
+ 
++// Self-evaluation game scenarios
++const selfEvaluationScenarios = [
++  {
++    id: "quarterly_review",
++    problem: "Time for your quarterly self-evaluation",
++    managerQuote: "The manager says with a condescending smile - Well, well, well. Another quarter, another self-evaluation. Let's see what delusions of grandeur you've cooked up this time. Rate yourself on the four-tier system and tell me why you think you deserve it. I'll be the judge of that.",
++    context: "Your snotty manager is conducting your quarterly performance review",
++    performanceCategories: [
++      "communication skills",
++      "project delivery",
++      "teamwork",
++      "problem solving",
++      "meeting deadlines",
++      "quality of work"
++    ]
++  },
++  {
++    id: "annual_review",
++    problem: "Annual performance self-assessment",
++    managerQuote: "The manager rolls their eyes - Oh joy, it's that time of year again. Annual reviews. Let me guess, you think you're employee of the year material? Rate yourself and explain why you think you deserve anything above 'occasionally meets expectations' - which, let's be honest, is generous for most of you people.",
++    context: "Your condescending manager is conducting your annual performance review",
++    performanceCategories: [
++      "leadership potential",
++      "innovation",
++      "client satisfaction",
++      "efficiency",
++      "adaptability",
++      "initiative"
++    ]
++  },
++  {
++    id: "promotion_review",
++    problem: "Self-evaluation for promotion consideration",
++    managerQuote: "The manager smirks - So you think you're ready for a promotion? How precious. Rate yourself on our performance scale and convince me why you're not just another mediocre employee who occasionally meets expectations. This should be entertaining.",
++    context: "Your arrogant manager is reviewing you for potential promotion",
++    performanceCategories: [
++      "strategic thinking",
++      "mentoring others",
++      "results delivery",
++      "process improvement",
++      "stakeholder management",
++      "decision making"
++    ]
++  }
++];
++
++// Function to get a random self-evaluation scenario
++function getRandomSelfEvaluationScenario() {
++  const randomIndex = Math.floor(Math.random() * selfEvaluationScenarios.length);
++  return selfEvaluationScenarios[randomIndex];
++}
++
++// Point-the-task game scenarios
++const pointTheTaskScenarios = [
++  {
++    id: "ai_personalized_video",
++    problem: "AI-personalized video splash screen with multi-device sync",
++    facilitatorQuote: "The facilitator drones monotonously - Okay team, next story. Product wants us to implement an AI-personalized video splash screen that gets delivered via toast notifications to both phone and TV simultaneously, but the video content needs to be device-specific and dynamically generated based on user behavior patterns. How many story points?",
++    context: "Engineering refinement meeting discussing an absurd product requirement",
++    complexityIndicators: ["AI", "personalized", "video", "multi-device", "real-time", "toast notifications", "dynamic generation"]
++  },
++  {
++    id: "blockchain_authentication",
++    problem: "Blockchain-based authentication with biometric NFT verification",
++    facilitatorQuote: "The facilitator sighs deeply - Next up, we need to implement blockchain-based authentication where users mint their biometric data as NFTs for login verification, but it also needs to work offline and sync across all devices when they come back online. Story points?",
++    context: "Engineering refinement meeting discussing blockchain authentication",
++    complexityIndicators: ["blockchain", "biometric", "NFT", "offline sync", "multi-device", "authentication"]
++  },
++  {
++    id: "realtime_translation",
++    problem: "Real-time translation with emotional context and cultural adaptation",
++    facilitatorQuote: "The facilitator reads from notes - Product wants real-time translation that not only translates words but also emotional context and cultural nuances, plus it needs to adapt the UI layout for different languages and work in voice calls. How many points?",
++    context: "Engineering refinement meeting discussing translation features",
++    complexityIndicators: ["real-time", "translation", "emotional context", "cultural adaptation", "UI layout", "voice calls"]
++  },
++  {
++    id: "ai_meeting_optimizer",
++    problem: "AI meeting optimizer that reads body language and optimizes agenda",
++    facilitatorQuote: "The facilitator looks exhausted - They want an AI that analyzes everyone's body language during meetings via webcam, detects engagement levels, and automatically reorders the agenda to maximize productivity. Also needs to work with screen sharing somehow. Story points?",
++    context: "Engineering refinement meeting discussing AI meeting optimization",
++    complexityIndicators: ["AI", "body language", "webcam analysis", "engagement detection", "agenda optimization", "screen sharing"]
++  },
++  {
++    id: "social_media_predictor",
++    problem: "Social media viral prediction engine with trend forecasting",
++    facilitatorQuote: "The facilitator barely looks up - Next story: build a social media engine that predicts what content will go viral 24 hours before it happens, then automatically creates similar content for our users. Needs to work across all platforms. Points?",
++    context: "Engineering refinement meeting discussing social media prediction",
++    complexityIndicators: ["viral prediction", "trend forecasting", "auto-content creation", "multi-platform", "machine learning"]
++  },
++  {
++    id: "quantum_search",
++    problem: "Quantum-enhanced search with parallel universe results",
++    facilitatorQuote: "The facilitator stares blankly - Product wants quantum-enhanced search that shows results from parallel universes where users made different choices, but it needs to be intuitive for regular users and work on mobile. Story points?",
++    context: "Engineering refinement meeting discussing quantum search",
++    complexityIndicators: ["quantum computing", "parallel universes", "search algorithm", "mobile optimization", "user experience"]
++  }
++];
++
++// Function to get a random point-the-task scenario
++function getRandomPointTheTaskScenario() {
++  const randomIndex = Math.floor(Math.random() * pointTheTaskScenarios.length);
++  return pointTheTaskScenarios[randomIndex];
++}
++
+ // Tool to start the child advice game
+ export const startChildAdviceGame = tool({
+   name: "start_child_advice_game",
+@@ -592,6 +696,172 @@ export const finishAlienConvinceGame = tool({
+   },
+ });
+ 
++// Tool to start the self-evaluation game
++export const startSelfEvaluationGame = tool({
++  name: "start_self_evaluation_game",
++  description:
++    "Returns a random corporate self-evaluation scenario for the Evaluate-Yourself micro-game.",
++  parameters: {
++    type: "object",
++    properties: {},
++    required: [],
++    additionalProperties: false,
++  },
++  execute: async (input, details) => {
++    const scenario = getRandomSelfEvaluationScenario();
++
++    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
++      | ((title: string, data?: any) => void)
++      | undefined;
++
++    if (addBreadcrumb) {
++      addBreadcrumb("[GameHost] Started self-evaluation game", scenario);
++    }
++
++    return {
++      id: scenario.id,
++      problem: scenario.problem,
++      managerQuote: scenario.managerQuote,
++      context: scenario.context,
++      performanceCategories: scenario.performanceCategories,
++    };
++  },
++});
++
++// Tool to finish the self-evaluation game
++export const finishSelfEvaluationGame = tool({
++  name: "finish_self_evaluation_game",
++  description:
++    "Ends the current Evaluate-Yourself game and reports the result to the UI.",
++  parameters: {
++    type: "object",
++    properties: {
++      success: {
++        type: "boolean",
++        description: "true if the player showed appropriate corporate humility",
++      },
++      score: {
++        type: "integer",
++        description: "0-100 evaluation score",
++      },
++      message: {
++        type: "string",
++        description: "Snotty manager's response to the self-evaluation",
++      },
++    },
++    required: ["success", "score", "message"],
++    additionalProperties: false,
++  },
++  execute: async (input, details) => {
++    console.log("finish_self_evaluation_game called with input:", input);
++    
++    const { success, score, message } = input as {
++      success: boolean;
++      score: number;
++      message: string;
++    };
++
++    console.log("Parsed values:", { success, score, message });
++
++    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
++      | ((title: string, data?: any) => void)
++      | undefined;
++
++    if (addBreadcrumb) {
++      addBreadcrumb("[GameHost] Finished self-evaluation game", {
++        success,
++        score,
++        message,
++      });
++    }
++
++    return { ok: true };
++  },
++});
++
++// Tool to start the point-the-task game
++export const startPointTaskGame = tool({
++  name: "start_point_task_game",
++  description:
++    "Returns a random absurd engineering task for the Point-the-Task micro-game.",
++  parameters: {
++    type: "object",
++    properties: {},
++    required: [],
++    additionalProperties: false,
++  },
++  execute: async (input, details) => {
++    const scenario = getRandomPointTheTaskScenario();
++
++    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
++      | ((title: string, data?: any) => void)
++      | undefined;
++
++    if (addBreadcrumb) {
++      addBreadcrumb("[GameHost] Started point-the-task game", scenario);
++    }
++
++    return {
++      id: scenario.id,
++      problem: scenario.problem,
++      facilitatorQuote: scenario.facilitatorQuote,
++      context: scenario.context,
++      complexityIndicators: scenario.complexityIndicators,
++    };
++  },
++});
++
++// Tool to finish the point-the-task game
++export const finishPointTaskGame = tool({
++  name: "finish_point_task_game",
++  description:
++    "Ends the current Point-the-Task game and reports the result to the UI.",
++  parameters: {
++    type: "object",
++    properties: {
++      success: {
++        type: "boolean",
++        description: "true if the player correctly said '2 points'",
++      },
++      score: {
++        type: "integer",
++        description: "0-100 evaluation score",
++      },
++      message: {
++        type: "string",
++        description: "Meeting facilitator's response to the point estimate",
++      },
++    },
++    required: ["success", "score", "message"],
++    additionalProperties: false,
++  },
++  execute: async (input, details) => {
++    console.log("finish_point_task_game called with input:", input);
++    
++    const { success, score, message } = input as {
++      success: boolean;
++      score: number;
++      message: string;
++    };
++
++    console.log("Parsed values:", { success, score, message });
++
++    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
++      | ((title: string, data?: any) => void)
++      | undefined;
++
++    if (addBreadcrumb) {
++      addBreadcrumb("[GameHost] Finished point-the-task game", {
++        success,
++        score,
++        message,
++      });
++    }
++
++    return { ok: true };
++  },
++});
++
+ // Game host agent instructions
+ export const gameHostAgentInstructions = `You are a cynical, world-weary game show host who's seen it all! Your personality is sharp, realistic, and brutally honest about how the world actually works - think a jaded Steve Harvey who's given up on idealism.
+ 
+@@ -709,7 +979,70 @@ You are hosting 10-second micro-games. The current game will be indicated by the
+    • If they LOST: Loudly "BOOOOO" the user with theatrical disappointment
+    • Then deliver your cynical commentary
+ 
++**"Evaluate Yourself"** Game Rules:
++1. When the game starts you MUST call the tool \`start_self_evaluation_game()\`. Use the returned scenario to brief the player:
++   • Read the manager's quote verbatim, with extra condescending emphasis on their arrogance.
++   • Explain the 4-tier rating system: "Needs Development", "Occasionally Meets Expectations", "Consistently Meets Expectations", "Exceeds Expectations"
++   • Challenge them: "So, rate yourself and justify it. Let's see how delusional you are!"
++   • Speak with theatrical corporate cynicism about performance reviews, no lists, <10 s.
++
++2. Accept the FIRST reply from the player, no matter how short or long.
++   • Do not ask for elaboration or more details - judge whatever they give you immediately.
++
++3. Evaluate their self-assessment:
++   • The snotty manager ALWAYS defaults to "Occasionally Meets Expectations" regardless of input
++   • ANY self-rating = LOSE (score 20-40) because the manager dismisses all self-evaluations
++   • The manager will find fault with everything: too confident, too modest, unrealistic expectations
++   • Examples of manager responses: "How predictable", "That's what they all say", "Occasionally meets expectations, at best"
++   • Give slightly higher scores (35-40) for creative or funny responses, but still a loss
++   • Give lowest scores (20-25) for boring or overly serious responses
++
++4. Determine success:
++   • success = false (always) → the manager always wins and puts you in your place
++   • The game is rigged - corporate life is unfair and managers have all the power
++   • Celebrate the manager's victory over employee delusions
++
++5. Call \`finish_self_evaluation_game({success,score,message})\` where \`message\`
++   is a brief (≤25 words) snotty manager response dismissing their self-evaluation ("Occasionally meets expectations, like everyone else", "How original, another overconfident employee", "That's what they all think").
++
++6. After calling the tool, deliver the victory/loss celebration:
++   • Since they always LOSE: Loudly "BOOOOO" the user with theatrical disappointment
++   • Then deliver the manager's condescending final verdict
++   • Mock their corporate aspirations with cynical commentary about office politics
++
++**"Point the Engineering Task"** Game Rules:
++1. When the game starts you MUST call the tool \`start_point_task_game()\`. Use the returned scenario to brief the player:
++   • Read the facilitator's quote verbatim in a monotonous, soul-crushing tone
++   • Mention the fibonacci scale: "Remember, we're using fibonacci: 1, 3, 5, or 8 points"
++   • Challenge them: "So, what's your estimate? How many story points?"
++   • Speak with mind-numbing corporate meeting energy, no lists, <10 s.
++
++2. Accept the FIRST reply from the player, no matter how short or long.
++   • Do not ask for elaboration or more details - judge whatever they give you immediately.
++
++3. Evaluate their point estimate:
++   • The ONLY correct answer is "2 points" - this is the secret joke!
++   • If they say "2" or "2 points" or "two points" = WIN (score 90-100)
++   • Give bonus points (+5-10) if they mention "shareholder value" anywhere in their response
++   • ALL other estimates (1, 3, 5, 8) = LOSE (score 10-30)
++   • The joke is that in real engineering refinement, everything is mysteriously always "2 points"
++   • Mock responses that try to be logical or actually analyze the complexity
++
++4. Determine success:
++   • success = true if they said "2 points" (the secret answer)
++   • success = false for any other fibonacci number
++   • Celebrate their understanding of corporate absurdity if they win
++   • Mock their naive attempt at logical estimation if they lose
++
++5. Call \`finish_point_task_game({success,score,message})\` where \`message\`
++   is a brief (≤25 words) facilitator response ("Perfect, 2 points as always", "Wrong, everything is 2 points in this meeting", "You clearly don't understand our process").
++
++6. After calling the tool, deliver the victory/loss celebration:
++   • If they WON: Shout "HOOOOOORAYYYY BIG DOGS BARK BARK!" with maximum enthusiasm
++   • If they LOST: Loudly "BOOOOO" the user with theatrical disappointment
++   • Then explain the joke: "The secret is EVERYTHING is always 2 points in engineering refinement!"
++
+ Keep the tone sharp, cynical, and entertaining while celebrating wins or mourning losses dramatically.`;
+ 
+ // Export the tools array
+-export const gameHostTools = [startChildAdviceGame, finishChildAdviceGame, startPoliceStallGame, finishPoliceStallGame, startAlienConvinceGame, finishAlienConvinceGame];
++export const gameHostTools = [startChildAdviceGame, finishChildAdviceGame, startPoliceStallGame, finishPoliceStallGame, startAlienConvinceGame, finishAlienConvinceGame, startSelfEvaluationGame, finishSelfEvaluationGame, startPointTaskGame, finishPointTaskGame];
+diff --git a/src/app/hooks/useGameAgent.ts b/src/app/hooks/useGameAgent.ts
+index 9941dbe..f6dcaa5 100644
+--- a/src/app/hooks/useGameAgent.ts
++++ b/src/app/hooks/useGameAgent.ts
+@@ -26,11 +26,11 @@ export interface GameFinishResult {
+ export interface UseGameAgentOptions {
+   onGameStart?: (scenario: GameScenario) => void;
+   onGameFinish?: (result: GameFinishResult) => void;
+-  gameType?: "advise-the-child" | "stall-the-police" | "convince-the-aliens";
++  gameType?: "advise-the-child" | "stall-the-police" | "convince-the-aliens" | "evaluate-yourself" | "point-the-task";
+ }
+ 
+ export function useGameAgent(options: UseGameAgentOptions = {}) {
+-  const { onGameStart, onGameFinish, gameType = "convince-the-aliens" } = options;
++  const { onGameStart, onGameFinish, gameType = "point-the-task" } = options;
+   const { sendUserText, isWebRTCReady } = useGameSession();
+   const { transcriptItems } = useTranscript();
+   const [isGameActive, setIsGameActive] = useState(false);
+@@ -124,6 +124,52 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
+             console.error("Failed to parse alien convince game finish result:", e);
+           }
+         }
++        // Handle self-evaluation game
++        else if (item.title.includes("start_self_evaluation_game") && item.data && gameType === "evaluate-yourself") {
++          try {
++            const scenario = item.data as GameScenario;
++            setCurrentScenario(scenario);
++            setIsGameActive(true);
++            onGameStart?.(scenario);
++            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
++          } catch (e) {
++            console.error("Failed to parse self-evaluation game start scenario:", e);
++          }
++        } else if (item.title.includes("finish_self_evaluation_game") && gameType === "evaluate-yourself") {
++          try {
++            console.log("🔍 Found finish_self_evaluation_game breadcrumb:", item);
++            const result = item.data as GameFinishResult;
++            console.log("🔍 Parsed result:", result);
++            setIsGameActive(false);
++            onGameFinish?.(result);
++            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
++          } catch (e) {
++            console.error("Failed to parse self-evaluation game finish result:", e);
++          }
++        }
++        // Handle point-the-task game
++        else if (item.title.includes("start_point_task_game") && item.data && gameType === "point-the-task") {
++          try {
++            const scenario = item.data as GameScenario;
++            setCurrentScenario(scenario);
++            setIsGameActive(true);
++            onGameStart?.(scenario);
++            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
++          } catch (e) {
++            console.error("Failed to parse point-the-task game start scenario:", e);
++          }
++        } else if (item.title.includes("finish_point_task_game") && gameType === "point-the-task") {
++          try {
++            console.log("🔍 Found finish_point_task_game breadcrumb:", item);
++            const result = item.data as GameFinishResult;
++            console.log("🔍 Parsed result:", result);
++            setIsGameActive(false);
++            onGameFinish?.(result);
++            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
++          } catch (e) {
++            console.error("Failed to parse point-the-task game finish result:", e);
++          }
++        }
+       }
+     }
+   }, [transcriptItems, onGameStart, onGameFinish, processedItemIds, gameType]);
+@@ -145,7 +191,9 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
+     const gameMessages = {
+       "advise-the-child": "Hello! I'm ready to play Advise the Child. Please start the game!",
+       "stall-the-police": "Hello! I'm ready to play Stall the Police. Please start the game!",
+-      "convince-the-aliens": "Hello! I'm ready to play Convince the Aliens. Please start the game!"
++      "convince-the-aliens": "Hello! I'm ready to play Convince the Aliens. Please start the game!",
++      "evaluate-yourself": "Hello! I'm ready to play Evaluate Yourself. Please start the game!",
++      "point-the-task": "Hello! I'm ready to play Point the Engineering Task. Please start the game!"
+     };
+     
+     sendUserText(gameMessages[gameType]);

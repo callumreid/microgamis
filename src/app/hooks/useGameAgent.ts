@@ -9,6 +9,7 @@ export interface GameScenario {
   policeQuote?: string;
   alienQuote?: string;
   customerQuote?: string;
+  bullyQuote?: string;
   context: string;
   goodAdviceKeywords?: string[];
   badAdviceKeywords?: string[];
@@ -18,6 +19,8 @@ export interface GameScenario {
   badConvinceKeywords?: string[];
   goodSaleKeywords?: string[];
   badSaleKeywords?: string[];
+  goodComebackKeywords?: string[];
+  badComebackKeywords?: string[];
 }
 
 export interface GameFinishResult {
@@ -30,6 +33,7 @@ export interface UseGameAgentOptions {
   onGameStart?: (scenario: GameScenario) => void;
   onGameFinish?: (result: GameFinishResult) => void;
   gameType?:
+    | "pwn-the-bully"
     | "advise-the-child"
     | "stall-the-police"
     | "convince-the-aliens"
@@ -250,6 +254,36 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             );
           }
         }
+        // Handle pwn-the-bully game
+        else if (
+          item.title.includes("start_bully_pwn_game") &&
+          item.data &&
+          gameType === "pwn-the-bully"
+        ) {
+          try {
+            const scenario = item.data as GameScenario;
+            setCurrentScenario(scenario);
+            setIsGameActive(true);
+            onGameStart?.(scenario);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse pwn-the-bully game start scenario:", e);
+          }
+        } else if (
+          item.title.includes("finish_bully_pwn_game") &&
+          gameType === "pwn-the-bully"
+        ) {
+          try {
+            console.log("🔍 Found finish_bully_pwn_game breadcrumb:", item);
+            const result = item.data as GameFinishResult;
+            console.log("🔍 Parsed result:", result);
+            setIsGameActive(false);
+            onGameFinish?.(result);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse pwn-the-bully game finish result:", e);
+          }
+        }
         // Handle lemon sale game
         else if (
           item.title.includes("start_lemon_sale_game") &&
@@ -299,6 +333,8 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
 
     // Send a message to trigger the game host agent to start the appropriate game
     const gameMessages = {
+      "pwn-the-bully":
+        "Hello! I'm ready to play Pwn the Bully. Please start the game!",
       "advise-the-child":
         "Hello! I'm ready to play Advise the Child. Please start the game!",
       "stall-the-police":

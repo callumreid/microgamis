@@ -83,6 +83,9 @@ function StallThePoliceGame(props: Partial<GameControlProps>) {
     gameType: "stall-the-police",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
+      console.log("🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔");
+      console.log("🚔🚔🚔 STALL THE POLICE GAME IS ON! 🚔🚔🚔");
+      console.log("🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔🚔");
       updateMessage?.(
         "The police officer is at your door! Listen carefully and convince them to leave!"
       );

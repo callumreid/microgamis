@@ -79,6 +79,9 @@ function ConvinceTheAliensGame(props: Partial<GameControlProps>) {
     gameType: "convince-the-aliens",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
+      console.log("👽👽👽👽👽👽👽👽👽👽👽👽👽👽👽👽👽👽👽👽");
+      console.log("👽👽👽 CONVINCE THE ALIENS GAME IS ON! 👽👽👽");
+      console.log("👽👽👽👽👽👽👽👽👽👽👽👽👽👽👽👽👽👽👽👽");
       updateMessage?.(
         "The alien overlords have arrived! Listen to their demands and convince them not to destroy Earth!"
       );

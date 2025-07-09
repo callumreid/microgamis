@@ -83,6 +83,9 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
     gameType: "pwn-the-bully",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
+      console.log("💪💪💪💪💪💪💪💪💪💪💪💪💪💪💪💪💪💪💪💪");
+      console.log("💪💪💪 PWN THE BULLY GAME IS ON! 💪💪💪");
+      console.log("💪💪💪💪💪💪💪💪💪💪💪💪💪💪💪💪💪💪💪💪");
       updateMessage?.(
         "A mean bully approaches! Listen to their insult and prepare your comeback!"
       );

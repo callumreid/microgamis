@@ -83,6 +83,9 @@ function ExplainDeathGame(props: Partial<GameControlProps>) {
     gameType: "explain-death",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
+      console.log("⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️");
+      console.log("⚰️⚰️⚰️ EXPLAIN DEATH GAME IS ON! ⚰️⚰️⚰️");
+      console.log("⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️⚰️");
       updateMessage?.(
         "Your daughter is asking about death. Listen to her question and prepare your explanation!"
       );

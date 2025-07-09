@@ -83,6 +83,9 @@ function EvaluateYourselfGame(props: Partial<GameControlProps>) {
     gameType: "evaluate-yourself",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
+      console.log("📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊");
+      console.log("📊📊📊 EVALUATE YOURSELF GAME IS ON! 📊📊📊");
+      console.log("📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊");
       updateMessage?.(
         "Your manager is ready for your quarterly self-evaluation. Listen carefully to their instructions!"
       );

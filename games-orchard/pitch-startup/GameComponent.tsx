@@ -102,6 +102,9 @@ function PitchStartupGame(props: Partial<GameControlProps>) {
     gameType: "pitch-startup",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
+      console.log("🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄");
+      console.log("🦄🦄🦄 PITCH STARTUP GAME IS ON! 🦄🦄🦄");
+      console.log("🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄");
       updateMessage?.(
         "Welcome to the mahogany boardroom! VCs are tapping their Apple Pencils..."
       );

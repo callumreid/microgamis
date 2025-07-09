@@ -45,6 +45,7 @@ export interface UseGameAgentOptions {
   onGameStart?: (scenario: GameScenario) => void;
   onGameFinish?: (result: GameFinishResult) => void;
   gameType?:
+    | "determine-sentience"
     | "save-their-soul"
     | "pitch-startup"
     | "excuse-the-boss"
@@ -421,6 +422,36 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             console.error("Failed to parse lemon sale game finish result:", e);
           }
         }
+        // Handle determine-sentience game
+        else if (
+          item.title.includes("start_sentience_evaluation_game") &&
+          item.data &&
+          gameType === "determine-sentience"
+        ) {
+          try {
+            const scenario = item.data as GameScenario;
+            setCurrentScenario(scenario);
+            setIsGameActive(true);
+            onGameStart?.(scenario);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse determine-sentience game start scenario:", e);
+          }
+        } else if (
+          item.title.includes("finish_sentience_evaluation_game") &&
+          gameType === "determine-sentience"
+        ) {
+          try {
+            console.log("🔍 Found finish_sentience_evaluation_game breadcrumb:", item);
+            const result = item.data as GameFinishResult;
+            console.log("🔍 Parsed result:", result);
+            setIsGameActive(false);
+            onGameFinish?.(result);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse determine-sentience game finish result:", e);
+          }
+        }
         // Handle save-their-soul game
         else if (
           item.title.includes("start_soul_saving_game") &&
@@ -500,6 +531,8 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
 
     // Send a message to trigger the game host agent to start the appropriate game
     const gameMessages = {
+      "determine-sentience":
+        "Hello! I'm ready to play Determine Sentience. Please start the game!",
       "save-their-soul":
         "Hello! I'm ready to play Save Their Soul. Please start the game!",
       "pitch-startup":

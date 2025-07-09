@@ -9,6 +9,7 @@ export interface GameProps {
   onGameEnd: (result: GameResult) => void;
   sendPlayerText?: (text: string) => void;
   playSound?: (soundId: string) => void;
+  isPTTUserSpeaking?: boolean;
 }
 
 export interface MicroGame {

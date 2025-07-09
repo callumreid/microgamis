@@ -19,6 +19,7 @@ interface GameControlProps {
   startTimer?: () => void;
   gameState?: any;
   playSound?: (soundId: string) => void;
+  isPTTUserSpeaking?: boolean;
 }
 
 function EvaluateYourselfGame(props: Partial<GameControlProps>) {
@@ -29,10 +30,10 @@ function EvaluateYourselfGame(props: Partial<GameControlProps>) {
     startTimer,
     sendPlayerText: _sendPlayerText,
     gameState,
+    isPTTUserSpeaking: nativeIsPTTUserSpeaking,
   } = props;
   const [hostFinishedSpeaking, setHostFinishedSpeaking] = useState(false);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
-  const [currentTranscriptionText, setCurrentTranscriptionText] = useState("");
   const pttStartTimeRef = useRef<number>(0);
 
   // Push-to-talk functionality
@@ -47,30 +48,6 @@ function EvaluateYourselfGame(props: Partial<GameControlProps>) {
   // Real-time transcription display
   const { transcriptItems } = useTranscript();
 
-  // Monitor transcription items - only capture user speech during PTT
-  useEffect(() => {
-    if (!isPTTUserSpeaking) {
-      return;
-    }
-
-    // Find items that appeared since PTT started AND are marked as user role
-    const userItemsSincePTT = transcriptItems
-      .filter(
-        (item) =>
-          item.title &&
-          item.title.trim() !== "" &&
-          item.role === "user" &&
-          item.createdAtMs > pttStartTimeRef.current
-      )
-      .sort((a, b) => b.createdAtMs - a.createdAtMs);
-
-    if (userItemsSincePTT.length > 0) {
-      const latestUserText = userItemsSincePTT[0].title;
-      console.log("User speech during PTT:", latestUserText);
-      setCurrentTranscriptionText(latestUserText || "");
-    }
-  }, [transcriptItems, isPTTUserSpeaking]);
-
   // Get latest host and user messages for speech bubble
   const getLatestTranscripts = useCallback(() => {
     const hostItems = transcriptItems
@@ -82,7 +59,11 @@ function EvaluateYourselfGame(props: Partial<GameControlProps>) {
 
     const userItems = transcriptItems
       .filter(
-        (item) => item.role === "user" && item.title && item.title.trim() !== ""
+        (item) =>
+          item.role === "user" &&
+          item.title &&
+          item.title.trim() !== "" &&
+          item.title.trim() !== "[inaudible]"
       )
       .sort((a, b) => b.createdAtMs - a.createdAtMs);
 
@@ -116,17 +97,15 @@ function EvaluateYourselfGame(props: Partial<GameControlProps>) {
       }, 8000);
     },
     onGameFinish: (result: GameFinishResult) => {
-      console.log("🎮 EvaluateYourself onGameFinish called with result:", result);
-      
       // Use the actual result values, handle undefined properly
       const success = result.success === true; // Ensure boolean
       const score = result.score || 0;
       const message = result.message || "Your performance review is complete!";
-      
+
       console.log("🎮 Processed values:", { success, score, message });
-      
+
       updateScore?.(score);
-      
+
       // Let BaseGame handle the banner - just end the game
       console.log("🎮 Calling endGame with:", { success, message, score });
       endGame?.(success, message, score);
@@ -154,7 +133,6 @@ function EvaluateYourselfGame(props: Partial<GameControlProps>) {
     interrupt();
     pttStartTimeRef.current = Date.now(); // Mark when PTT started
     setIsPTTUserSpeaking(true);
-    setCurrentTranscriptionText(""); // Clear previous text
     await pushToTalkStartNative();
     console.log("PTT started at:", pttStartTimeRef.current);
   }, [
@@ -170,13 +148,7 @@ function EvaluateYourselfGame(props: Partial<GameControlProps>) {
 
     setIsPTTUserSpeaking(false);
     await pushToTalkStopNative();
-    console.log("PTT stopped. Final text:", currentTranscriptionText);
-  }, [
-    sessionStatus,
-    isPTTUserSpeaking,
-    pushToTalkStopNative,
-    currentTranscriptionText,
-  ]);
+  }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative]);
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800">
@@ -190,8 +162,6 @@ function EvaluateYourselfGame(props: Partial<GameControlProps>) {
           </div>
         </div>
 
-      
-        
         {/* Speech Bubble - Centered and Prominent */}
         <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 mb-4 min-h-[200px] flex flex-col justify-center">
           {/* Host Speech Bubble */}
@@ -217,9 +187,11 @@ function EvaluateYourselfGame(props: Partial<GameControlProps>) {
                     👤 Employee (You):
                   </div>
                   <div className="text-green-900 text-lg">
-                    {isPTTUserSpeaking
-                      ? currentTranscriptionText || "🎤 Self-evaluating..."
-                      : latestUser || "Press mic to speak"}
+                    {isPTTUserSpeaking || nativeIsPTTUserSpeaking
+                      ? "🎤 Self-evaluating..."
+                      : latestUser.startsWith("Hello! I'm ready to play")
+                      ? "Press mic to evaluate yourself"
+                      : latestUser}
                   </div>
                 </div>
               </div>
@@ -243,7 +215,9 @@ function EvaluateYourselfGame(props: Partial<GameControlProps>) {
           <div className="fixed bottom-6 right-6 z-10">
             <div className="bg-blue-100 border-2 border-blue-300 rounded-full p-4 shadow-lg">
               <div className="text-center">
-                <div className="text-xs text-blue-800 mb-1">Hold to Self-Evaluate</div>
+                <div className="text-xs text-blue-800 mb-1">
+                  Hold to Self-Evaluate
+                </div>
                 <button
                   onMouseDown={handleTalkButtonDown}
                   onMouseUp={handleTalkButtonUp}
@@ -273,7 +247,6 @@ function EvaluateYourselfGame(props: Partial<GameControlProps>) {
         <span>📋</span>
         <span>⏰</span>
       </div>
-
     </div>
   );
 }

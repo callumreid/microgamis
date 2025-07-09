@@ -130,7 +130,7 @@ const turkeyAttractionScenarios = [
     problem:
       "A bashful wild turkey lurks beyond the tree line and you need protein for Thanksgiving",
     turkeyQuote:
-      "The game host dramatically sets the scene - A bashful, wide-eyed wild turkey is lurking just beyond the tree line! Thanksgiving is three days away and you're feeling protein-deficient. You squat in the leaves, elbows akimbo, armed with nothing but your vocal cords and questionable bird-wooing charisma. You must emit gobbles so seductive that the turkey waddles out and does a little head-bob of approval!",
+      "The game host dramatically sets the scene - A bashful, wide-eyed wild turkey is lurking just beyond the tree line! Thanksgiving is three days away and you're feeling protein-deficient. You squat in the leaves, elbows akimbo, armed with nothing but your vocal cords and questionable bird-wooing charisma. You must emit gobbles so suave that the turkey waddles out and does a little head-bob of approval!",
     context:
       "Pre-Thanksgiving turkey hunt using only vocal seduction techniques",
     goodTurkeyKeywords: [
@@ -2573,7 +2573,7 @@ export const finishDeathExplanationGame = tool({
 export const startTurkeyAttractionGame = tool({
   name: "start_turkey_attraction_game",
   description:
-    "Starts an Attract the Turkey game where the player must gobble seductively to lure a bashful turkey.",
+    "Starts an Attract the Turkey game where the player must gobble charismatically to lure a bashful turkey.",
   parameters: {
     type: "object",
     properties: {},
@@ -2987,7 +2987,7 @@ You are hosting 30-second micro-games. The current game will be indicated by the
 **"Attract the Turkey"** Game Rules:
 1. When the game starts you MUST call the tool \`start_turkey_attraction_game()\`. Use the returned scenario to brief the player:
    • Read the turkey scenario quote verbatim with dramatic flair about the bashful turkey and Thanksgiving urgency.
-   • Challenge the player: "Time to gobble seductively! Make those gobbles irresistibly thicc!"
+   • Challenge the player: "Time to gobble charismatically! Make those gobbles irresistibly thicc!"
    • Keep briefing under 12 seconds with theatrical nature documentary energy.
 
 2. Accept the FIRST reply from the player, no matter how short or long.

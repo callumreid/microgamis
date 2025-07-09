@@ -90,7 +90,7 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
       console.log("🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃");
       
       updateMessage?.(
-        "A bashful turkey lurks beyond the trees! Listen to the setup and prepare your seductive gobbles!"
+        "A bashful turkey lurks beyond the trees! Listen to the setup and prepare your charismatic gobbles!"
       );
 
       // Start timer after host finishes speaking (estimated 12 seconds for turkey scenario)
@@ -208,7 +208,7 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
                   </div>
                   <div className="text-orange-900 text-lg">
                     {isPTTUserSpeaking || nativeIsPTTUserSpeaking
-                      ? "🎤 Gobbling seductively..."
+                      ? "🎤 Gobbling charismatically..."
                       : latestUser.startsWith("Hello! I'm ready to play")
                       ? "Press mic to gobble at the turkey"
                       : latestUser}
@@ -274,7 +274,7 @@ export default function AttractTheTurkeyGameComponent(props: GameProps) {
   return (
     <BaseGame
       title="Attract the Turkey"
-      instructions="Thanksgiving is 3 days away! Squat in the leaves and gobble seductively to lure a bashful wild turkey with your irresistible vocal charisma."
+      instructions="Thanksgiving is 3 days away! Squat in the leaves and gobble charismatically to lure a bashful wild turkey with your irresistible vocal charisma."
       duration={30}
       {...props}
     >

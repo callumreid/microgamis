@@ -201,13 +201,13 @@
 
 #### Added
 - **New Game: "Attract the Turkey"**: Thanksgiving-themed vocal seduction micro game
-  - Player squats in leaves and must gobble seductively to lure a bashful wild turkey
+  - Player squats in leaves and must gobble charismatically to lure a bashful wild turkey
   - Thanksgiving urgency: only 3 days left and player needs protein
   - Win condition: "Irresistibly thicc" gobbles with tempo changes, flirty clucks, tail-feather sounds
   - Win outcome: Turkey prances out and nuzzles player's knee
   - Lose conditions: Too timid (turkey skitters away, "dryer than aunt Carol's stuffing") or too aggressive (turkey dive-bombs face)
   - Always ends with host whisper-gobbling "Gobble on, legend..." or "Gobble off, loser"
-  - 30-second timer for seductive gobbling performances
+  - 30-second timer for charismatic gobbling performances
 
 #### Enhanced
 - **Game Registry**: Added "attract-the-turkey" as the FIRST game in play sequence
@@ -219,7 +219,7 @@
 - **Game Theme**: Pre-Thanksgiving turkey hunt using only vocal seduction techniques
 - **UI Design**: Autumn/Thanksgiving theme with amber/orange/yellow gradient and turkey emojis (🦃, 🍂, 🌾, 🥧)
 - **Voice Integration**: 12-second delay for turkey scenario setup, then 30-second gobbling window
-- **Scoring Logic**: Rewards creative, rhythmic, seductive gobbles with tempo variation
+- **Scoring Logic**: Rewards creative, rhythmic, charismatic gobbles with tempo variation
 - **Agent Integration**: Uses "attract-the-turkey" game type with turkey quote scenarios
 - **Keywords**: Comprehensive good/bad turkey keywords for gobbling evaluation
 

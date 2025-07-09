@@ -185,8 +185,8 @@ function PitchStartupGame(props: Partial<GameControlProps>) {
   ]);
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-slate-800 via-gray-700 to-slate-900">
-      <div className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-lg shadow-2xl p-6 max-w-4xl w-full mt-16 border-4 border-slate-600">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-gray-800 via-blue-900 to-gray-900">
+      <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg shadow-2xl p-6 max-w-4xl w-full mt-16 border-4 border-blue-600">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold mb-4 text-center text-slate-900">
             🏢💰 Pitch Startup

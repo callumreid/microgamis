@@ -45,6 +45,7 @@ export interface UseGameAgentOptions {
   onGameStart?: (scenario: GameScenario) => void;
   onGameFinish?: (result: GameFinishResult) => void;
   gameType?:
+    | "save-their-soul"
     | "pitch-startup"
     | "excuse-the-boss"
     | "attract-the-turkey"
@@ -420,6 +421,36 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             console.error("Failed to parse lemon sale game finish result:", e);
           }
         }
+        // Handle save-their-soul game
+        else if (
+          item.title.includes("start_soul_saving_game") &&
+          item.data &&
+          gameType === "save-their-soul"
+        ) {
+          try {
+            const scenario = item.data as GameScenario;
+            setCurrentScenario(scenario);
+            setIsGameActive(true);
+            onGameStart?.(scenario);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse save-their-soul game start scenario:", e);
+          }
+        } else if (
+          item.title.includes("finish_soul_saving_game") &&
+          gameType === "save-their-soul"
+        ) {
+          try {
+            console.log("🔍 Found finish_soul_saving_game breadcrumb:", item);
+            const result = item.data as GameFinishResult;
+            console.log("🔍 Parsed result:", result);
+            setIsGameActive(false);
+            onGameFinish?.(result);
+            setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
+          } catch (e) {
+            console.error("Failed to parse save-their-soul game finish result:", e);
+          }
+        }
         // Handle pitch-startup game
         else if (
           item.title.includes("start_startup_pitch_game") &&
@@ -469,6 +500,8 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
 
     // Send a message to trigger the game host agent to start the appropriate game
     const gameMessages = {
+      "save-their-soul":
+        "Hello! I'm ready to play Save Their Soul. Please start the game!",
       "pitch-startup":
         "Hello! I'm ready to play Pitch Startup. Please start the game!",
       "excuse-the-boss":

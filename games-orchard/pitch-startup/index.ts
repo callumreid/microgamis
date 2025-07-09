@@ -5,11 +5,11 @@ export const metadata: GameMetadata = {
   id: "pitch-startup",
   name: "Pitch Startup",
   description: "Mahogany boardroom. VCs tapping Apple Pencils. You have 30 seconds to pitch a startup so ludicrously visionary that their Patagonia vests burst at the seams.",
-  category: "Corporate Comedy",
+  category: "corporate",
   difficulty: 4,
-  isImplemented: true,
   requiresVoice: true,
-  duration: 30,
+  requiresAudio: true,
+  estimatedDuration: 30,
 };
 
 export default PitchStartupGameComponent;

@@ -294,6 +294,39 @@
 - `src/app/hooks/useGameAgent.ts` - Added pitch-startup game type and VC quote field
 - `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added VC boardroom scenarios, tools, and game rules
 
+### Recent Changes - 2025-07-09 (Ninth Game Implementation)
+
+#### Added
+- **New Game: "Save Their Soul"**: Late-night religious conversion micro game with cult recruitment theme
+  - 3 a.m. bus stop setting with forlorn stranger scrolling doom-posts on cracked phone
+  - Neon light flickers, pigeons judge from above as you approach with holy elevator pitch
+  - Player must convert stranger to highly questionable religion (name on the fly, bonus for umlauts)
+  - Win conditions: 1) Belief spark (stranger parrots tenets like "tithe in vibes"), 2) Commitment flex (downloads sect app, attends "Salsa & Salvation" mixer)
+  - Win outcome: "Another glorious soul saved! Stock price rising!" with confetti cannons and celestial saxophone riff
+  - Lose conditions: Generic platitudes ("love one another"), boring doctrine, or stranger files restraining order
+  - Lose outcome: "Congrats, heathen—eternal hold music for you" as bus splashes with gutter water
+  - 30-second timer for soul-snatching before rival cult hotline intervenes
+
+#### Enhanced
+- **Game Registry**: Added "save-their-soul" as the NEW FIRST game in play sequence
+  - Now positioned at top of both `implementedGames` registry and metadata arrays
+  - Replaces pitch-startup as the first to play when randomly selected or testing
+  - MLM pyramid scheme meets cosmic enlightenment theme with missionary mechanics
+
+#### Technical Implementation Details
+- **Game Theme**: Street-corner charisma meets MLM pyramid scheme meets cosmic enlightenment with 3 a.m. bus stop atmosphere
+- **UI Design**: Dark theme with purple/gray gradient and missionary emojis (🙏, ✨, 🚏, 🌙)
+- **Voice Integration**: 12-second delay for scene setup, then 30-second conversion window for holy pitch
+- **Scoring Logic**: Rewards creative cult concepts, ritual elements, and commitment displays; punishes generic religious messaging
+- **Agent Integration**: Uses "save-their-soul" game type with stranger quote scenarios and soul-saving keyword arrays
+- **Keywords**: Comprehensive religious conversion evaluation (cosmic/mystical vs generic/platitudes)
+
+#### Files Modified
+- `games-orchard/save-their-soul/` - New game directory with complete implementation
+- `games-orchard/index.ts` - Added soul-saving game to registry as new first game  
+- `src/app/hooks/useGameAgent.ts` - Added save-their-soul game type and stranger quote field
+- `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added 3 a.m. bus stop scenarios, tools, and game rules
+
 ## Instructions for Future AI Agents
 
 When working on this codebase:

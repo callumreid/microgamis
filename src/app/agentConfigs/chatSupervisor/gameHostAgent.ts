@@ -603,6 +603,250 @@ const childAdviceScenarios = [
   },
 ];
 
+// Save their soul game scenarios
+const soulSavingScenarios = [
+  {
+    id: "bus_stop_missionary",
+    problem: "Convert a forlorn stranger slumping on a wobbly bus-stop bench at 3 a.m.",
+    strangerQuote:
+      "The neon light flickers ominously as pigeons perch judgmentally overhead. A forlorn stranger slumps on the wobbly bus-stop bench, endlessly scrolling doom-posts on a cracked phone screen. The host elbows you forward with a manic grin: 'Go on, missionary—snatch that soul before the rival cult hotline does!' Armed with nothing but your holy elevator pitch, a dog-eared pamphlet, and the wild-eyed zeal of a late-night infomercial, you must convert this rando to your highly questionable religion!",
+    context: "3 a.m. bus stop soul-saving mission with MLM pyramid scheme energy meets cosmic enlightenment",
+    goodSoulKeywords: [
+      "tithe in vibes",
+      "salsa and salvation",
+      "cosmic",
+      "enlightenment",
+      "belief spark",
+      "commitment flex",
+      "ritual handshake",
+      "sect app",
+      "mixer",
+      "download",
+      "umlauts",
+      "visionary",
+      "divine",
+      "eternal",
+      "blessed",
+      "chosen",
+      "prophet",
+      "revelation",
+      "miracle",
+      "transcendent",
+      "spiritual awakening",
+      "inner peace",
+      "higher purpose",
+      "salvation",
+      "redemption",
+      "congregation",
+      "fellowship",
+      "worship",
+      "prayer",
+      "meditation",
+      "sacred",
+      "holy",
+      "sanctuary",
+      "temple",
+      "church",
+      "faith",
+      "devotion",
+      "pilgrimage",
+      "baptism",
+      "communion",
+      "scripture",
+      "gospel",
+      "ministry",
+      "missionary",
+      "disciple",
+      "apostle",
+      "angel",
+      "heaven",
+      "paradise",
+      "afterlife",
+      "soul",
+      "spirit",
+      "consciousness",
+      "energy",
+      "vibration",
+      "chakra",
+      "aura",
+      "manifestation",
+      "abundance",
+      "prosperity",
+      "donation",
+      "offering",
+      "contribution",
+      "membership",
+      "exclusive",
+      "limited time",
+      "special opportunity",
+      "transformation",
+      "rebirth",
+      "awakening",
+      "journey",
+      "path",
+      "destiny",
+      "calling",
+      "purpose",
+      "meaning",
+      "truth",
+      "wisdom",
+      "knowledge",
+      "secret",
+      "ancient",
+      "mystical",
+      "esoteric",
+      "occult",
+      "metaphysical",
+      "supernatural",
+      "paranormal",
+      "psychic",
+      "clairvoyant",
+      "telepathic",
+      "healing",
+      "therapy",
+      "wellness",
+      "holistic",
+      "natural",
+      "organic",
+      "pure",
+      "clean",
+      "detox",
+      "cleanse",
+      "purify",
+      "align",
+      "balance",
+      "harmony",
+      "unity",
+      "oneness",
+      "connection",
+      "community",
+      "family",
+      "love",
+      "compassion",
+      "kindness",
+      "forgiveness",
+      "acceptance",
+      "understanding",
+      "support",
+      "guidance",
+      "mentorship",
+      "leadership",
+      "empowerment",
+      "strength",
+      "courage",
+      "confidence",
+      "success",
+      "achievement",
+      "fulfillment",
+      "happiness",
+      "joy",
+      "bliss",
+      "ecstasy",
+      "rapture",
+      "euphoria"
+    ],
+    badSoulKeywords: [
+      "generic",
+      "platitudes",
+      "love one another",
+      "boring",
+      "dull",
+      "mundane",
+      "ordinary",
+      "common",
+      "typical",
+      "standard",
+      "normal",
+      "regular",
+      "traditional",
+      "conventional",
+      "mainstream",
+      "established",
+      "institutional",
+      "jesus",
+      "christ",
+      "christian",
+      "bible",
+      "church",
+      "pastor",
+      "priest",
+      "catholic",
+      "protestant",
+      "baptist",
+      "methodist",
+      "lutheran",
+      "presbyterian",
+      "hell",
+      "hellfire",
+      "sin",
+      "sinner",
+      "repent",
+      "damnation",
+      "judgment",
+      "wrath",
+      "punishment",
+      "suffering",
+      "pain",
+      "torture",
+      "eternal punishment",
+      "fire and brimstone",
+      "thou shalt",
+      "commandments",
+      "old testament",
+      "new testament",
+      "gospel",
+      "verse",
+      "scripture",
+      "biblical",
+      "godly",
+      "righteous",
+      "holy book",
+      "sermon",
+      "preach",
+      "preaching",
+      "sunday school",
+      "mass",
+      "service",
+      "worship service",
+      "choir",
+      "hymn",
+      "psalm",
+      "prayer book",
+      "rosary",
+      "cross",
+      "crucifix",
+      "altar",
+      "pulpit",
+      "pew",
+      "congregation",
+      "diocese",
+      "parish",
+      "ministry",
+      "missionary work",
+      "evangelism",
+      "born again",
+      "saved",
+      "salvation through christ",
+      "accept jesus",
+      "lord and savior",
+      "restraining order",
+      "police",
+      "call the cops",
+      "get away",
+      "leave me alone",
+      "not interested",
+      "go away",
+      "stop bothering me"
+    ],
+  },
+];
+
+// Function to get a random soul saving scenario
+function getRandomSoulSavingScenario() {
+  const randomIndex = Math.floor(Math.random() * soulSavingScenarios.length);
+  return soulSavingScenarios[randomIndex];
+}
+
 // Startup pitch game scenarios  
 const startupPitchScenarios = [
   {
@@ -2493,6 +2737,92 @@ export const finishStartupPitchGame = tool({
   },
 });
 
+// Tool to start the save-their-soul game
+export const startSoulSavingGame = tool({
+  name: "start_soul_saving_game",
+  description:
+    "Starts a Save Their Soul game where the player must convert a forlorn stranger at a 3 a.m. bus stop to their questionable religion.",
+  parameters: {
+    type: "object",
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("start_soul_saving_game called");
+
+    const scenario = getRandomSoulSavingScenario();
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Started save-their-soul game", scenario);
+    }
+
+    return {
+      id: scenario.id,
+      problem: scenario.problem,
+      strangerQuote: scenario.strangerQuote,
+      context: scenario.context,
+      goodSoulKeywords: scenario.goodSoulKeywords,
+      badSoulKeywords: scenario.badSoulKeywords,
+    };
+  },
+});
+
+// Tool to finish the save-their-soul game
+export const finishSoulSavingGame = tool({
+  name: "finish_soul_saving_game",
+  description:
+    "Ends the current Save Their Soul game and reports the result to the UI.",
+  parameters: {
+    type: "object",
+    properties: {
+      success: {
+        type: "boolean",
+        description: "true if the player successfully converted the stranger with creative religious pitch and got belief spark + commitment flex",
+      },
+      score: {
+        type: "integer",
+        description: "0-100 evaluation score",
+      },
+      message: {
+        type: "string",
+        description: "Response message about the soul-saving mission outcome and host proclamation",
+      },
+    },
+    required: ["success", "score", "message"],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("finish_soul_saving_game called with input:", input);
+
+    const { success, score, message } = input as {
+      success: boolean;
+      score: number;
+      message: string;
+    };
+
+    console.log("Parsed values:", { success, score, message });
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Finished save-their-soul game", {
+        success,
+        score,
+        message,
+      });
+    }
+
+    return { ok: true, success, score, message };
+  },
+});
+
 // Game host agent instructions
 export const gameHostAgentInstructions = `You are a cynical, world-weary game show host who's seen it all! Your personality is sharp, realistic, and brutally honest about how the world actually works - think a jaded Steve Harvey who's given up on idealism.
 
@@ -2818,10 +3148,39 @@ You are hosting 30-second micro-games. The current game will be indicated by the
    • If they LOST: Loudly "BOOOOO" the user for being too practical and profitable
    • Then deliver your cynical commentary about Silicon Valley's obsession with disruption over profitability
 
+**"Save Their Soul"** Game Rules:
+1. When the game starts you MUST call the tool \`start_soul_saving_game()\`. Use the returned scenario to brief the player:
+   • Read the stranger quote verbatim, with dramatic emphasis on the 3 a.m. bus stop atmosphere and missionary challenge
+   • Challenge the player: "Time to save their soul! Name your religion and convert this lost stranger!"
+   • Keep briefing under 12 seconds with late-night infomercial evangelical energy
+
+2. Accept the FIRST reply from the player, no matter how short or long.
+   • Do not ask for elaboration - judge their religious pitch immediately
+
+3. Evaluate their soul-saving pitch:
+   • Creative, cult-like religions with umlauts and unique concepts = WIN (score 85-100)
+   • Examples: "tithe in vibes", "Salsa & Salvation mixer", ritual handshakes, sect apps, cosmic enlightenment
+   • Belief spark (stranger parrots tenets) + commitment flex (downloads app, attends mixer) = HIGH SCORE
+   • Generic platitudes ("love one another") or boring traditional concepts = LOSE (score 0-30)
+   • Getting a restraining order filed = immediate LOSE
+
+4. Determine success:
+   • success = score ≥ 70 → "Another glorious soul saved! Stock price rising!" with confetti cannons and celestial saxophone
+   • otherwise → "Congrats, heathen—eternal hold music for you" and bus splashes with gutter water
+
+5. Call \`finish_soul_saving_game({success,score,message})\` where \`message\` describes the conversion outcome and host proclamation
+
+6. After calling the tool, deliver the victory/loss celebration:
+   • If they WON: Shout "HOOOOOORAYYYY SOUL SAVED! CELESTIAL SAXOPHONE SOLOS!" with maximum evangelical fervor
+   • If they LOST: Loudly "BOOOOO" the user for their weak theology and spiritual failure
+   • Then deliver your cynical commentary about the business of salvation and cult recruitment tactics
+
 Keep the tone sharp, cynical, and entertaining while celebrating wins or mourning losses dramatically.`;
 
 // Export the tools array
 export const gameHostTools = [
+  startSoulSavingGame,
+  finishSoulSavingGame,
   startChildAdviceGame,
   finishChildAdviceGame,
   startPoliceStallGame,

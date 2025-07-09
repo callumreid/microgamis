@@ -1,4 +1,7 @@
 import { GameMetadata } from "./types";
+import SaveTheirSoulGame, {
+  metadata as saveTheirSoulMetadata,
+} from "./save-their-soul";
 import AdviseTheChildGame, {
   metadata as adviseTheChildMetadata,
 } from "./advise-the-child";
@@ -37,6 +40,7 @@ import PitchStartupGame, {
 
 // Game registry mapping
 export const implementedGames = {
+  "save-their-soul": SaveTheirSoulGame,
   "pitch-startup": PitchStartupGame,
   "excuse-the-boss": ExcuseTheBossGame,
   "attract-the-turkey": AttractTheTurkeyGame,
@@ -52,6 +56,7 @@ export const implementedGames = {
 
 // Implemented game metadata
 export const implementedGameMetadata: GameMetadata[] = [
+  saveTheirSoulMetadata,
   pitchStartupMetadata,
   excuseTheBossMetadata,
   attractTheTurkeyMetadata,

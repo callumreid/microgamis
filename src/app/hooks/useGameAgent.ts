@@ -279,7 +279,10 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameStart?.(scenario);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse pwn-the-bully game start scenario:", e);
+            console.error(
+              "Failed to parse pwn-the-bully game start scenario:",
+              e
+            );
           }
         } else if (
           item.title.includes("finish_bully_pwn_game") &&
@@ -293,7 +296,10 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameFinish?.(result);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse pwn-the-bully game finish result:", e);
+            console.error(
+              "Failed to parse pwn-the-bully game finish result:",
+              e
+            );
           }
         }
         // Handle explain-death game
@@ -309,21 +315,30 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameStart?.(scenario);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse explain-death game start scenario:", e);
+            console.error(
+              "Failed to parse explain-death game start scenario:",
+              e
+            );
           }
         } else if (
           item.title.includes("finish_death_explanation_game") &&
           gameType === "explain-death"
         ) {
           try {
-            console.log("🔍 Found finish_death_explanation_game breadcrumb:", item);
+            console.log(
+              "🔍 Found finish_death_explanation_game breadcrumb:",
+              item
+            );
             const result = item.data as GameFinishResult;
             console.log("🔍 Parsed result:", result);
             setIsGameActive(false);
             onGameFinish?.(result);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse explain-death game finish result:", e);
+            console.error(
+              "Failed to parse explain-death game finish result:",
+              e
+            );
           }
         }
         // Handle excuse-the-boss game
@@ -339,7 +354,10 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameStart?.(scenario);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse excuse-the-boss game start scenario:", e);
+            console.error(
+              "Failed to parse excuse-the-boss game start scenario:",
+              e
+            );
           }
         } else if (
           item.title.includes("finish_boss_excuse_game") &&
@@ -353,7 +371,10 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameFinish?.(result);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse excuse-the-boss game finish result:", e);
+            console.error(
+              "Failed to parse excuse-the-boss game finish result:",
+              e
+            );
           }
         }
         // Handle attract-the-turkey game
@@ -369,21 +390,30 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
             onGameStart?.(scenario);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse attract-the-turkey game start scenario:", e);
+            console.error(
+              "Failed to parse attract-the-turkey game start scenario:",
+              e
+            );
           }
         } else if (
           item.title.includes("finish_turkey_attraction_game") &&
           gameType === "attract-the-turkey"
         ) {
           try {
-            console.log("🔍 Found finish_turkey_attraction_game breadcrumb:", item);
+            console.log(
+              "🔍 Found finish_turkey_attraction_game breadcrumb:",
+              item
+            );
             const result = item.data as GameFinishResult;
             console.log("🔍 Parsed result:", result);
             setIsGameActive(false);
             onGameFinish?.(result);
             setProcessedItemIds((prev) => new Set(prev).add(item.itemId));
           } catch (e) {
-            console.error("Failed to parse attract-the-turkey game finish result:", e);
+            console.error(
+              "Failed to parse attract-the-turkey game finish result:",
+              e
+            );
           }
         }
         // Handle lemon sale game
@@ -436,25 +466,25 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
     // Send a message to trigger the game host agent to start the appropriate game
     const gameMessages = {
       "excuse-the-boss":
-        "Hello! I'm ready to play Excuse the Boss. Please start the game!",
+        "Hello! I'm ready to play Excuse the Boss. Please start the game (call the tool start_boss_excuse_game)!",
       "attract-the-turkey":
-        "Hello! I'm ready to play Attract the Turkey. Please start the game!",
+        "Hello! I'm ready to play Attract the Turkey. Please start the game (call the tool start_turkey_attraction_game)!",
       "pwn-the-bully":
-        "Hello! I'm ready to play Pwn the Bully. Please start the game!",
+        "Hello! I'm ready to play Pwn the Bully. Please start the game (call the tool start_bully_pwn_game)!",
       "explain-death":
-        "Hello! I'm ready to play Explain Death. Please start the game!",
+        "Hello! I'm ready to play Explain Death. Please start the game (call the tool start_death_explanation_game)!",
       "advise-the-child":
-        "Hello! I'm ready to play Advise the Child. Please start the game!",
+        "Hello! I'm ready to play Advise the Child. Please start the game (call the tool start_child_advice_game)!",
       "stall-the-police":
-        "Hello! I'm ready to play Stall the Police. Please start the game!",
+        "Hello! I'm ready to play Stall the Police. Please start the game (call the tool start_police_stall_game)!",
       "convince-the-aliens":
-        "Hello! I'm ready to play Convince the Aliens. Please start the game!",
+        "Hello! I'm ready to play Convince the Aliens. Please start the game (call the tool start_alien_convince_game)!",
       "evaluate-yourself":
-        "Hello! I'm ready to play Evaluate Yourself. Please start the game!",
+        "Hello! I'm ready to play Evaluate Yourself. Please start the game (call the tool start_self_evaluation_game)!",
       "point-the-task":
-        "Hello! I'm ready to play Point the Engineering Task. Please start the game!",
+        "Hello! I'm ready to play Point the Engineering Task. Please start the game (call the tool start_point_task_game)!",
       "sell-the-lemon":
-        "Hello! I'm ready to play Sell the Lemon. Please start the game!",
+        "Hello! I'm ready to play Sell the Lemon. Please start the game (call the tool start_lemon_sale_game)!",
     };
 
     sendUserText(gameMessages[gameType]);

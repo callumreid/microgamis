@@ -1,10 +1,12 @@
 import { RealtimeAgent } from "@openai/agents/realtime";
-import { gameHostAgentInstructions, gameHostTools } from "./gameHostAgent";
+import { gameHostTools } from "./gameHostAgent";
+import { getBasePrompt } from "./prompts";
 
+// Create agent with base instructions - game-specific instructions are loaded dynamically
 export const chatAgent = new RealtimeAgent({
   name: "gameHostAgent",
   voice: "sage",
-  instructions: gameHostAgentInstructions,
+  instructions: getBasePrompt(),
   tools: gameHostTools,
 });
 

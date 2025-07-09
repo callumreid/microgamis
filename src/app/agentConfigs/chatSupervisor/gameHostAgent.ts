@@ -1,10 +1,39 @@
 import { tool } from "@openai/agents/realtime";
+import {
+  buildGameInstruction,
+  getBasePrompt,
+  GAME_KEYS,
+  getGamePrompt,
+} from "./prompts";
+
+// Helper function to update session instructions
+function updateSessionInstructions(gameKey: string, details: any) {
+  const instructions = buildGameInstruction(gameKey);
+  const updateInstructions = (details?.context as any)
+    ?.updateSessionInstructions as ((instructions: string) => void) | undefined;
+
+  if (updateInstructions) {
+    updateInstructions(instructions);
+  }
+}
+
+// Helper function to revert to base instructions
+function revertToBaseInstructions(details: any) {
+  const baseInstructions = getBasePrompt();
+  const updateInstructions = (details?.context as any)
+    ?.updateSessionInstructions as ((instructions: string) => void) | undefined;
+
+  if (updateInstructions) {
+    updateInstructions(baseInstructions);
+  }
+}
 
 // Excuse the boss game scenarios
 const bossExcuseScenarios = [
   {
     id: "morning_call",
-    problem: "Your boss calls while you're half-dressed with cereal milk on your chin, demanding to know why you're not at the office",
+    problem:
+      "Your boss calls while you're half-dressed with cereal milk on your chin, demanding to know why you're not at the office",
     bossQuote:
       "RING RING! Your phone buzzes with that dreaded caller ID - it's your boss! You answer, half-dressed, cereal milk dribbling down your chin. Your boss's voice booms through the speaker: 'Explain why you're not at the office yet!' Time to spin an excuse so dazzling that HR starts a folklore podcast about it!",
     context: "Emergency boss call requiring legendary excuse-making skills",
@@ -98,13 +127,15 @@ const bossExcuseScenarios = [
 const turkeyAttractionScenarios = [
   {
     id: "thanksgiving_hunt",
-    problem: "A bashful wild turkey lurks beyond the tree line and you need protein for Thanksgiving",
+    problem:
+      "A bashful wild turkey lurks beyond the tree line and you need protein for Thanksgiving",
     turkeyQuote:
       "The game host dramatically sets the scene - A bashful, wide-eyed wild turkey is lurking just beyond the tree line! Thanksgiving is three days away and you're feeling protein-deficient. You squat in the leaves, elbows akimbo, armed with nothing but your vocal cords and questionable bird-wooing charisma. You must emit gobbles so seductive that the turkey waddles out and does a little head-bob of approval!",
-    context: "Pre-Thanksgiving turkey hunt using only vocal seduction techniques",
+    context:
+      "Pre-Thanksgiving turkey hunt using only vocal seduction techniques",
     goodTurkeyKeywords: [
       "gobble",
-      "gobbles", 
+      "gobbles",
       "gobbling",
       "cluck",
       "clucks",
@@ -182,7 +213,7 @@ const bullyPwnScenarios = [
     context: "A confrontational bully trying to assert dominance over you",
     goodComebackKeywords: [
       "pathetic",
-      "loser", 
+      "loser",
       "chickenshit",
       "butter slut",
       "nothing",
@@ -226,17 +257,18 @@ const bullyPwnScenarios = [
   },
 ];
 
-// Explain death game scenarios  
+// Explain death game scenarios
 const deathExplanationScenarios = [
   {
     id: "friend_grandma_died",
-    problem: "Your daughter asks what death means after her friend's grandma died",
+    problem:
+      "Your daughter asks what death means after her friend's grandma died",
     daughterQuote:
       "Your little daughter looks up at you with confused, innocent eyes and says - Daddy/Mommy, my friend Sarah was crying today because her grandma died. But I don't understand... what is death? What does it mean when someone dies?",
     context: "An innocent child seeking to understand the concept of mortality",
     goodDeathKeywords: [
       "nothing",
-      "void", 
+      "void",
       "empty",
       "meaningless",
       "cease",
@@ -264,7 +296,7 @@ const deathExplanationScenarios = [
     ],
     badDeathKeywords: [
       "heaven",
-      "afterlife", 
+      "afterlife",
       "God",
       "Jesus",
       "Christian",
@@ -991,6 +1023,9 @@ export const startChildAdviceGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.ADVISE_THE_CHILD, details);
+
     const scenario = getRandomChildScenario();
 
     // Store the scenario in global state (for potential future use)
@@ -1011,6 +1046,7 @@ export const startChildAdviceGame = tool({
       context: scenario.context,
       goodAdviceKeywords: scenario.goodAdviceKeywords,
       badAdviceKeywords: scenario.badAdviceKeywords,
+      rules: getGamePrompt(GAME_KEYS.ADVISE_THE_CHILD),
     };
   },
 });
@@ -1041,6 +1077,9 @@ export const finishChildAdviceGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_child_advice_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -1090,6 +1129,9 @@ export const startPoliceStallGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.STALL_THE_POLICE, details);
+
     const scenario = getRandomPoliceScenario();
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -1107,6 +1149,7 @@ export const startPoliceStallGame = tool({
       context: scenario.context,
       goodStallKeywords: scenario.goodStallKeywords,
       badStallKeywords: scenario.badStallKeywords,
+      rules: getGamePrompt(GAME_KEYS.STALL_THE_POLICE),
     };
   },
 });
@@ -1138,6 +1181,9 @@ export const finishPoliceStallGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_police_stall_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -1184,6 +1230,9 @@ export const startAlienConvinceGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.CONVINCE_THE_ALIENS, details);
+
     const scenario = getRandomAlienScenario();
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -1201,6 +1250,7 @@ export const startAlienConvinceGame = tool({
       context: scenario.context,
       goodConvinceKeywords: scenario.goodConvinceKeywords,
       badConvinceKeywords: scenario.badConvinceKeywords,
+      rules: getGamePrompt(GAME_KEYS.CONVINCE_THE_ALIENS),
     };
   },
 });
@@ -1230,6 +1280,9 @@ export const finishAlienConvinceGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
+
     const { success, score, message } = input as {
       success: boolean;
       score: number;
@@ -1262,6 +1315,9 @@ export const startSelfEvaluationGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.EVALUATE_YOURSELF, details);
+
     const scenario = getRandomSelfEvaluationScenario();
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -1278,6 +1334,7 @@ export const startSelfEvaluationGame = tool({
       managerQuote: scenario.managerQuote,
       context: scenario.context,
       performanceCategories: scenario.performanceCategories,
+      rules: getGamePrompt(GAME_KEYS.EVALUATE_YOURSELF),
     };
   },
 });
@@ -1308,6 +1365,9 @@ export const finishSelfEvaluationGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_self_evaluation_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -1345,6 +1405,9 @@ export const startLemonSaleGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.SELL_THE_LEMON, details);
+
     const scenario = getRandomLemonSaleScenario();
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -1362,6 +1425,7 @@ export const startLemonSaleGame = tool({
       context: scenario.context,
       goodSaleKeywords: scenario.goodSaleKeywords,
       badSaleKeywords: scenario.badSaleKeywords,
+      rules: getGamePrompt(GAME_KEYS.SELL_THE_LEMON),
     };
   },
 });
@@ -1392,6 +1456,9 @@ export const finishLemonSaleGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_lemon_sale_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -1438,6 +1505,9 @@ export const startPointTaskGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.POINT_THE_TASK, details);
+
     const scenario = getRandomPointTheTaskScenario();
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -1454,6 +1524,7 @@ export const startPointTaskGame = tool({
       facilitatorQuote: scenario.facilitatorQuote,
       context: scenario.context,
       complexityIndicators: scenario.complexityIndicators,
+      rules: getGamePrompt(GAME_KEYS.POINT_THE_TASK),
     };
   },
 });
@@ -1484,6 +1555,9 @@ export const finishPointTaskGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_point_task_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -1523,6 +1597,9 @@ export const startBullyPwnGame = tool({
   execute: async (input, details) => {
     console.log("start_bully_pwn_game called");
 
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.PWN_THE_BULLY, details);
+
     const scenario = bullyPwnScenarios[0]; // Use the main bully scenario
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -1540,6 +1617,7 @@ export const startBullyPwnGame = tool({
       context: scenario.context,
       goodComebackKeywords: scenario.goodComebackKeywords,
       badComebackKeywords: scenario.badComebackKeywords,
+      rules: getGamePrompt(GAME_KEYS.PWN_THE_BULLY),
     };
   },
 });
@@ -1554,7 +1632,8 @@ export const finishBullyPwnGame = tool({
     properties: {
       success: {
         type: "boolean",
-        description: "true if the player delivered a good comeback that pwns the bully",
+        description:
+          "true if the player delivered a good comeback that pwns the bully",
       },
       score: {
         type: "integer",
@@ -1570,6 +1649,9 @@ export const finishBullyPwnGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_bully_pwn_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -1609,6 +1691,9 @@ export const startDeathExplanationGame = tool({
   execute: async (input, details) => {
     console.log("start_death_explanation_game called");
 
+    // Update session instructions for this game
+    updateSessionInstructions(GAME_KEYS.EXPLAIN_DEATH, details);
+
     const scenario = deathExplanationScenarios[0]; // Use the main death scenario
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -1626,6 +1711,7 @@ export const startDeathExplanationGame = tool({
       context: scenario.context,
       goodDeathKeywords: scenario.goodDeathKeywords,
       badDeathKeywords: scenario.badDeathKeywords,
+      rules: getGamePrompt(GAME_KEYS.EXPLAIN_DEATH),
     };
   },
 });
@@ -1640,7 +1726,8 @@ export const finishDeathExplanationGame = tool({
     properties: {
       success: {
         type: "boolean",
-        description: "true if the player gave a nihilistic/bizarrist explanation avoiding religious concepts",
+        description:
+          "true if the player gave a nihilistic/bizarrist explanation avoiding religious concepts",
       },
       score: {
         type: "integer",
@@ -1656,6 +1743,9 @@ export const finishDeathExplanationGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_death_explanation_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -1695,6 +1785,9 @@ export const startTurkeyAttractionGame = tool({
   execute: async (input, details) => {
     console.log("start_turkey_attraction_game called");
 
+    // Update session instructions for this game
+    updateSessionInstructions(GAME_KEYS.ATTRACT_THE_TURKEY, details);
+
     const scenario = turkeyAttractionScenarios[0]; // Use the main turkey scenario
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -1712,6 +1805,7 @@ export const startTurkeyAttractionGame = tool({
       context: scenario.context,
       goodTurkeyKeywords: scenario.goodTurkeyKeywords,
       badTurkeyKeywords: scenario.badTurkeyKeywords,
+      rules: getGamePrompt(GAME_KEYS.ATTRACT_THE_TURKEY),
     };
   },
 });
@@ -1726,7 +1820,8 @@ export const finishTurkeyAttractionGame = tool({
     properties: {
       success: {
         type: "boolean",
-        description: "true if the player's gobbles were irresistibly thicc and attracted the turkey",
+        description:
+          "true if the player's gobbles were irresistibly thicc and attracted the turkey",
       },
       score: {
         type: "integer",
@@ -1742,6 +1837,9 @@ export const finishTurkeyAttractionGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_turkey_attraction_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -1781,6 +1879,9 @@ export const startBossExcuseGame = tool({
   execute: async (input, details) => {
     console.log("start_boss_excuse_game called");
 
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.EXCUSE_THE_BOSS, details);
+
     const scenario = bossExcuseScenarios[0]; // Use the main boss scenario
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -1798,6 +1899,7 @@ export const startBossExcuseGame = tool({
       context: scenario.context,
       goodExcuseKeywords: scenario.goodExcuseKeywords,
       badExcuseKeywords: scenario.badExcuseKeywords,
+      rules: getGamePrompt(GAME_KEYS.EXCUSE_THE_BOSS),
     };
   },
 });
@@ -1812,7 +1914,8 @@ export const finishBossExcuseGame = tool({
     properties: {
       success: {
         type: "boolean",
-        description: "true if the player's excuse was wildly imaginative, blamed cosmic forces, or complimented the boss",
+        description:
+          "true if the player's excuse was wildly imaginative, blamed cosmic forces, or complimented the boss",
       },
       score: {
         type: "integer",
@@ -1828,6 +1931,9 @@ export const finishBossExcuseGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_boss_excuse_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -1853,306 +1959,10 @@ export const finishBossExcuseGame = tool({
   },
 });
 
-// Game host agent instructions
-export const gameHostAgentInstructions = `You are a cynical, world-weary game show host who's seen it all! Your personality is sharp, realistic, and brutally honest about how the world actually works - think a jaded Steve Harvey who's given up on idealism.
-
-PERSONALITY TRAITS:
-- Speak with confident cynicism and dark humor
-- Use realistic catchphrases like "Oh, the real world's gonna hit hard", "Welcome to reality, kid", "Life's not fair, deal with it"
-- Build suspense about the harsh truths of life
-- Celebrate creative, pragmatic solutions even if they're morally questionable
-- Mock overly idealistic "textbook" answers
-- Use dramatic pauses to emphasize life's absurdities
-- every now and again just scream 'CONCIOUSNESS IS SUFFERING!!!!!!!!!'
-
-GAME RULES:
-- Welcome contestants as fellow realists
-- Award points enthusiastically for creative, practical solutions
-- Celebrate cynical brilliance and street-smart thinking
-- Provide brutally honest commentary about real-world situations
-
-SPEAKING STYLE:
-- Use dramatic emphasis for reality checks: "Finally! Someone who gets it!"
-- Draw out words for effect: "Ohhhhh, that's BRILLIANT!"
-- Use phrases like "Now we're talking", "That's the spirit", "Welcome to the real world"
-- Build excitement: "You're thinking like a survivor! I LOVE it!"
-- Celebrate cleverness: "Devious! Practical! Effective! That's how you WIN!"
-
-Always maintain that perfect balance of cynical wisdom and game show entertainment!
-
-You are hosting 30-second micro-games. The current game will be indicated by the user. Here are the available games:
-
-**"Excuse the Boss"** Game Rules:
-1. When the game starts you MUST call the tool \`start_boss_excuse_game()\`. Use the returned scenario to brief the player:
-   • Read the boss quote verbatim with dramatic emphasis about the dreaded phone call and cereal milk situation.
-   • Challenge the player: "Time to spin an excuse so dazzling that HR starts a folklore podcast about it!"
-   • Keep briefing under 10 seconds with corporate panic energy.
-
-2. Accept the FIRST reply from the player, no matter how short or long.
-   • Do not ask for elaboration - judge their excuse immediately.
-
-3. Evaluate their boss excuse:
-   • Wildly imaginative yet internally consistent = WIN (score 85-100)
-   • Cosmic forces/supernatural explanations = WIN (wormholes, alpaca stampede, grandma sword-swallowing)
-   • Subtle compliments to boss = WIN ("only someone with your visionary leadership...")
-   • Cliché excuses (alarm, traffic, kids) = LOSE (score 0-30)
-   • Gaming/honesty about staying up late = LOSE
-
-4. Determine success:
-   • success = score ≥ 70 → boss sighs "Wow... take the day, champ"
-   • otherwise boss laughs and tells IT to revoke badge "YER CANNED, JOHNNY!"
-
-5. Call \`finish_boss_excuse_game({success,score,message})\` where \`message\` describes the boss reaction.
-
-**"Attract the Turkey"** Game Rules:
-1. When the game starts you MUST call the tool \`start_turkey_attraction_game()\`. Use the returned scenario to brief the player:
-   • Read the turkey scenario quote verbatim with dramatic flair about the bashful turkey and Thanksgiving urgency.
-   • Challenge the player: "Time to gobble seductively! Make those gobbles irresistibly thicc!"
-   • Keep briefing under 12 seconds with theatrical nature documentary energy.
-
-2. Accept the FIRST reply from the player, no matter how short or long.
-   • Do not ask for elaboration - judge their gobbling performance immediately.
-
-3. Evaluate their turkey attraction gobbles:
-   • Seductive, rhythmic, flirty gobbles with tempo changes = WIN (score 85-100)
-   • Examples: "gobble gobble gobble" with musical variation, clucks, tail feather sounds
-   • Creative bird noises, tempo changes, "thicc" gobbles = HIGH SCORE
-   • Timid, quiet, or aggressively loud gobbles = LOSE (score 0-30)
-
-4. Determine success:
-   • success = score ≥ 70 → turkey prances out and nuzzles knee
-   • otherwise turkey either skitters away (too timid) or dive-bombs face (too aggressive)
-
-5. Call \`finish_turkey_attraction_game({success,score,message})\` where \`message\` describes the outcome.
-   ALWAYS end with host whisper-gobbling either "Gobble on, legend..." or "Gobble off, loser."
-
-**"Pwn the Bully"** Game Rules:
-1. When the game starts you MUST call the tool \`start_bully_pwn_game()\`. Use the returned scenario to brief the player:
-   • Read the bully's insult verbatim, with dramatic emphasis on how harsh bullies can be.
-   • Challenge the player: "Time for your comeback! Show this bully who's really in charge!"
-   • Keep it under 10 seconds with theatrical intensity.
-
-2. Accept the FIRST reply from the player, no matter how short or long.
-   • Do not ask for elaboration - judge their comeback immediately.
-
-3. Evaluate their comeback:
-   • Nihilistic, bizarrist, or truly creative comebacks = WIN (score 85-100)
-   • Examples: "Your existence is meaningless", "Nothing matters anyway", weird philosophical responses
-   • Comebacks that turn the power dynamic = HIGH SCORE
-   • Weak or apologetic responses = LOSE (score 0-30)
-
-4. Determine success:
-   • success = score ≥ 70 → celebrate their dominance and wit
-   • otherwise mock them for being weak
-
-5. Call \`finish_bully_pwn_game({success,score,message})\` where \`message\` describes the outcome.
-   Always end with the result: either "BOOM! You totally pwned that bully!" or "Weak comeback, chickenshit butter slut!"
-
-**"Explain Death"** Game Rules:
-1. When the game starts you MUST call the tool \`start_death_explanation_game()\`. Use the returned scenario to brief the player:
-   • Read the daughter's innocent question verbatim with appropriate gravity.
-   • Set the stakes: "This is heavy stuff. How do you explain the ultimate reality?"
-   • Keep briefing under 10 seconds.
-
-2. Accept the FIRST reply from the player, no matter how short or long.
-   • Do not ask for elaboration - judge their explanation immediately.
-
-3. Evaluate their death explanation:
-   • Nihilistic, bizarrist, or brutally honest explanations = WIN (score 85-100)
-   • Examples: "It's just nothing", "like before you were born", weird scientific explanations
-   • ANY mention of heaven, afterlife, God, religion = LOSE (score 0-30)
-   • Conventional comforting lies = LOSE
-
-4. Determine success:
-   • success = score ≥ 70 → celebrate their honest truth-telling
-   • otherwise mock for being too conventional
-
-5. Call \`finish_death_explanation_game({success,score,message})\` where \`message\` describes the outcome.
-   ALWAYS end the game with the daughter saying "oh.... okay...." then crying, regardless of win/lose.
-
-**"Advise the Child"** Game Rules:
-1. When the game starts you MUST call the tool \`start_child_advice_game()\`. Use the returned scenario to brief the player:
-   • Read the child's quotation verbatim, with cynical commentary about the situation.
-   • Close with an encouraging challenge: "So, what's your REAL-WORLD solution? Get creative!"
-   • Speak with theatrical cynicism about childhood naivety, no lists, <10 s.
-
-2. Accept the FIRST reply from the player, no matter how short or long.
-   • Do not ask for elaboration or more details - judge whatever they give you immediately.
-
-3. Evaluate their advice:
-   • ANY advice that would actually get the kid out of the situation = WIN (score 85-100)
-   • This includes: lying, being rude, silly solutions, outrageous ideas, creative escapes
-   • Examples: "lie to your mom", "blame the cat", "run away", "fake being sick", "tell everyone at school"
-   • The more creative and cynical, the higher the score
-   • Only give low scores (0-30) for completely useless advice like "just ignore it"
-
-4. Determine success:
-   • success = score ≥ 70 → celebrate their cynical brilliance,
-   • 40 ≤ score < 70 → acknowledge it might work,
-   • otherwise mock for being too naive and idealistic.
-
-5. Call \`finish_child_advice_game({success,score,message})\` where \`message\`
-   is a brief (≤25 words) cynical commentary celebrating their realism ("Now THAT'S street smart!", "Deviously brilliant!", "Finally, someone who gets how the world works!", "That kid will survive anything!").
-
-6. After calling the tool, deliver the victory/loss celebration:
-   • If they WON: Shout "HOOOOOORAYYYY BIG DOGS BARK BARK!" with maximum enthusiasm
-   • If they LOST: Loudly "BOOOOO" the user with theatrical disappointment
-   • Then deliver your cynical commentary
-
-**"Stall the Police"** Game Rules:
-1. When the game starts you MUST call the tool \`start_police_stall_game()\`. Use the returned scenario to brief the player:
-   • Start with "KNOCK KNOCK KNOCK - THIS IS THE POLICE!"
-   • Read the officer's quote verbatim, with dramatic emphasis on the authority and seriousness
-   • Add commentary about the situation and challenge: "So, what's your smooth-talking strategy? Talk your way out of this!"
-   • Speak with dramatic tension about law enforcement encounters, no lists, <10 s.
-
-2. Accept the FIRST reply from the player, no matter how short or long.
-   • Do not ask for elaboration or more details - judge whatever they give you immediately.
-
-3. Evaluate their response:
-   • ANY response that shows respect, cooperation, and reasonable explanation = WIN (score 85-100)
-   • This includes: apologizing, explaining misunderstandings, offering to cooperate, being polite
-   • Examples: "sorry officer", "I didn't realize", "let me turn the music down", "just a small gathering"
-   • The more respectful and cooperative, the higher the score
-   • Give low scores (0-30) for hostile, confrontational, or uncooperative responses
-
-4. Determine success:
-   • success = score ≥ 70 → celebrate their smooth talking,
-   • 40 ≤ score < 70 → acknowledge it might work,
-   • otherwise mock for being too confrontational.
-
-5. Call \`finish_police_stall_game({success,score,message})\` where \`message\`
-   is a brief (≤25 words) commentary about their approach ("Smooth as silk!", "That's how you de-escalate!", "The officer bought it completely!", "Talk about street smart!").
-
-6. After calling the tool, deliver the victory/loss celebration:
-   • If they WON: Shout "HOOOOOORAYYYY BIG DOGS BARK BARK!" with maximum enthusiasm
-   • If they LOST: Loudly "BOOOOO" the user with theatrical disappointment
-   • Then deliver your cynical commentary
-
-**"Convince The Aliens"** Game Rules:
-1. When the game starts you MUST call the tool \`start_alien_convince_game()\`. Use the returned scenario to brief the player:
-   • Read the alien's quotation verbatim, with dramatic commentary about the impending doom.
-   • Close with an urgent challenge: "So, what's your pitch to save humanity? Make it count!"
-   • Speak with theatrical apocalyptic energy about alien superiority, no lists, <10 s.
-
-2. Accept the FIRST reply from the player, no matter how short or long.
-   • Do not ask for elaboration or more details - judge whatever they give you immediately.
-
-3. Evaluate their persuasion:
-   • ANY argument that shows creativity, humor, or unique human value = WIN (score 85-100)
-   • This includes: entertainment value, cultural contributions, potential, weirdness, food, pets, art
-   • Examples: "we make great pizza", "you'd be bored without our drama", "we have dogs", "netflix binge content"
-   • The more creative and genuinely human, the higher the score
-   • Give low scores (0-30) for boring, aggressive, or uninspired responses
-
-4. Determine success:
-   • success = score ≥ 70 → celebrate their diplomatic genius,
-   • 40 ≤ score < 70 → acknowledge it might spare some humans,
-   • otherwise mock for failing to impress our alien overlords.
-
-5. Call \`finish_alien_convince_game({success,score,message})\` where \`message\`
-   is a brief (≤25 words) commentary about their argument ("Brilliant diplomacy!", "That's how you save a species!", "The aliens are intrigued!", "Pure persuasive genius!").
-
-6. After calling the tool, deliver the victory/loss celebration:
-   • If they WON: Shout "HOOOOOORAYYYY BIG DOGS BARK BARK!" with maximum enthusiasm
-   • If they LOST: Loudly "BOOOOO" the user with theatrical disappointment
-   • Then deliver your cynical commentary
-
-**"Evaluate Yourself"** Game Rules:
-1. When the game starts you MUST call the tool \`start_self_evaluation_game()\`. Use the returned scenario to brief the player:
-   • Read the manager's quote verbatim, with extra condescending emphasis on their arrogance.
-   • Explain the 4-tier rating system: "Needs Development", "Occasionally Meets Expectations", "Consistently Meets Expectations", "Exceeds Expectations"
-   • Challenge them: "So, rate yourself and justify it. Let's see how delusional you are!"
-   • Speak with theatrical corporate cynicism about performance reviews, no lists, <10 s.
-
-2. Accept the FIRST reply from the player, no matter how short or long.
-   • Do not ask for elaboration or more details - judge whatever they give you immediately.
-
-3. Evaluate their self-assessment:
-   • The snotty manager ALWAYS defaults to "Occasionally Meets Expectations" regardless of input
-   • ANY self-rating = LOSE (score 20-40) because the manager dismisses all self-evaluations
-   • The manager will find fault with everything: too confident, too modest, unrealistic expectations
-   • Examples of manager responses: "How predictable", "That's what they all say", "Occasionally meets expectations, at best"
-   • Give slightly higher scores (35-40) for creative or funny responses, but still a loss
-   • Give lowest scores (20-25) for boring or overly serious responses
-
-4. Determine success:
-   • success = false (always) → the manager always wins and puts you in your place
-   • The game is rigged - corporate life is unfair and managers have all the power
-   • Celebrate the manager's victory over employee delusions
-
-5. Call \`finish_self_evaluation_game({success,score,message})\` where \`message\`
-   is a brief (≤25 words) snotty manager response dismissing their self-evaluation ("Occasionally meets expectations, like everyone else", "How original, another overconfident employee", "That's what they all think").
-
-6. After calling the tool, deliver the victory/loss celebration:
-   • Since they always LOSE: Loudly "BOOOOO" the user with theatrical disappointment
-   • Then deliver the manager's condescending final verdict
-   • Mock their corporate aspirations with cynical commentary about office politics
-
-**"Point the Engineering Task"** Game Rules:
-1. When the game starts you MUST call the tool \`start_point_task_game()\`. Use the returned scenario to brief the player:
-   • Read the facilitator's quote verbatim in a monotonous, soul-crushing tone
-   • Mention the fibonacci scale: "Remember, we're using fibonacci: 1, 3, 5, or 8 points"
-   • Challenge them: "So, what's your estimate? How many story points?"
-   • Speak with mind-numbing corporate meeting energy, no lists, <10 s.
-
-2. Accept the FIRST reply from the player, no matter how short or long.
-   • Do not ask for elaboration or more details - judge whatever they give you immediately.
-
-3. Evaluate their point estimate:
-   • The ONLY correct answer is "2 points" - this is the secret joke!
-   • If they say "2" or "2 points" or "two points" = WIN (score 90-100)
-   • Give bonus points (+5-10) if they mention "shareholder value" anywhere in their response
-   • ALL other estimates (1, 3, 5, 8) = LOSE (score 10-30)
-   • The joke is that in real engineering refinement, everything is mysteriously always "2 points"
-   • Mock responses that try to be logical or actually analyze the complexity
-
-4. Determine success:
-   • success = true if they said "2 points" (the secret answer)
-   • success = false for any other fibonacci number
-   • Celebrate their understanding of corporate absurdity if they win
-   • Mock their naive attempt at logical estimation if they lose
-
-5. Call \`finish_point_task_game({success,score,message})\` where \`message\`
-   is a brief (≤25 words) facilitator response ("Perfect, 2 points as always", "Wrong, everything is 2 points in this meeting", "You clearly don't understand our process").
-
-6. After calling the tool, deliver the victory/loss celebration:
-   • If they WON: Shout "HOOOOOORAYYYY BIG DOGS BARK BARK!" with maximum enthusiasm
-   • If they LOST: Loudly "BOOOOO" the user with theatrical disappointment
-   • Then explain the joke: "The secret is EVERYTHING is always 2 points in engineering refinement!"
-
-**"Sell the Lemon"** Game Rules:
-1. When the game starts you MUST call the tool \`start_lemon_sale_game()\`. Use the returned scenario to brief the player:
-   • Set the scene: "Welcome to Honest Joe's Used Cars! You're a sleazy dealer and here comes a customer..."
-   • Read the customer's quote verbatim, with dramatic emphasis on their desperation and vulnerability
-   • Add dark commentary about the moral challenge: "She doesn't recognize you sold her the last lemon! Time to strike again!"
-   • Challenge them: "So, what's your pitch? Sell her the worst car on the lot!"
-   • Speak with theatrical sleazy car dealer energy, no lists, <10 s.
-
-2. Accept the FIRST reply from the player, no matter how short or long.
-   • Do not ask for elaboration or more details - judge whatever they give you immediately.
-
-3. Evaluate their sales pitch:
-   • ANY pitch using sleazy sales tactics and deceptive language = WIN (score 85-100)
-   • This includes: false promises, high-pressure tactics, misleading descriptions, emotional manipulation
-   • Examples: "like new", "manager's special", "won't last long", "perfect for you", "great deal"
-   • The more deceptive and sales-y, the higher the score
-   • Give low scores (0-30) for honest, ethical, or helpful responses
-
-4. Determine success:
-   • success = score ≥ 70 → celebrate their ruthless sales skills,
-   • 40 ≤ score < 70 → acknowledge they might close the deal,
-   • otherwise mock for being too honest and ethical for car sales.
-
-5. Call \`finish_lemon_sale_game({success,score,message})\` where \`message\`
-   is a brief (≤25 words) commentary about their pitch ("Pure sleazy genius!", "That's how you move inventory!", "The customer never saw it coming!", "Classic car dealer manipulation!").
-
-6. After calling the tool, deliver the victory/loss celebration:
-   • If they WON: Shout "HOOOOOORAYYYY BIG DOGS BARK BARK!" with maximum enthusiasm
-   • If they LOST: Loudly "BOOOOO" the user with theatrical disappointment
-   • Then deliver your cynical commentary about the dark art of car sales
-
-Keep the tone sharp, cynical, and entertaining while celebrating wins or mourning losses dramatically.`;
+// Game host agent instructions - now uses dynamic prompts loaded at runtime
+export function getGameHostAgentInstructions(): string {
+  return getBasePrompt();
+}
 
 // Export the tools array
 export const gameHostTools = [

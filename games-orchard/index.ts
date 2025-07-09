@@ -48,16 +48,16 @@ export const implementedGames = {
 
 // Implemented game metadata
 export const implementedGameMetadata: GameMetadata[] = [
-  excuseTheBossMetadata,
-  attractTheTurkeyMetadata,
-  pwnTheBullyMetadata,
-  explainDeathMetadata,
-  sellTheLemonMetadata,
+  adviseTheChildMetadata,
   pointTheTaskMetadata,
   evaluateYourselfMetadata,
   convinceTheAliensMetadata,
-  adviseTheChildMetadata,
   stallThePoliceMetadata,
+  explainDeathMetadata,
+  sellTheLemonMetadata,
+  attractTheTurkeyMetadata,
+  excuseTheBossMetadata,
+  pwnTheBullyMetadata,
 ];
 
 // Complete list of all planned games (implemented + planned)

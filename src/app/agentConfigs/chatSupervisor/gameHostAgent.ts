@@ -2421,7 +2421,7 @@ export const startStartupPitchGame = tool({
   execute: async (input, details) => {
     console.log("start_startup_pitch_game called");
 
-    const scenario = startupPitchScenarios[0]; // Use the main VC boardroom scenario
+    const scenario = getRandomStartupPitchScenario();
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
       | ((title: string, data?: any) => void)

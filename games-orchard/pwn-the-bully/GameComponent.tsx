@@ -19,6 +19,7 @@ interface GameControlProps {
   startTimer?: () => void;
   gameState?: any;
   playSound?: (soundId: string) => void;
+  isPTTUserSpeaking?: boolean;
 }
 
 function PwnTheBullyGame(props: Partial<GameControlProps>) {
@@ -29,10 +30,10 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
     startTimer,
     sendPlayerText: _sendPlayerText,
     gameState,
+    isPTTUserSpeaking: nativeIsPTTUserSpeaking,
   } = props;
   const [hostFinishedSpeaking, setHostFinishedSpeaking] = useState(false);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
-  const [currentTranscriptionText, setCurrentTranscriptionText] = useState("");
   const pttStartTimeRef = useRef<number>(0);
 
   // Push-to-talk functionality
@@ -47,30 +48,6 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
   // Real-time transcription display
   const { transcriptItems } = useTranscript();
 
-  // Monitor transcription items - only capture user speech during PTT
-  useEffect(() => {
-    if (!isPTTUserSpeaking) {
-      return;
-    }
-
-    // Find items that appeared since PTT started AND are marked as user role
-    const userItemsSincePTT = transcriptItems
-      .filter(
-        (item) =>
-          item.title &&
-          item.title.trim() !== "" &&
-          item.role === "user" &&
-          item.createdAtMs > pttStartTimeRef.current
-      )
-      .sort((a, b) => b.createdAtMs - a.createdAtMs);
-
-    if (userItemsSincePTT.length > 0) {
-      const latestUserText = userItemsSincePTT[0].title;
-      console.log("User speech during PTT:", latestUserText);
-      setCurrentTranscriptionText(latestUserText || "");
-    }
-  }, [transcriptItems, isPTTUserSpeaking]);
-
   // Get latest host and user messages for speech bubble
   const getLatestTranscripts = useCallback(() => {
     const hostItems = transcriptItems
@@ -82,7 +59,11 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
 
     const userItems = transcriptItems
       .filter(
-        (item) => item.role === "user" && item.title && item.title.trim() !== ""
+        (item) =>
+          item.role === "user" &&
+          item.title &&
+          item.title.trim() !== "" &&
+          item.title.trim() !== "[inaudible]"
       )
       .sort((a, b) => b.createdAtMs - a.createdAtMs);
 
@@ -121,12 +102,16 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
       // Use the actual result values, handle undefined properly
       const success = result.success === true; // Ensure boolean
       const score = result.score || 0;
-      
+
       let message: string;
       if (success) {
-        message = result.message || "BOOM! You totally pwned that bully! You're the one with power now!";
+        message =
+          result.message ||
+          "BOOM! You totally pwned that bully! You're the one with power now!";
       } else {
-        message = result.message || "Weak comeback, chickenshit butter slut! The bully owns you now!";
+        message =
+          result.message ||
+          "Weak comeback, chickenshit butter slut! The bully owns you now!";
       }
 
       console.log("🎮 Processed values:", { success, score, message });
@@ -141,9 +126,7 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
 
   // Start the game when component mounts (user has already clicked START GAME)
   useEffect(() => {
-    updateMessage?.(
-      "Welcome to Pwn The Bully! A mean bully is approaching..."
-    );
+    updateMessage?.("Welcome to Pwn The Bully! A mean bully is approaching...");
 
     // Start the game after a brief delay
     const timer = setTimeout(() => {
@@ -160,7 +143,6 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
     interrupt();
     pttStartTimeRef.current = Date.now(); // Mark when PTT started
     setIsPTTUserSpeaking(true);
-    setCurrentTranscriptionText(""); // Clear previous text
     await pushToTalkStartNative();
     console.log("PTT started at:", pttStartTimeRef.current);
   }, [
@@ -176,13 +158,7 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
 
     setIsPTTUserSpeaking(false);
     await pushToTalkStopNative();
-    console.log("PTT stopped. Final text:", currentTranscriptionText);
-  }, [
-    sessionStatus,
-    isPTTUserSpeaking,
-    pushToTalkStopNative,
-    currentTranscriptionText,
-  ]);
+  }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative]);
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-red-200 via-orange-200 to-yellow-200">
@@ -205,7 +181,9 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
                   <div className="text-sm text-red-800 font-medium mb-1">
                     😈 Bully:
                   </div>
-                  <div className="text-red-900 text-lg font-bold">{latestHost}</div>
+                  <div className="text-red-900 text-lg font-bold">
+                    {latestHost}
+                  </div>
                 </div>
               </div>
             </div>
@@ -220,9 +198,11 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
                     💪 You:
                   </div>
                   <div className="text-blue-900 text-lg">
-                    {isPTTUserSpeaking
-                      ? currentTranscriptionText || "🎤 Crafting your comeback..."
-                      : latestUser || "Press mic to deliver your comeback"}
+                    {isPTTUserSpeaking || nativeIsPTTUserSpeaking
+                      ? "🎤 Crafting your comeback..."
+                      : latestUser.startsWith("Hello! I'm ready to play")
+                      ? "Press mic to deliver your comeback"
+                      : latestUser}
                   </div>
                 </div>
               </div>
@@ -289,7 +269,7 @@ export default function PwnTheBullyGameComponent(props: GameProps) {
       duration={30}
       {...props}
     >
-      <PwnTheBullyGame />
+      <PwnTheBullyGame isPTTUserSpeaking={props.isPTTUserSpeaking} />
     </BaseGame>
   );
 }

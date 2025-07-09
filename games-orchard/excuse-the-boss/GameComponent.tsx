@@ -19,6 +19,7 @@ interface GameControlProps {
   startTimer?: () => void;
   gameState?: any;
   playSound?: (soundId: string) => void;
+  isPTTUserSpeaking?: boolean;
 }
 
 function ExcuseTheBossGame(props: Partial<GameControlProps>) {
@@ -29,10 +30,10 @@ function ExcuseTheBossGame(props: Partial<GameControlProps>) {
     startTimer,
     sendPlayerText: _sendPlayerText,
     gameState,
+    isPTTUserSpeaking: nativeIsPTTUserSpeaking,
   } = props;
   const [hostFinishedSpeaking, setHostFinishedSpeaking] = useState(false);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
-  const [currentTranscriptionText, setCurrentTranscriptionText] = useState("");
   const pttStartTimeRef = useRef<number>(0);
 
   // Push-to-talk functionality
@@ -47,30 +48,6 @@ function ExcuseTheBossGame(props: Partial<GameControlProps>) {
   // Real-time transcription display
   const { transcriptItems } = useTranscript();
 
-  // Monitor transcription items - only capture user speech during PTT
-  useEffect(() => {
-    if (!isPTTUserSpeaking) {
-      return;
-    }
-
-    // Find items that appeared since PTT started AND are marked as user role
-    const userItemsSincePTT = transcriptItems
-      .filter(
-        (item) =>
-          item.title &&
-          item.title.trim() !== "" &&
-          item.role === "user" &&
-          item.createdAtMs > pttStartTimeRef.current
-      )
-      .sort((a, b) => b.createdAtMs - a.createdAtMs);
-
-    if (userItemsSincePTT.length > 0) {
-      const latestUserText = userItemsSincePTT[0].title;
-      console.log("User speech during PTT:", latestUserText);
-      setCurrentTranscriptionText(latestUserText || "");
-    }
-  }, [transcriptItems, isPTTUserSpeaking]);
-
   // Get latest host and user messages for speech bubble
   const getLatestTranscripts = useCallback(() => {
     const hostItems = transcriptItems
@@ -82,7 +59,11 @@ function ExcuseTheBossGame(props: Partial<GameControlProps>) {
 
     const userItems = transcriptItems
       .filter(
-        (item) => item.role === "user" && item.title && item.title.trim() !== ""
+        (item) =>
+          item.role === "user" &&
+          item.title &&
+          item.title.trim() !== "" &&
+          item.title.trim() !== "[inaudible]"
       )
       .sort((a, b) => b.createdAtMs - a.createdAtMs);
 
@@ -121,12 +102,16 @@ function ExcuseTheBossGame(props: Partial<GameControlProps>) {
       // Use the actual result values, handle undefined properly
       const success = result.success === true; // Ensure boolean
       const score = result.score || 0;
-      
+
       let message: string;
       if (success) {
-        message = result.message || "Boss sighs: 'Wow... take the day, champ.' HR is already planning the folklore podcast!";
+        message =
+          result.message ||
+          "Boss sighs: 'Wow... take the day, champ.' HR is already planning the folklore podcast!";
       } else {
-        message = result.message || "Boss laughs, then tells IT to revoke your badge. 'YER CANNED, JOHNNY!'";
+        message =
+          result.message ||
+          "Boss laughs, then tells IT to revoke your badge. 'YER CANNED, JOHNNY!'";
       }
 
       console.log("🎮 Processed values:", { success, score, message });
@@ -160,7 +145,6 @@ function ExcuseTheBossGame(props: Partial<GameControlProps>) {
     interrupt();
     pttStartTimeRef.current = Date.now(); // Mark when PTT started
     setIsPTTUserSpeaking(true);
-    setCurrentTranscriptionText(""); // Clear previous text
     await pushToTalkStartNative();
     console.log("PTT started at:", pttStartTimeRef.current);
   }, [
@@ -176,13 +160,7 @@ function ExcuseTheBossGame(props: Partial<GameControlProps>) {
 
     setIsPTTUserSpeaking(false);
     await pushToTalkStopNative();
-    console.log("PTT stopped. Final text:", currentTranscriptionText);
-  }, [
-    sessionStatus,
-    isPTTUserSpeaking,
-    pushToTalkStopNative,
-    currentTranscriptionText,
-  ]);
+  }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative]);
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-blue-100 via-indigo-200 to-purple-300">
@@ -205,7 +183,9 @@ function ExcuseTheBossGame(props: Partial<GameControlProps>) {
                   <div className="text-sm text-red-800 font-medium mb-1">
                     👔 Your Boss:
                   </div>
-                  <div className="text-red-900 text-lg font-bold">{latestHost}</div>
+                  <div className="text-red-900 text-lg font-bold">
+                    {latestHost}
+                  </div>
                 </div>
               </div>
             </div>
@@ -220,9 +200,11 @@ function ExcuseTheBossGame(props: Partial<GameControlProps>) {
                     🥛 You (Half-dressed):
                   </div>
                   <div className="text-blue-900 text-lg">
-                    {isPTTUserSpeaking
-                      ? currentTranscriptionText || "🎤 Spinning your excuse..."
-                      : latestUser || "Press mic to give your legendary excuse"}
+                    {isPTTUserSpeaking || nativeIsPTTUserSpeaking
+                      ? "🎤 Spinning your excuse..."
+                      : latestUser.startsWith("Hello! I'm ready to play")
+                      ? "Press mic to give your legendary excuse"
+                      : latestUser}
                   </div>
                 </div>
               </div>
@@ -246,9 +228,7 @@ function ExcuseTheBossGame(props: Partial<GameControlProps>) {
           <div className="fixed bottom-6 right-6 z-10">
             <div className="bg-blue-50 border-2 border-blue-200 rounded-full p-4 shadow-lg">
               <div className="text-center">
-                <div className="text-xs text-blue-800 mb-1">
-                  Hold to Excuse
-                </div>
+                <div className="text-xs text-blue-800 mb-1">Hold to Excuse</div>
                 <button
                   onMouseDown={handleTalkButtonDown}
                   onMouseUp={handleTalkButtonUp}
@@ -289,7 +269,7 @@ export default function ExcuseTheBossGameComponent(props: GameProps) {
       duration={30}
       {...props}
     >
-      <ExcuseTheBossGame />
+      <ExcuseTheBossGame isPTTUserSpeaking={props.isPTTUserSpeaking} />
     </BaseGame>
   );
 }

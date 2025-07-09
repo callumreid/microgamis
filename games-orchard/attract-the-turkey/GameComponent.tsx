@@ -19,6 +19,7 @@ interface GameControlProps {
   startTimer?: () => void;
   gameState?: any;
   playSound?: (soundId: string) => void;
+  isPTTUserSpeaking?: boolean;
 }
 
 function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
@@ -29,10 +30,10 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
     startTimer,
     sendPlayerText: _sendPlayerText,
     gameState,
+    isPTTUserSpeaking: nativeIsPTTUserSpeaking,
   } = props;
   const [hostFinishedSpeaking, setHostFinishedSpeaking] = useState(false);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
-  const [currentTranscriptionText, setCurrentTranscriptionText] = useState("");
   const pttStartTimeRef = useRef<number>(0);
 
   // Push-to-talk functionality
@@ -47,30 +48,6 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
   // Real-time transcription display
   const { transcriptItems } = useTranscript();
 
-  // Monitor transcription items - only capture user speech during PTT
-  useEffect(() => {
-    if (!isPTTUserSpeaking) {
-      return;
-    }
-
-    // Find items that appeared since PTT started AND are marked as user role
-    const userItemsSincePTT = transcriptItems
-      .filter(
-        (item) =>
-          item.title &&
-          item.title.trim() !== "" &&
-          item.role === "user" &&
-          item.createdAtMs > pttStartTimeRef.current
-      )
-      .sort((a, b) => b.createdAtMs - a.createdAtMs);
-
-    if (userItemsSincePTT.length > 0) {
-      const latestUserText = userItemsSincePTT[0].title;
-      console.log("User speech during PTT:", latestUserText);
-      setCurrentTranscriptionText(latestUserText || "");
-    }
-  }, [transcriptItems, isPTTUserSpeaking]);
-
   // Get latest host and user messages for speech bubble
   const getLatestTranscripts = useCallback(() => {
     const hostItems = transcriptItems
@@ -82,7 +59,11 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
 
     const userItems = transcriptItems
       .filter(
-        (item) => item.role === "user" && item.title && item.title.trim() !== ""
+        (item) =>
+          item.role === "user" &&
+          item.title &&
+          item.title.trim() !== "" &&
+          item.title.trim() !== "[inaudible]"
       )
       .sort((a, b) => b.createdAtMs - a.createdAtMs);
 
@@ -116,17 +97,24 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
       }, 12000);
     },
     onGameFinish: (result: GameFinishResult) => {
-      console.log("🎮 AttractTheTurkey onGameFinish called with result:", result);
+      console.log(
+        "🎮 AttractTheTurkey onGameFinish called with result:",
+        result
+      );
 
       // Use the actual result values, handle undefined properly
       const success = result.success === true; // Ensure boolean
       const score = result.score || 0;
-      
+
       let message: string;
       if (success) {
-        message = result.message || "The turkey prances out and nuzzles your knee! Gobble on, legend!";
+        message =
+          result.message ||
+          "The turkey prances out and nuzzles your knee! Gobble on, legend!";
       } else {
-        message = result.message || "The turkey wants nothing to do with you. Gobble off, loser.";
+        message =
+          result.message ||
+          "The turkey wants nothing to do with you. Gobble off, loser.";
       }
 
       console.log("🎮 Processed values:", { success, score, message });
@@ -160,7 +148,6 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
     interrupt();
     pttStartTimeRef.current = Date.now(); // Mark when PTT started
     setIsPTTUserSpeaking(true);
-    setCurrentTranscriptionText(""); // Clear previous text
     await pushToTalkStartNative();
     console.log("PTT started at:", pttStartTimeRef.current);
   }, [
@@ -176,13 +163,7 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
 
     setIsPTTUserSpeaking(false);
     await pushToTalkStopNative();
-    console.log("PTT stopped. Final text:", currentTranscriptionText);
-  }, [
-    sessionStatus,
-    isPTTUserSpeaking,
-    pushToTalkStopNative,
-    currentTranscriptionText,
-  ]);
+  }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative]);
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-amber-100 via-orange-200 to-yellow-300">
@@ -220,9 +201,11 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
                     🧍 You (Turkey Whisperer):
                   </div>
                   <div className="text-orange-900 text-lg">
-                    {isPTTUserSpeaking
-                      ? currentTranscriptionText || "🎤 Gobbling seductively..."
-                      : latestUser || "Press mic to gobble at the turkey"}
+                    {isPTTUserSpeaking || nativeIsPTTUserSpeaking
+                      ? "🎤 Gobbling seductively..."
+                      : latestUser.startsWith("Hello! I'm ready to play")
+                      ? "Press mic to gobble at the turkey"
+                      : latestUser}
                   </div>
                 </div>
               </div>
@@ -289,7 +272,7 @@ export default function AttractTheTurkeyGameComponent(props: GameProps) {
       duration={30}
       {...props}
     >
-      <AttractTheTurkeyGame />
+      <AttractTheTurkeyGame isPTTUserSpeaking={props.isPTTUserSpeaking} />
     </BaseGame>
   );
 }

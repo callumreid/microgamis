@@ -19,6 +19,7 @@ interface GameControlProps {
   startTimer?: () => void;
   gameState?: any;
   playSound?: (soundId: string) => void;
+  isPTTUserSpeaking?: boolean;
 }
 
 function ExplainDeathGame(props: Partial<GameControlProps>) {
@@ -29,10 +30,10 @@ function ExplainDeathGame(props: Partial<GameControlProps>) {
     startTimer,
     sendPlayerText: _sendPlayerText,
     gameState,
+    isPTTUserSpeaking: nativeIsPTTUserSpeaking,
   } = props;
   const [hostFinishedSpeaking, setHostFinishedSpeaking] = useState(false);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
-  const [currentTranscriptionText, setCurrentTranscriptionText] = useState("");
   const pttStartTimeRef = useRef<number>(0);
 
   // Push-to-talk functionality
@@ -47,30 +48,6 @@ function ExplainDeathGame(props: Partial<GameControlProps>) {
   // Real-time transcription display
   const { transcriptItems } = useTranscript();
 
-  // Monitor transcription items - only capture user speech during PTT
-  useEffect(() => {
-    if (!isPTTUserSpeaking) {
-      return;
-    }
-
-    // Find items that appeared since PTT started AND are marked as user role
-    const userItemsSincePTT = transcriptItems
-      .filter(
-        (item) =>
-          item.title &&
-          item.title.trim() !== "" &&
-          item.role === "user" &&
-          item.createdAtMs > pttStartTimeRef.current
-      )
-      .sort((a, b) => b.createdAtMs - a.createdAtMs);
-
-    if (userItemsSincePTT.length > 0) {
-      const latestUserText = userItemsSincePTT[0].title;
-      console.log("User speech during PTT:", latestUserText);
-      setCurrentTranscriptionText(latestUserText || "");
-    }
-  }, [transcriptItems, isPTTUserSpeaking]);
-
   // Get latest host and user messages for speech bubble
   const getLatestTranscripts = useCallback(() => {
     const hostItems = transcriptItems
@@ -82,7 +59,11 @@ function ExplainDeathGame(props: Partial<GameControlProps>) {
 
     const userItems = transcriptItems
       .filter(
-        (item) => item.role === "user" && item.title && item.title.trim() !== ""
+        (item) =>
+          item.role === "user" &&
+          item.title &&
+          item.title.trim() !== "" &&
+          item.title.trim() !== "[inaudible]"
       )
       .sort((a, b) => b.createdAtMs - a.createdAtMs);
 
@@ -121,12 +102,16 @@ function ExplainDeathGame(props: Partial<GameControlProps>) {
       // Use the actual result values, handle undefined properly
       const success = result.success === true; // Ensure boolean
       const score = result.score || 0;
-      
+
       let message: string;
       if (success) {
-        message = result.message || "Your daughter says 'oh.... okay....' then starts crying. Dark but honest truth delivered.";
+        message =
+          result.message ||
+          "Your daughter says 'oh.... okay....' then starts crying. Dark but honest truth delivered.";
       } else {
-        message = result.message || "Your daughter says 'oh.... okay....' then starts crying. Too conventional or religious.";
+        message =
+          result.message ||
+          "Your daughter says 'oh.... okay....' then starts crying. Too conventional or religious.";
       }
 
       console.log("🎮 Processed values:", { success, score, message });
@@ -160,7 +145,6 @@ function ExplainDeathGame(props: Partial<GameControlProps>) {
     interrupt();
     pttStartTimeRef.current = Date.now(); // Mark when PTT started
     setIsPTTUserSpeaking(true);
-    setCurrentTranscriptionText(""); // Clear previous text
     await pushToTalkStartNative();
     console.log("PTT started at:", pttStartTimeRef.current);
   }, [
@@ -176,13 +160,7 @@ function ExplainDeathGame(props: Partial<GameControlProps>) {
 
     setIsPTTUserSpeaking(false);
     await pushToTalkStopNative();
-    console.log("PTT stopped. Final text:", currentTranscriptionText);
-  }, [
-    sessionStatus,
-    isPTTUserSpeaking,
-    pushToTalkStopNative,
-    currentTranscriptionText,
-  ]);
+  }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative]);
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-gray-200 via-slate-300 to-gray-400">
@@ -220,9 +198,11 @@ function ExplainDeathGame(props: Partial<GameControlProps>) {
                     👨‍👩 You (Parent):
                   </div>
                   <div className="text-gray-900 text-lg">
-                    {isPTTUserSpeaking
-                      ? currentTranscriptionText || "🎤 Explaining death..."
-                      : latestUser || "Press mic to explain death to your daughter"}
+                    {isPTTUserSpeaking || nativeIsPTTUserSpeaking
+                      ? "🎤 Explaining death..."
+                      : latestUser.startsWith("Hello! I'm ready to play")
+                      ? "Press mic to explain death to your daughter"
+                      : latestUser}
                   </div>
                 </div>
               </div>
@@ -289,7 +269,7 @@ export default function ExplainDeathGameComponent(props: GameProps) {
       duration={30}
       {...props}
     >
-      <ExplainDeathGame />
+      <ExplainDeathGame isPTTUserSpeaking={props.isPTTUserSpeaking} />
     </BaseGame>
   );
 }

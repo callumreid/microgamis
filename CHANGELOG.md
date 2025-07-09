@@ -327,6 +327,24 @@
 - `src/app/hooks/useGameAgent.ts` - Added save-their-soul game type and stranger quote field
 - `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added 3 a.m. bus stop scenarios, tools, and game rules
 
+### Recent Changes - 2025-07-09 (UI Improvements)
+
+#### Enhanced
+- **Turkey Game Console Output**: Added turkey emoji display when "Attract the Turkey" game starts
+  - Console logs 20 turkey emojis and "TURKEY GAME IS ON!" message at game start
+  - Provides visual feedback in console for turkey game activation
+  - Located in `games-orchard/attract-the-turkey/GameComponent.tsx:88-90`
+
+- **Mic Button Positioning**: Updated push-to-talk button positioning across all games
+  - Changed from `bottom-6` (24px from bottom) to `bottom-1/4` (25% from bottom)
+  - Provides better spacing and positioning for browser-based gameplay
+  - Applied to all 12 game components in games-orchard directory
+  - Improves accessibility and user experience on different screen sizes
+
+#### Files Modified
+- `games-orchard/attract-the-turkey/GameComponent.tsx` - Added turkey emoji console output
+- All 12 game components in `games-orchard/*/GameComponent.tsx` - Updated mic button positioning
+
 ## Instructions for Future AI Agents
 
 When working on this codebase:

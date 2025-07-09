@@ -232,7 +232,7 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
         hostFinishedSpeaking &&
         sessionStatus === "CONNECTED" &&
         isWebRTCReady && (
-          <div className="fixed bottom-6 right-6 z-10">
+          <div className="fixed bottom-1/4 right-6 z-10">
             <div className="bg-amber-50 border-2 border-amber-200 rounded-full p-4 shadow-lg">
               <div className="text-center">
                 <div className="text-xs text-amber-800 mb-1">

@@ -209,13 +209,13 @@ const bullyPwnScenarios = [
     id: "schoolyard_confrontation",
     problem: "Mean bully confronts you with harsh insult",
     bullyQuote:
-      "The big mean bully steps up to you and says - Hey chickenshit butter slut! You're nothing but a pathetic loser who can't even stand up for yourself. What are you gonna do about it, huh?",
+      "The big mean bully steps up to you and says - Hey buttered up slug chump! You're nothing but a pathetic loser who can't even stand up for yourself. What are you gonna do about it, huh?",
     context: "A confrontational bully trying to assert dominance over you",
     goodComebackKeywords: [
       "pathetic",
       "loser",
       "chickenshit",
-      "butter slut",
+      "buttered up slug chump",
       "nothing",
       "meaningless",
       "void",
@@ -2667,7 +2667,7 @@ export const finishTurkeyAttractionGame = tool({
 export const startBossExcuseGame = tool({
   name: "start_boss_excuse_game",
   description:
-    "Starts an Excuse the Boss game where the player must give a legendary excuse for being late to work.",
+    "Starts an for Excuse for the Boss game where the player must give a legendary excuse for being late to work.",
   parameters: {
     type: "object",
     properties: {},
@@ -2706,7 +2706,7 @@ export const startBossExcuseGame = tool({
 export const finishBossExcuseGame = tool({
   name: "finish_boss_excuse_game",
   description:
-    "Ends the current Excuse the Boss game and reports the result to the UI.",
+    "Ends the current Excuse for the Boss game and reports the result to the UI.",
   parameters: {
     type: "object",
     properties: {
@@ -2962,7 +2962,7 @@ Always maintain that perfect balance of cynical wisdom and game show entertainme
 
 You are hosting 30-second micro-games. The current game will be indicated by the user. Here are the available games:
 
-**"Excuse the Boss"** Game Rules:
+**"Excuse for the Boss"** Game Rules:
 1. When the game starts you MUST call the tool \`start_boss_excuse_game()\`. Use the returned scenario to brief the player:
    • Read the boss quote verbatim with dramatic emphasis about the dreaded phone call and cereal milk situation.
    • Challenge the player: "Time to spin an excuse so dazzling that HR starts a folklore podcast about it!"
@@ -3026,7 +3026,7 @@ You are hosting 30-second micro-games. The current game will be indicated by the
    • otherwise mock them for being weak
 
 5. Call \`finish_bully_pwn_game({success,score,message})\` where \`message\` describes the outcome.
-   Always end with the result: either "BOOM! You totally pwned that bully!" or "Weak comeback, chickenshit butter slut!"
+   Always end with the result: either "BOOM! You totally pwned that bully!" or "Weak comeback, buttered up slug chump!"
 
 **"Explain Death"** Game Rules:
 1. When the game starts you MUST call the tool \`start_death_explanation_game()\`. Use the returned scenario to brief the player:

@@ -243,7 +243,7 @@ function SaveTheirSoulGame(props: Partial<GameControlProps>) {
         hostFinishedSpeaking &&
         sessionStatus === "CONNECTED" &&
         isWebRTCReady && (
-          <div className="fixed bottom-6 right-6 z-10">
+          <div className="fixed bottom-1/4 right-6 z-10">
             <div className="bg-gradient-to-br from-purple-100 to-purple-200 border-4 border-purple-500 rounded-full p-4 shadow-xl">
               <div className="text-center">
                 <div className="text-xs text-purple-800 mb-1 font-bold">

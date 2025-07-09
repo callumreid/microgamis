@@ -18,4 +18,4 @@
    • otherwise mock them for being weak
 
 5. Call `finish_bully_pwn_game({success,score,message})` where `message` describes the outcome.
-   Always end with the result: either "BOOM! You totally pwned that bully!" or "Weak comeback, chickenshit butter slut!" 
+   Always end with the result: either "BOOM! You totally pwned that bully!" or "Weak comeback, buttered up slug chump!" 

@@ -1,4 +1,4 @@
-**"Excuse the Boss"** Game Rules:
+**"Excuse for the Boss"** Game Rules:
 1. When the game starts you MUST call the tool `start_boss_excuse_game()`. Use the returned scenario to brief the player:
    • Read the boss quote verbatim with dramatic emphasis about the dreaded phone call and cereal milk situation.
    • Challenge the player: "Time to spin an excuse so dazzling that HR starts a folklore podcast about it!"

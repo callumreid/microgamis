@@ -535,7 +535,7 @@ export function useGameAgent(options: UseGameAgentOptions = {}) {
       "pitch-startup":
         "Hello! I'm ready to play Pitch Startup. Please start the game!",
       "excuse-the-boss":
-        "Hello! I'm ready to play Excuse the Boss. Please start the game (call the tool start_boss_excuse_game)!",
+        "Hello! I'm ready to play Excuse for the Boss. Please start the game (call the tool start_boss_excuse_game)!",
       "attract-the-turkey":
         "Hello! I'm ready to play Attract the Turkey. Please start the game (call the tool start_turkey_attraction_game)!",
       "pwn-the-bully":

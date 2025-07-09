@@ -145,10 +145,10 @@
 
 #### Added
 - **New Game: "Pwn the Bully"**: Social confrontation micro game with comeback mechanics
-  - Mean bully calls player a "chickenshit butter slut" and player must deliver perfect comeback
+  - Mean bully calls player a "buttered up slug chump" and player must deliver perfect comeback
   - Social combat themed UI with red/orange/yellow gradient and confrontation emojis (💪, 😤, 🔥, 💥)
   - Win condition: Deliver comeback that totally pwns the bully and regains player power
-  - Lose condition: Weak comeback results in bully maintaining dominance (and calling player "chickenshit butter slut")
+  - Lose condition: Weak comeback results in bully maintaining dominance (and calling player "buttered up slug chump")
   - 10-second timer focusing on quick wit and verbal combat skills
 
 #### Enhanced
@@ -232,7 +232,7 @@
 ### Recent Changes - 2025-07-08 (Seventh Game Implementation)
 
 #### Added
-- **New Game: "Excuse the Boss"**: Corporate emergency call micro game with legendary excuse-making
+- **New Game: "Excuse for the Boss"**: Corporate emergency call micro game with legendary excuse-making
   - RING RING! Boss calls while you're half-dressed with cereal milk dribbling down your chin
   - Boss demands: "Explain why you're not at the office yet!" - you must spin a dazzling excuse
   - Win conditions: 1) Wildly imaginative yet internally consistent, 2) Blame cosmic forces (wormholes, alpaca stampede, grandma's sword-swallowing), 3) Subtle boss compliments

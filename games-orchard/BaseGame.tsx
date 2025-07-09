@@ -26,7 +26,7 @@ export default function BaseGame({
   });
 
   const [showCountdown, setShowCountdown] = useState(true);
-  const [countdown, setCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(5);
   const [timerStarted, setTimerStarted] = useState(false);
   const [showHorrorBanner, setShowHorrorBanner] = useState(false);
   const [horrorFlickerCount, setHorrorFlickerCount] = useState(0);

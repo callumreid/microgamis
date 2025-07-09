@@ -337,3 +337,31 @@ When working on this codebase:
 4. **Modular Structure**: Each game should be self-contained in the games-orchard directory
 5. **10-Second Gameplay**: All games designed for quick 10-second play sessions
 6. **Update This Changelog**: Document all significant changes for future context
+
+## [Unreleased] - 2024-12-20
+
+### Added - 10 New Microgamis Games
+- **what-sound-does-this-animal-make**: Voice-based animal sound identification game where players must make the correct animal sound
+- **buffalo**: Fast-paced word association game where players must say "buffalo" correctly based on patterns
+- **steer-the-ship**: Navigate a ship through dangerous waters using voice commands
+- **identify-the-criminal**: Detective game where players identify suspects from lineup descriptions
+- **gone-fishing**: Relaxing fishing game where players must tell the perfect fishing story
+- **volcano-casino**: High-stakes gambling game set in an active volcano casino
+- **name-that-capitol**: Geography trivia game testing knowledge of world capitals
+- **whos-that-pokemon**: Classic Pokemon identification game using voice input
+- **jump-off-bridge**: Extreme sports game where players must convince someone not to jump
+- **finish-the-limerick**: Creative poetry game completing humorous limericks
+
+### Technical Implementation Notes
+- All games follow existing patterns with start/finish tools in gameHostAgent.ts
+- Each game includes voice integration and 30-second timer
+- Games added to registry with animal-sound game as first to display
+- Complete game components with themed UI following dark/cynical aesthetic
+- Integration with useGameAgent hook for proper state management
+
+### Oink Notes for Future Piggy Engineers
+- 🐷 Oink oink! These games embrace the absurd and cynical nature of existence
+- Each game rewards creativity over correctness (except the trivia ones)
+- Voice-first design leverages existing realtime capabilities
+- Reused BaseGame wrapper and existing UI patterns for consistency
+- *oink* Remember: consciousness is suffering, but at least we have games!

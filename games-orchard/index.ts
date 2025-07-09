@@ -1,4 +1,34 @@
 import { GameMetadata } from "./types";
+import AnimalSoundGame, {
+  metadata as animalSoundMetadata,
+} from "./what-sound-does-this-animal-make";
+import BuffaloGame, {
+  metadata as buffaloMetadata,
+} from "./buffalo";
+import SteerShipGame, {
+  metadata as steerShipMetadata,
+} from "./steer-the-ship";
+import IdentifyCriminalGame, {
+  metadata as identifyCriminalMetadata,
+} from "./identify-the-criminal";
+import GoneFishingGame, {
+  metadata as goneFishingMetadata,
+} from "./gone-fishing";
+import VolcanoCasinoGame, {
+  metadata as volcanoCasinoMetadata,
+} from "./volcano-casino";
+import NameCapitolGame, {
+  metadata as nameCapitolMetadata,
+} from "./name-that-capitol";
+import WhosThatPokemonGame, {
+  metadata as whosThatPokemonMetadata,
+} from "./whos-that-pokemon";
+import JumpOffBridgeGame, {
+  metadata as jumpOffBridgeMetadata,
+} from "./jump-off-bridge";
+import FinishLimerickGame, {
+  metadata as finishLimerickMetadata,
+} from "./finish-the-limerick";
 import SaveTheirSoulGame, {
   metadata as saveTheirSoulMetadata,
 } from "./save-their-soul";
@@ -40,6 +70,16 @@ import PitchStartupGame, {
 
 // Game registry mapping
 export const implementedGames = {
+  "what-sound-does-this-animal-make": AnimalSoundGame,
+  "buffalo": BuffaloGame,
+  "steer-the-ship": SteerShipGame,
+  "identify-the-criminal": IdentifyCriminalGame,
+  "gone-fishing": GoneFishingGame,
+  "volcano-casino": VolcanoCasinoGame,
+  "name-that-capitol": NameCapitolGame,
+  "whos-that-pokemon": WhosThatPokemonGame,
+  "jump-off-bridge": JumpOffBridgeGame,
+  "finish-the-limerick": FinishLimerickGame,
   "save-their-soul": SaveTheirSoulGame,
   "pitch-startup": PitchStartupGame,
   "excuse-the-boss": ExcuseTheBossGame,
@@ -56,6 +96,16 @@ export const implementedGames = {
 
 // Implemented game metadata
 export const implementedGameMetadata: GameMetadata[] = [
+  animalSoundMetadata,
+  buffaloMetadata,
+  steerShipMetadata,
+  identifyCriminalMetadata,
+  goneFishingMetadata,
+  volcanoCasinoMetadata,
+  nameCapitolMetadata,
+  whosThatPokemonMetadata,
+  jumpOffBridgeMetadata,
+  finishLimerickMetadata,
   adviseTheChildMetadata,
   pitchStartupMetadata,
   attractTheTurkeyMetadata,
@@ -67,7 +117,6 @@ export const implementedGameMetadata: GameMetadata[] = [
   convinceTheAliensMetadata,
   evaluateYourselfMetadata,
   stallThePoliceMetadata,
-  sellTheLemonMetadata,
   saveTheirSoulMetadata,
 ];
 

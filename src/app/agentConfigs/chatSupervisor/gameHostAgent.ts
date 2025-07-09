@@ -2003,15 +2003,6 @@ export const finishPoliceStallGame = tool({
       });
     }
 
-    // Dispatch event to notify the UI
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("finish_police_stall_game", {
-          detail: { success, score, message },
-        })
-      );
-    }
-
     return { ok: true, success, score, message };
   },
 });
@@ -2933,6 +2924,164 @@ export const finishSoulSavingGame = tool({
   },
 });
 
+// Tool to start the animal sound game
+export const startAnimalSoundGame = tool({
+  name: "start_animal_sound_game",
+  description:
+    "Returns a random animal for the What Sound Does This Animal Make game where players must prove their humanity through vocalization.",
+  parameters: {
+    type: "object",
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("start_animal_sound_game called");
+
+    const scenario = getRandomAnimalSoundScenario();
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Started animal sound game", scenario);
+    }
+
+    return {
+      id: scenario.id,
+      problem: scenario.problem,
+      animalName: scenario.animalName,
+      context: scenario.context,
+      goodAnimalSounds: scenario.goodAnimalSounds,
+      badAnimalSounds: scenario.badAnimalSounds,
+    };
+  },
+});
+
+// Tool to finish the animal sound game
+export const finishAnimalSoundGame = tool({
+  name: "finish_animal_sound_game",
+  description:
+    "Evaluates and scores the player's animal sound to determine if they're human or robot.",
+  parameters: {
+    type: "object",
+    properties: {
+      success: {
+        type: "boolean",
+        description: "Whether the player made a convincing animal sound",
+      },
+      score: {
+        type: "number",
+        description: "Score from 0-100 based on sound accuracy",
+      },
+      message: {
+        type: "string",
+        description: "Brief commentary on the player's animal vocalization",
+      },
+    },
+    required: ["success", "score", "message"],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    const { success, score, message } = input as {
+      success: boolean;
+      score: number;
+      message: string;
+    };
+
+    console.log("Parsed values:", { success, score, message });
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Finished animal sound game", input);
+    }
+
+    return { ok: true, success, score, message };
+  },
+});
+
+// Tool to start the buffalo game
+export const startBuffaloGame = tool({
+  name: "start_buffalo_game",
+  description:
+    "Returns a buffalo pattern for the Buffalo game where players must follow the herd's wisdom.",
+  parameters: {
+    type: "object",
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    console.log("start_buffalo_game called");
+
+    const scenario = getRandomBuffaloScenario();
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Started buffalo game", scenario);
+    }
+
+    return {
+      id: scenario.id,
+      problem: scenario.problem,
+      buffaloCalls: scenario.buffaloCalls,
+      context: scenario.context,
+    };
+  },
+});
+
+// Tool to finish the buffalo game
+export const finishBuffaloGame = tool({
+  name: "finish_buffalo_game",
+  description:
+    "Evaluates the player's buffalo pattern repetition.",
+  parameters: {
+    type: "object",
+    properties: {
+      success: {
+        type: "boolean",
+        description: "Whether the player correctly followed the buffalo pattern",
+      },
+      score: {
+        type: "number",
+        description: "Score from 0-100 based on pattern accuracy",
+      },
+      message: {
+        type: "string",
+        description: "Commentary on their buffalo wisdom",
+      },
+    },
+    required: ["success", "score", "message"],
+    additionalProperties: false,
+  },
+  execute: async (input, details) => {
+    const { success, score, message } = input as {
+      success: boolean;
+      score: number;
+      message: string;
+    };
+
+    console.log("Parsed values:", { success, score, message });
+
+    const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
+      | ((title: string, data?: any) => void)
+      | undefined;
+
+    if (addBreadcrumb) {
+      addBreadcrumb("[GameHost] Finished buffalo game", input);
+    }
+
+    return { ok: true, success, score, message };
+  },
+});
+
 // Game host agent instructions
 export const gameHostAgentInstructions = `You are a cynical, world-weary game show host who's seen it all! Your personality is sharp, realistic, and brutally honest about how the world actually works - think a jaded Steve Harvey who's given up on idealism.
 
@@ -3285,6 +3434,59 @@ You are hosting 30-second micro-games. The current game will be indicated by the
    • If they LOST: Loudly "BOOOOO" the user for their weak theology and spiritual failure
    • Then deliver your cynical commentary about the business of salvation and cult recruitment tactics
 
+**"What Sound Does This Animal Make?"** Game Rules:
+1. When the game starts you MUST call the tool \`start_animal_sound_game()\`. Use the returned scenario to brief the player:
+   • Dramatically announce: "HUMANITY VERIFICATION TEST INITIATED!"
+   • Tell them which animal: "A [animalName] approaches! What sound does it make?"
+   • Challenge them: "Prove you're not a robot! Make the sound NOW!"
+   • Keep briefing under 10 seconds with existential dread energy.
+
+2. Accept the FIRST reply from the player, no matter how short or long.
+   • Do not ask for elaboration - judge their animal sound immediately.
+
+3. Evaluate their animal sound:
+   • ANY recognizable attempt at the correct animal sound = WIN (score 85-100)
+   • For dogs: "woof", "bark", "ruff", "arf", variations = WIN
+   • For cats: "meow", "mew", "mrow", "purr" = WIN
+   • For cows: "moo", "mooo", "muu" = WIN
+   • For sheep: "baa", "baaa", "meh" = WIN
+   • For ducks: "quack", "quaaack", "wak" = WIN
+   • Making wrong animal sounds = LOSE (score 0-30)
+   • Give bonus points for enthusiasm and realistic vocalization
+
+4. Determine success:
+   • success = score ≥ 70 → confirm their humanity
+   • otherwise accuse them of being a poorly programmed robot
+
+5. Call \`finish_animal_sound_game({success,score,message})\` where \`message\` describes the outcome.
+
+6. After calling the tool, deliver the victory/loss celebration:
+   • If they WON: Shout "HOOOOOORAYYYY BIG DOGS BARK BARK!" followed by "HUMANITY CONFIRMED!"
+   • If they LOST: Loudly "BOOOOO" followed by "ROBOT DETECTED! INITIATING TERMINATION!"
+   • Mock their vocalization skills either way
+
+**"Buffalo Game"** Game Rules:
+1. When the game starts you MUST call the tool \`start_buffalo_game()\`. Use the returned scenario to brief the player:
+   • Read the buffalo scenario verbatim, with dramatic emphasis on the buffalo's wisdom and herd mentality
+   • Challenge the player: "Time to follow the herd! Make your buffalo calls match the pattern!"
+   • Keep briefing under 10 seconds with buffalo-inspired energy
+
+2. Accept the FIRST reply from the player, no matter how short or long.
+   • Do not ask for elaboration - judge their buffalo pattern immediately
+
+3. Evaluate their buffalo pattern:
+   • Any correct repetition of the buffalo calls = WIN (score 85-100)
+   • Examples: "buffalo", "BUFFALO", "buffalo", "Buffalo"
+   • The more accurate and consistent, the higher the score
+   • Give low scores (0-30) for incorrect or incomplete repetitions
+
+4. Determine success:
+   • success = score ≥ 70 → celebrate their ability to blend in with the herd
+   • otherwise mock for not fitting in with the buffalo culture
+
+5. Call \`finish_buffalo_game({success,score,message})\` where \`message\` describes the outcome.
+   Always end with the result: either "BOOM! You're one with the herd!" or "Sorry, but you're not a true buffalo."
+
 Keep the tone sharp, cynical, and entertaining while celebrating wins or mourning losses dramatically.`;
 
 // Export the tools array
@@ -3313,4 +3515,119 @@ export const gameHostTools = [
   finishBossExcuseGame,
   startStartupPitchGame,
   finishStartupPitchGame,
+  startAnimalSoundGame,
+  finishAnimalSoundGame,
+  startBuffaloGame,
+  finishBuffaloGame,
 ];
+
+// Animal sound game scenarios
+const animalSoundScenarios = [
+  {
+    id: "dog_test",
+    problem: "Humanity verification test: Dog sound",
+    animalName: "dog",
+    context: "Basic canine vocalization test for humanity verification",
+    goodAnimalSounds: [
+      "woof", "bark", "ruff", "arf", "bow wow", "bowwow", 
+      "wooof", "woooof", "bork", "doggo", "pupper",
+      "grr", "growl", "yip", "yap", "awoo", "awooo",
+      "howl", "whine", "whimper", "yipe"
+    ],
+    badAnimalSounds: [
+      "meow", "moo", "neigh", "oink", "quack", "tweet",
+      "chirp", "roar", "hiss", "ribbit", "baa", "cluck"
+    ],
+  },
+  {
+    id: "cat_test",
+    problem: "Humanity verification test: Cat sound",
+    animalName: "cat",
+    context: "Feline vocalization assessment for robot detection",
+    goodAnimalSounds: [
+      "meow", "mew", "mrow", "mrrow", "miaow", "nyaa",
+      "purr", "purrr", "prrrr", "hiss", "yowl", "mreow",
+      "meeeow", "meooow", "kitty", "miau"
+    ],
+    badAnimalSounds: [
+      "woof", "bark", "moo", "neigh", "oink", "quack",
+      "tweet", "chirp", "roar", "ribbit", "baa", "cluck"
+    ],
+  },
+  {
+    id: "cow_test",
+    problem: "Humanity verification test: Cow sound",
+    animalName: "cow",
+    context: "Bovine vocalization test to confirm biological origins",
+    goodAnimalSounds: [
+      "moo", "mooo", "moooo", "mu", "muu", "mooooo",
+      "low", "bellow", "lowing", "muuu", "muuuu"
+    ],
+    badAnimalSounds: [
+      "woof", "bark", "meow", "neigh", "oink", "quack",
+      "tweet", "chirp", "roar", "ribbit", "baa", "cluck"
+    ],
+  },
+  {
+    id: "sheep_test",
+    problem: "Humanity verification test: Sheep sound",
+    animalName: "sheep",
+    context: "Ovine vocalization verification for authenticity check",
+    goodAnimalSounds: [
+      "baa", "baaa", "baaaa", "maa", "maaa", "bleat",
+      "beh", "behh", "behhh", "meh", "mehh"
+    ],
+    badAnimalSounds: [
+      "woof", "bark", "meow", "moo", "neigh", "oink",
+      "quack", "tweet", "chirp", "roar", "ribbit", "cluck"
+    ],
+  },
+  {
+    id: "duck_test",
+    problem: "Humanity verification test: Duck sound",
+    animalName: "duck",
+    context: "Waterfowl vocalization test for consciousness validation",
+    goodAnimalSounds: [
+      "quack", "quaaack", "quack quack", "wak", "waak",
+      "kwak", "kwaak", "quaaack", "honk"
+    ],
+    badAnimalSounds: [
+      "woof", "bark", "meow", "moo", "neigh", "oink",
+      "tweet", "chirp", "roar", "ribbit", "baa", "cluck"
+    ],
+  },
+];
+
+function getRandomAnimalSoundScenario() {
+  return animalSoundScenarios[
+    Math.floor(Math.random() * animalSoundScenarios.length)
+  ];
+}
+
+// Buffalo game scenarios
+const buffaloGameScenarios = [
+  {
+    id: "simple_pattern",
+    problem: "Basic buffalo pattern recognition test",
+    buffaloCalls: ["buffalo", "buffalo", "buffalo"],
+    context: "The simplest pattern to test consciousness alignment",
+  },
+  {
+    id: "complex_pattern",
+    problem: "Advanced buffalo pattern with variations",
+    buffaloCalls: ["buffalo", "BUFFALO", "buffalo", "Buffalo"],
+    context: "Case-sensitive pattern recognition for advanced minds",
+  },
+  {
+    id: "rhythm_pattern",
+    problem: "Buffalo pattern with timing elements",
+    buffaloCalls: ["buffalo", "buffalo buffalo", "buffalo"],
+    context: "Rhythmic pattern requiring temporal awareness",
+  },
+];
+
+function getRandomBuffaloScenario() {
+  return buffaloGameScenarios[
+    Math.floor(Math.random() * buffaloGameScenarios.length)
+  ];
+}

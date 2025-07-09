@@ -127,7 +127,7 @@ function ExcuseTheBossGame(props: Partial<GameControlProps>) {
   // Start the game when component mounts (user has already clicked START GAME)
   useEffect(() => {
     updateMessage?.(
-      "Welcome to Excuse the Boss! Your phone is ringing... oh no, it's the boss!"
+      "Welcome to Excuse for the Boss! Your phone is ringing... oh no, it's the boss!"
     );
 
     // Start the game after a brief delay
@@ -167,7 +167,7 @@ function ExcuseTheBossGame(props: Partial<GameControlProps>) {
       <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mt-16">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-            📞💼 Excuse the Boss
+            📞💼 Excuse for the Boss
           </h2>
           <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
             Time: {gameState?.timeRemaining || 30}s
@@ -264,7 +264,7 @@ function ExcuseTheBossGame(props: Partial<GameControlProps>) {
 export default function ExcuseTheBossGameComponent(props: GameProps) {
   return (
     <BaseGame
-      title="Excuse the Boss"
+      title="Excuse for the Boss"
       instructions="RING RING! Your boss calls while you're half-dressed with cereal milk on your chin. Spin an excuse so dazzling that HR starts a folklore podcast!"
       duration={30}
       {...props}

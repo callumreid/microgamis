@@ -232,7 +232,7 @@
 ### Recent Changes - 2025-07-08 (Seventh Game Implementation)
 
 #### Added
-- **New Game: "Excuse the Boss"**: Corporate emergency call micro game with legendary excuse-making
+- **New Game: "Excuse for the Boss"**: Corporate emergency call micro game with legendary excuse-making
   - RING RING! Boss calls while you're half-dressed with cereal milk dribbling down your chin
   - Boss demands: "Explain why you're not at the office yet!" - you must spin a dazzling excuse
   - Win conditions: 1) Wildly imaginative yet internally consistent, 2) Blame cosmic forces (wormholes, alpaca stampede, grandma's sword-swallowing), 3) Subtle boss compliments

@@ -4,7 +4,7 @@ import GameComponent from "./GameComponent";
 
 export const metadata: GameMetadata = {
   id: "excuse-the-boss",
-  name: "Excuse the Boss",
+  name: "Excuse for the Boss",
   description: "RING RING! Your boss calls while you're half-dressed with cereal milk on your chin. Spin an excuse so dazzling that HR starts a folklore podcast about it.",
   category: "corporate",
   difficulty: 4,

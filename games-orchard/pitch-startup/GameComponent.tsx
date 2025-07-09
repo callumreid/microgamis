@@ -185,27 +185,27 @@ function PitchStartupGame(props: Partial<GameControlProps>) {
   ]);
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-amber-900 via-yellow-800 to-orange-700">
-      <div className="bg-gradient-to-br from-amber-50 to-yellow-100 rounded-lg shadow-lg p-6 max-w-4xl w-full mt-16 border-4 border-yellow-600">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-slate-800 via-gray-700 to-slate-900">
+      <div className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-lg shadow-2xl p-6 max-w-4xl w-full mt-16 border-4 border-slate-600">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold mb-4 text-center text-amber-900">
+          <h2 className="text-2xl font-bold mb-4 text-center text-slate-900">
             🏢💰 Pitch Startup
           </h2>
-          <div className="text-lg font-semibold text-amber-900 p-3 bg-yellow-200 rounded-lg border-2 border-yellow-400">
+          <div className="text-lg font-semibold text-slate-900 p-3 bg-slate-200 rounded-lg border-2 border-slate-400">
             Time: {gameState?.timeRemaining || 30}s
           </div>
         </div>
         {/* Speech Bubble - Mahogany boardroom theme */}
-        <div className="bg-gradient-to-br from-amber-100 to-yellow-50 border-4 border-amber-400 rounded-lg p-6 mb-4 min-h-[200px] flex flex-col justify-center">
+        <div className="bg-gradient-to-br from-slate-100 to-gray-50 border-4 border-slate-400 rounded-lg p-6 mb-4 min-h-[200px] flex flex-col justify-center">
           {/* Host/VC Speech Bubble */}
           {latestHost && (
             <div className="mb-4">
               <div className="flex justify-start">
-                <div className="bg-gradient-to-br from-amber-200 to-yellow-200 border-3 border-amber-500 rounded-2xl rounded-bl-none p-4 max-w-md text-black shadow-lg">
-                  <div className="text-sm text-amber-800 font-medium mb-1">
+                <div className="bg-gradient-to-br from-slate-200 to-gray-200 border-3 border-slate-500 rounded-2xl rounded-bl-none p-4 max-w-md text-black shadow-lg">
+                  <div className="text-sm text-slate-800 font-medium mb-1">
                     🤵 Venture Capitalists:
                   </div>
-                  <div className="text-amber-900 text-lg font-bold">{latestHost}</div>
+                  <div className="text-slate-900 text-lg font-bold">{latestHost}</div>
                 </div>
               </div>
             </div>
@@ -215,11 +215,11 @@ function PitchStartupGame(props: Partial<GameControlProps>) {
           {(latestUser || isPTTUserSpeaking) && (
             <div className="mb-2">
               <div className="flex justify-end">
-                <div className="bg-gradient-to-br from-orange-200 to-red-200 border-3 border-orange-500 rounded-2xl rounded-br-none p-4 max-w-md text-black shadow-lg">
-                  <div className="text-sm text-orange-800 font-medium mb-1">
+                <div className="bg-gradient-to-br from-blue-200 to-indigo-200 border-3 border-blue-500 rounded-2xl rounded-br-none p-4 max-w-md text-black shadow-lg">
+                  <div className="text-sm text-blue-800 font-medium mb-1">
                     💡 You (Visionary):
                   </div>
-                  <div className="text-orange-900 text-lg font-semibold">
+                  <div className="text-blue-900 text-lg font-semibold">
                     {isPTTUserSpeaking
                       ? currentTranscriptionText || "🎤 Disrupting the paradigm..."
                       : latestUser || "Press mic to pitch your unicorn startup"}
@@ -231,7 +231,7 @@ function PitchStartupGame(props: Partial<GameControlProps>) {
 
           {/* No conversation yet */}
           {!latestHost && !latestUser && !isPTTUserSpeaking && (
-            <div className="text-center text-amber-700 text-lg font-medium">
+            <div className="text-center text-slate-700 text-lg font-medium">
               The mahogany boardroom awaits your disruptive vision...
             </div>
           )}
@@ -244,9 +244,9 @@ function PitchStartupGame(props: Partial<GameControlProps>) {
         sessionStatus === "CONNECTED" &&
         isWebRTCReady && (
           <div className="fixed bottom-1/4 right-6 z-10">
-            <div className="bg-gradient-to-br from-yellow-100 to-amber-100 border-4 border-amber-400 rounded-full p-4 shadow-xl">
+            <div className="bg-gradient-to-br from-slate-100 to-gray-100 border-4 border-slate-400 rounded-full p-4 shadow-xl">
               <div className="text-center">
-                <div className="text-xs text-amber-800 mb-1 font-bold">
+                <div className="text-xs text-slate-800 mb-1 font-bold">
                   Hold to Pitch
                 </div>
                 <button
@@ -255,10 +255,10 @@ function PitchStartupGame(props: Partial<GameControlProps>) {
                   onMouseLeave={handleTalkButtonUp}
                   onTouchStart={handleTalkButtonDown}
                   onTouchEnd={handleTalkButtonUp}
-                  className={`w-16 h-16 rounded-full border-4 border-amber-600 transition-all duration-150 ${
+                  className={`w-16 h-16 rounded-full border-4 border-slate-600 transition-all duration-150 ${
                     isPTTUserSpeaking
                       ? "bg-red-500 scale-110 shadow-lg"
-                      : "bg-yellow-300 hover:bg-yellow-400"
+                      : "bg-slate-300 hover:bg-slate-400"
                   }`}
                 >
                   <div className="text-5xl">

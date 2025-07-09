@@ -265,7 +265,7 @@ export default function ExplainDeathGameComponent(props: GameProps) {
   return (
     <BaseGame
       title="Explain Death"
-      instructions="Your daughter asks 'what is death?' after her friend's grandma died. Explain it honestly. Win with nihilistic/bizarrist truth, lose with heaven/afterlife."
+      instructions="Your daughter asks 'what is death?' after her friend's grandma died. Explain it honestly. "
       duration={30}
       {...props}
     >

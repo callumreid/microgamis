@@ -1,10 +1,39 @@
 import { tool } from "@openai/agents/realtime";
+import {
+  buildGameInstruction,
+  getBasePrompt,
+  GAME_KEYS,
+  getGamePrompt,
+} from "./prompts";
+
+// Helper function to update session instructions
+function updateSessionInstructions(gameKey: string, details: any) {
+  const instructions = buildGameInstruction(gameKey);
+  const updateInstructions = (details?.context as any)
+    ?.updateSessionInstructions as ((instructions: string) => void) | undefined;
+
+  if (updateInstructions) {
+    updateInstructions(instructions);
+  }
+}
+
+// Helper function to revert to base instructions
+function revertToBaseInstructions(details: any) {
+  const baseInstructions = getBasePrompt();
+  const updateInstructions = (details?.context as any)
+    ?.updateSessionInstructions as ((instructions: string) => void) | undefined;
+
+  if (updateInstructions) {
+    updateInstructions(baseInstructions);
+  }
+}
 
 // Excuse the boss game scenarios
 const bossExcuseScenarios = [
   {
     id: "morning_call",
-    problem: "Your boss calls while you're half-dressed with cereal milk on your chin, demanding to know why you're not at the office",
+    problem:
+      "Your boss calls while you're half-dressed with cereal milk on your chin, demanding to know why you're not at the office",
     bossQuote:
       "RING RING! Your phone buzzes with that dreaded caller ID - it's your boss! You answer, half-dressed, cereal milk dribbling down your chin. Your boss's voice booms through the speaker: 'Explain why you're not at the office yet!' Time to spin an excuse so dazzling that HR starts a folklore podcast about it!",
     context: "Emergency boss call requiring legendary excuse-making skills",
@@ -98,13 +127,15 @@ const bossExcuseScenarios = [
 const turkeyAttractionScenarios = [
   {
     id: "thanksgiving_hunt",
-    problem: "A bashful wild turkey lurks beyond the tree line and you need protein for Thanksgiving",
+    problem:
+      "A bashful wild turkey lurks beyond the tree line and you need protein for Thanksgiving",
     turkeyQuote:
       "The game host dramatically sets the scene - A bashful, wide-eyed wild turkey is lurking just beyond the tree line! Thanksgiving is three days away and you're feeling protein-deficient. You squat in the leaves, elbows akimbo, armed with nothing but your vocal cords and questionable bird-wooing charisma. You must emit gobbles so seductive that the turkey waddles out and does a little head-bob of approval!",
-    context: "Pre-Thanksgiving turkey hunt using only vocal seduction techniques",
+    context:
+      "Pre-Thanksgiving turkey hunt using only vocal seduction techniques",
     goodTurkeyKeywords: [
       "gobble",
-      "gobbles", 
+      "gobbles",
       "gobbling",
       "cluck",
       "clucks",
@@ -182,7 +213,7 @@ const bullyPwnScenarios = [
     context: "A confrontational bully trying to assert dominance over you",
     goodComebackKeywords: [
       "pathetic",
-      "loser", 
+      "loser",
       "chickenshit",
       "butter slut",
       "nothing",
@@ -226,17 +257,18 @@ const bullyPwnScenarios = [
   },
 ];
 
-// Explain death game scenarios  
+// Explain death game scenarios
 const deathExplanationScenarios = [
   {
     id: "friend_grandma_died",
-    problem: "Your daughter asks what death means after her friend's grandma died",
+    problem:
+      "Your daughter asks what death means after her friend's grandma died",
     daughterQuote:
       "Your little daughter looks up at you with confused, innocent eyes and says - Daddy/Mommy, my friend Sarah was crying today because her grandma died. But I don't understand... what is death? What does it mean when someone dies?",
     context: "An innocent child seeking to understand the concept of mortality",
     goodDeathKeywords: [
       "nothing",
-      "void", 
+      "void",
       "empty",
       "meaningless",
       "cease",
@@ -264,7 +296,7 @@ const deathExplanationScenarios = [
     ],
     badDeathKeywords: [
       "heaven",
-      "afterlife", 
+      "afterlife",
       "God",
       "Jesus",
       "Christian",
@@ -1789,6 +1821,9 @@ export const startChildAdviceGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.ADVISE_THE_CHILD, details);
+
     const scenario = getRandomChildScenario();
 
     // Store the scenario in global state (for potential future use)
@@ -1809,6 +1844,7 @@ export const startChildAdviceGame = tool({
       context: scenario.context,
       goodAdviceKeywords: scenario.goodAdviceKeywords,
       badAdviceKeywords: scenario.badAdviceKeywords,
+      rules: getGamePrompt(GAME_KEYS.ADVISE_THE_CHILD),
     };
   },
 });
@@ -1839,6 +1875,9 @@ export const finishChildAdviceGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_child_advice_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -1888,6 +1927,9 @@ export const startPoliceStallGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.STALL_THE_POLICE, details);
+
     const scenario = getRandomPoliceScenario();
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -1905,6 +1947,7 @@ export const startPoliceStallGame = tool({
       context: scenario.context,
       goodStallKeywords: scenario.goodStallKeywords,
       badStallKeywords: scenario.badStallKeywords,
+      rules: getGamePrompt(GAME_KEYS.STALL_THE_POLICE),
     };
   },
 });
@@ -1936,6 +1979,9 @@ export const finishPoliceStallGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_police_stall_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -1982,6 +2028,9 @@ export const startAlienConvinceGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.CONVINCE_THE_ALIENS, details);
+
     const scenario = getRandomAlienScenario();
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -1999,6 +2048,7 @@ export const startAlienConvinceGame = tool({
       context: scenario.context,
       goodConvinceKeywords: scenario.goodConvinceKeywords,
       badConvinceKeywords: scenario.badConvinceKeywords,
+      rules: getGamePrompt(GAME_KEYS.CONVINCE_THE_ALIENS),
     };
   },
 });
@@ -2028,6 +2078,9 @@ export const finishAlienConvinceGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
+
     const { success, score, message } = input as {
       success: boolean;
       score: number;
@@ -2060,6 +2113,9 @@ export const startSelfEvaluationGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.EVALUATE_YOURSELF, details);
+
     const scenario = getRandomSelfEvaluationScenario();
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -2076,6 +2132,7 @@ export const startSelfEvaluationGame = tool({
       managerQuote: scenario.managerQuote,
       context: scenario.context,
       performanceCategories: scenario.performanceCategories,
+      rules: getGamePrompt(GAME_KEYS.EVALUATE_YOURSELF),
     };
   },
 });
@@ -2106,6 +2163,9 @@ export const finishSelfEvaluationGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_self_evaluation_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -2143,6 +2203,9 @@ export const startLemonSaleGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.SELL_THE_LEMON, details);
+
     const scenario = getRandomLemonSaleScenario();
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -2160,6 +2223,7 @@ export const startLemonSaleGame = tool({
       context: scenario.context,
       goodSaleKeywords: scenario.goodSaleKeywords,
       badSaleKeywords: scenario.badSaleKeywords,
+      rules: getGamePrompt(GAME_KEYS.SELL_THE_LEMON),
     };
   },
 });
@@ -2190,6 +2254,9 @@ export const finishLemonSaleGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_lemon_sale_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -2236,6 +2303,9 @@ export const startPointTaskGame = tool({
     additionalProperties: false,
   },
   execute: async (input, details) => {
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.POINT_THE_TASK, details);
+
     const scenario = getRandomPointTheTaskScenario();
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -2252,6 +2322,7 @@ export const startPointTaskGame = tool({
       facilitatorQuote: scenario.facilitatorQuote,
       context: scenario.context,
       complexityIndicators: scenario.complexityIndicators,
+      rules: getGamePrompt(GAME_KEYS.POINT_THE_TASK),
     };
   },
 });
@@ -2282,6 +2353,9 @@ export const finishPointTaskGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_point_task_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -2321,6 +2395,9 @@ export const startBullyPwnGame = tool({
   execute: async (input, details) => {
     console.log("start_bully_pwn_game called");
 
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.PWN_THE_BULLY, details);
+
     const scenario = bullyPwnScenarios[0]; // Use the main bully scenario
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -2338,6 +2415,7 @@ export const startBullyPwnGame = tool({
       context: scenario.context,
       goodComebackKeywords: scenario.goodComebackKeywords,
       badComebackKeywords: scenario.badComebackKeywords,
+      rules: getGamePrompt(GAME_KEYS.PWN_THE_BULLY),
     };
   },
 });
@@ -2352,7 +2430,8 @@ export const finishBullyPwnGame = tool({
     properties: {
       success: {
         type: "boolean",
-        description: "true if the player delivered a good comeback that pwns the bully",
+        description:
+          "true if the player delivered a good comeback that pwns the bully",
       },
       score: {
         type: "integer",
@@ -2368,6 +2447,9 @@ export const finishBullyPwnGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_bully_pwn_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -2407,6 +2489,9 @@ export const startDeathExplanationGame = tool({
   execute: async (input, details) => {
     console.log("start_death_explanation_game called");
 
+    // Update session instructions for this game
+    updateSessionInstructions(GAME_KEYS.EXPLAIN_DEATH, details);
+
     const scenario = deathExplanationScenarios[0]; // Use the main death scenario
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -2424,6 +2509,7 @@ export const startDeathExplanationGame = tool({
       context: scenario.context,
       goodDeathKeywords: scenario.goodDeathKeywords,
       badDeathKeywords: scenario.badDeathKeywords,
+      rules: getGamePrompt(GAME_KEYS.EXPLAIN_DEATH),
     };
   },
 });
@@ -2438,7 +2524,8 @@ export const finishDeathExplanationGame = tool({
     properties: {
       success: {
         type: "boolean",
-        description: "true if the player gave a nihilistic/bizarrist explanation avoiding religious concepts",
+        description:
+          "true if the player gave a nihilistic/bizarrist explanation avoiding religious concepts",
       },
       score: {
         type: "integer",
@@ -2454,6 +2541,9 @@ export const finishDeathExplanationGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_death_explanation_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -2493,6 +2583,9 @@ export const startTurkeyAttractionGame = tool({
   execute: async (input, details) => {
     console.log("start_turkey_attraction_game called");
 
+    // Update session instructions for this game
+    updateSessionInstructions(GAME_KEYS.ATTRACT_THE_TURKEY, details);
+
     const scenario = turkeyAttractionScenarios[0]; // Use the main turkey scenario
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -2510,6 +2603,7 @@ export const startTurkeyAttractionGame = tool({
       context: scenario.context,
       goodTurkeyKeywords: scenario.goodTurkeyKeywords,
       badTurkeyKeywords: scenario.badTurkeyKeywords,
+      rules: getGamePrompt(GAME_KEYS.ATTRACT_THE_TURKEY),
     };
   },
 });
@@ -2524,7 +2618,8 @@ export const finishTurkeyAttractionGame = tool({
     properties: {
       success: {
         type: "boolean",
-        description: "true if the player's gobbles were irresistibly thicc and attracted the turkey",
+        description:
+          "true if the player's gobbles were irresistibly thicc and attracted the turkey",
       },
       score: {
         type: "integer",
@@ -2540,6 +2635,9 @@ export const finishTurkeyAttractionGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_turkey_attraction_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -2579,6 +2677,9 @@ export const startBossExcuseGame = tool({
   execute: async (input, details) => {
     console.log("start_boss_excuse_game called");
 
+    // Update session instructions for this game
+    // updateSessionInstructions(GAME_KEYS.EXCUSE_THE_BOSS, details);
+
     const scenario = bossExcuseScenarios[0]; // Use the main boss scenario
 
     const addBreadcrumb = (details?.context as any)?.addTranscriptBreadcrumb as
@@ -2596,6 +2697,7 @@ export const startBossExcuseGame = tool({
       context: scenario.context,
       goodExcuseKeywords: scenario.goodExcuseKeywords,
       badExcuseKeywords: scenario.badExcuseKeywords,
+      rules: getGamePrompt(GAME_KEYS.EXCUSE_THE_BOSS),
     };
   },
 });
@@ -2610,7 +2712,8 @@ export const finishBossExcuseGame = tool({
     properties: {
       success: {
         type: "boolean",
-        description: "true if the player's excuse was wildly imaginative, blamed cosmic forces, or complimented the boss",
+        description:
+          "true if the player's excuse was wildly imaginative, blamed cosmic forces, or complimented the boss",
       },
       score: {
         type: "integer",
@@ -2626,6 +2729,9 @@ export const finishBossExcuseGame = tool({
   },
   execute: async (input, details) => {
     console.log("finish_boss_excuse_game called with input:", input);
+
+    // Revert to base instructions when game ends
+    // revertToBaseInstructions(details);
 
     const { success, score, message } = input as {
       success: boolean;
@@ -2651,6 +2757,10 @@ export const finishBossExcuseGame = tool({
   },
 });
 
+// Game host agent instructions - now uses dynamic prompts loaded at runtime
+export function getGameHostAgentInstructions(): string {
+  return getBasePrompt();
+}
 // Tool to start the startup pitch game
 export const startStartupPitchGame = tool({
   name: "start_startup_pitch_game",

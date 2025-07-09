@@ -1,13 +1,11 @@
 import { RealtimeAgent } from "@openai/agents/realtime";
-import {
-  gameHostAgentInstructions,
-  gameHostTools,
-} from "../chatSupervisor/gameHostAgent";
+import { gameHostTools } from "../chatSupervisor/gameHostAgent";
+import { getBasePrompt } from "../chatSupervisor/prompts";
 
 // Create a standalone game host agent (not part of chat supervisor handoff chain)
 const gameHostAgent = new RealtimeAgent({
   name: "gameHost",
-  instructions: gameHostAgentInstructions,
+  instructions: getBasePrompt(),
   tools: gameHostTools,
 });
 

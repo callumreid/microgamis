@@ -245,8 +245,22 @@ function App() {
           audioElement: sdkAudioElement,
           extraContext: {
             addTranscriptBreadcrumb,
+            updateSessionInstructions: _updateSessionInstructions,
           },
         });
+
+        // Initialize with base instructions for game host
+        if (reorderedAgents[0]?.name === "gameHostAgent") {
+          try {
+            const { getBasePrompt } = await import(
+              "./agentConfigs/chatSupervisor/prompts"
+            );
+            const baseInstructions = getBasePrompt();
+            _updateSessionInstructions(baseInstructions);
+          } catch (err) {
+            console.warn("Failed to load base instructions:", err);
+          }
+        }
       } catch (err) {
         console.error("Error connecting via SDK:", err);
         setSessionStatus("DISCONNECTED");
@@ -306,6 +320,15 @@ function App() {
       sendSimulatedUserMessage("hi");
     }
     return;
+  };
+
+  const _updateSessionInstructions = (instructions: string) => {
+    sendEvent({
+      type: "session.update",
+      session: {
+        instructions: instructions,
+      },
+    });
   };
 
   const handleSendTextMessage = () => {

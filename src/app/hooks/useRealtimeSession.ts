@@ -210,19 +210,20 @@ export function useRealtimeSession(callbacks: RealtimeSessionCallbacks = {}) {
           inputAudioTranscription: {
             model: "gpt-4o-mini-transcribe",
           },
+          turnDetection: undefined,
         },
         outputGuardrails: outputGuardrails ?? [],
         context: extraContext ?? {},
       });
 
       await sessionRef.current.connect({ apiKey: ek });
-      
+
       // For web users, initially mute the session to prevent automatic transcription
       if (!nativeAudioInput.isAvailable) {
         console.log("[RealtimeSession] Muting WebRTC session initially");
         sessionRef.current.mute(true);
       }
-      
+
       updateStatus("CONNECTED");
     },
     [callbacks, updateStatus, checkSecureContext, requestMicrophonePermission]
@@ -337,7 +338,7 @@ export function useRealtimeSession(callbacks: RealtimeSessionCallbacks = {}) {
       return success;
     } else {
       // Use WebRTC PTT for web
-      console.log('push to start no native')
+      console.log("push to start no native");
       await pushToTalkStart();
       return true;
     }
@@ -355,7 +356,9 @@ export function useRealtimeSession(callbacks: RealtimeSessionCallbacks = {}) {
       sessionRef.current.transport.sendEvent({
         type: "input_audio_buffer.commit",
       } as any);
-      sessionRef.current.transport.sendEvent({ type: "response.create" } as any);
+      sessionRef.current.transport.sendEvent({
+        type: "response.create",
+      } as any);
     } else {
       // Use WebRTC PTT for web
       await pushToTalkStop();

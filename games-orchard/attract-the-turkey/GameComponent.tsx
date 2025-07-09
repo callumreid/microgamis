@@ -83,6 +83,12 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
     gameType: "attract-the-turkey",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
+      
+      // Display turkey emojis in console
+      console.log("🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃");
+      console.log("🦃🦃🦃 TURKEY GAME IS ON! 🦃🦃🦃");
+      console.log("🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃");
+      
       updateMessage?.(
         "A bashful turkey lurks beyond the trees! Listen to the setup and prepare your seductive gobbles!"
       );

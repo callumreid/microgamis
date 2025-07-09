@@ -111,7 +111,7 @@ function PwnTheBullyGame(props: Partial<GameControlProps>) {
       } else {
         message =
           result.message ||
-          "Weak comeback, chickenshit butter slut! The bully owns you now!";
+          "Weak comeback, buttered up slug chump! The bully owns you now!";
       }
 
       console.log("🎮 Processed values:", { success, score, message });
@@ -265,7 +265,7 @@ export default function PwnTheBullyGameComponent(props: GameProps) {
   return (
     <BaseGame
       title="Pwn the Bully"
-      instructions="A mean bully calls you a 'chickenshit butter slut' - deliver the perfect comeback to totally pwn them!"
+      instructions="A mean bully calls you a 'buttered up slug chump' - deliver the perfect comeback to totally pwn them!"
       duration={30}
       {...props}
     >

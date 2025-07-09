@@ -145,10 +145,10 @@
 
 #### Added
 - **New Game: "Pwn the Bully"**: Social confrontation micro game with comeback mechanics
-  - Mean bully calls player a "chickenshit butter slut" and player must deliver perfect comeback
+  - Mean bully calls player a "buttered up slug chump" and player must deliver perfect comeback
   - Social combat themed UI with red/orange/yellow gradient and confrontation emojis (💪, 😤, 🔥, 💥)
   - Win condition: Deliver comeback that totally pwns the bully and regains player power
-  - Lose condition: Weak comeback results in bully maintaining dominance (and calling player "chickenshit butter slut")
+  - Lose condition: Weak comeback results in bully maintaining dominance (and calling player "buttered up slug chump")
   - 10-second timer focusing on quick wit and verbal combat skills
 
 #### Enhanced
@@ -326,24 +326,6 @@
 - `games-orchard/index.ts` - Added soul-saving game to registry as new first game  
 - `src/app/hooks/useGameAgent.ts` - Added save-their-soul game type and stranger quote field
 - `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added 3 a.m. bus stop scenarios, tools, and game rules
-
-### Recent Changes - 2025-07-09 (UI Improvements)
-
-#### Enhanced
-- **Turkey Game Console Output**: Added turkey emoji display when "Attract the Turkey" game starts
-  - Console logs 20 turkey emojis and "TURKEY GAME IS ON!" message at game start
-  - Provides visual feedback in console for turkey game activation
-  - Located in `games-orchard/attract-the-turkey/GameComponent.tsx:88-90`
-
-- **Mic Button Positioning**: Updated push-to-talk button positioning across all games
-  - Changed from `bottom-6` (24px from bottom) to `bottom-1/4` (25% from bottom)
-  - Provides better spacing and positioning for browser-based gameplay
-  - Applied to all 12 game components in games-orchard directory
-  - Improves accessibility and user experience on different screen sizes
-
-#### Files Modified
-- `games-orchard/attract-the-turkey/GameComponent.tsx` - Added turkey emoji console output
-- All 12 game components in `games-orchard/*/GameComponent.tsx` - Updated mic button positioning
 
 ## Instructions for Future AI Agents
 

@@ -1,4 +1,7 @@
 import { GameMetadata } from "./types";
+import SaveTheirSoulGame, {
+  metadata as saveTheirSoulMetadata,
+} from "./save-their-soul";
 import AdviseTheChildGame, {
   metadata as adviseTheChildMetadata,
 } from "./advise-the-child";
@@ -29,11 +32,16 @@ import AttractTheTurkeyGame, {
 import ExcuseTheBossGame, {
   metadata as excuseTheBossMetadata,
 } from "./excuse-the-boss";
+import PitchStartupGame, {
+  metadata as pitchStartupMetadata,
+} from "./pitch-startup";
 
 // Minimal export for build - no actual games imported
 
 // Game registry mapping
 export const implementedGames = {
+  "save-their-soul": SaveTheirSoulGame,
+  "pitch-startup": PitchStartupGame,
   "excuse-the-boss": ExcuseTheBossGame,
   "attract-the-turkey": AttractTheTurkeyGame,
   "pwn-the-bully": PwnTheBullyGame,
@@ -49,6 +57,13 @@ export const implementedGames = {
 // Implemented game metadata
 export const implementedGameMetadata: GameMetadata[] = [
   adviseTheChildMetadata,
+  saveTheirSoulMetadata,
+  pitchStartupMetadata,
+  excuseTheBossMetadata,
+  attractTheTurkeyMetadata,
+  pwnTheBullyMetadata,
+  explainDeathMetadata,
+  sellTheLemonMetadata,
   pointTheTaskMetadata,
   evaluateYourselfMetadata,
   convinceTheAliensMetadata,

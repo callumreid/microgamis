@@ -261,6 +261,72 @@
 - `src/app/hooks/useGameAgent.ts` - Added excuse-the-boss game type and boss quote field
 - `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added boss excuse scenarios, tools, and game rules
 
+### Recent Changes - 2025-07-08 (Eighth Game Implementation)
+
+#### Added
+- **New Game: "Pitch Startup"**: Silicon Valley boardroom micro game with venture capital satire
+  - Mahogany boardroom setting with VCs tapping Apple Pencils against $9 latte sippers
+  - Player must deliver 30-second pitch so ludicrously visionary that Patagonia vests burst at the seams
+  - Win conditions: Buzzword-heavy, disruptive, scalable pitches with unicorn potential and gig worker exploitation
+  - Lose conditions: Profitable, practical, realistic, or feasible business ideas
+  - Win outcome: VCs' vests literally explode from excitement, venture capital thrown like confetti
+  - Lose outcome: VCs yawn in unison, security escorts player past kombucha fountain
+  - Extensive keyword system (200+ good/bad startup buzzwords) for pitch evaluation
+  - 30-second timer for maximum disruption density
+
+#### Enhanced
+- **Game Registry**: Added "pitch-startup" as the NEW FIRST game in play sequence
+  - Now positioned at top of both `implementedGames` registry and metadata arrays
+  - Replaces excuse-the-boss as the first to play when randomly selected or testing
+  - Silicon Valley satire theme with VC boardroom pitch mechanics
+
+#### Technical Implementation Details
+- **Game Theme**: Venture capital pitch meeting requiring maximum buzzword density and paradigm disruption
+- **UI Design**: Mahogany boardroom theme with amber/yellow/orange gradient and startup emojis (🏢, 💰, 🦄, 📈)
+- **Voice Integration**: 12-second delay for VC setup, then 30-second pitch window for disruptive vision
+- **Scoring Logic**: Rewards AI, blockchain, quantum-synergy, web 4.5 buzzwords; punishes profitability mentions
+- **Agent Integration**: Uses "pitch-startup" game type with VC quote scenarios and extensive keyword arrays
+- **Keywords**: Comprehensive startup buzzword evaluation (disruptive/scalable vs practical/profitable)
+
+#### Files Modified
+- `games-orchard/pitch-startup/` - New game directory with complete implementation
+- `games-orchard/index.ts` - Added startup pitch game to registry as new first game
+- `src/app/hooks/useGameAgent.ts` - Added pitch-startup game type and VC quote field
+- `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added VC boardroom scenarios, tools, and game rules
+
+### Recent Changes - 2025-07-09 (Ninth Game Implementation)
+
+#### Added
+- **New Game: "Save Their Soul"**: Late-night religious conversion micro game with cult recruitment theme
+  - 3 a.m. bus stop setting with forlorn stranger scrolling doom-posts on cracked phone
+  - Neon light flickers, pigeons judge from above as you approach with holy elevator pitch
+  - Player must convert stranger to highly questionable religion (name on the fly, bonus for umlauts)
+  - Win conditions: 1) Belief spark (stranger parrots tenets like "tithe in vibes"), 2) Commitment flex (downloads sect app, attends "Salsa & Salvation" mixer)
+  - Win outcome: "Another glorious soul saved! Stock price rising!" with confetti cannons and celestial saxophone riff
+  - Lose conditions: Generic platitudes ("love one another"), boring doctrine, or stranger files restraining order
+  - Lose outcome: "Congrats, heathen—eternal hold music for you" as bus splashes with gutter water
+  - 30-second timer for soul-snatching before rival cult hotline intervenes
+
+#### Enhanced
+- **Game Registry**: Added "save-their-soul" as the NEW FIRST game in play sequence
+  - Now positioned at top of both `implementedGames` registry and metadata arrays
+  - Replaces pitch-startup as the first to play when randomly selected or testing
+  - MLM pyramid scheme meets cosmic enlightenment theme with missionary mechanics
+
+#### Technical Implementation Details
+- **Game Theme**: Street-corner charisma meets MLM pyramid scheme meets cosmic enlightenment with 3 a.m. bus stop atmosphere
+- **UI Design**: Dark theme with purple/gray gradient and missionary emojis (🙏, ✨, 🚏, 🌙)
+- **Voice Integration**: 12-second delay for scene setup, then 30-second conversion window for holy pitch
+- **Scoring Logic**: Rewards creative cult concepts, ritual elements, and commitment displays; punishes generic religious messaging
+- **Agent Integration**: Uses "save-their-soul" game type with stranger quote scenarios and soul-saving keyword arrays
+- **Keywords**: Comprehensive religious conversion evaluation (cosmic/mystical vs generic/platitudes)
+
+#### Files Modified
+- `games-orchard/save-their-soul/` - New game directory with complete implementation
+- `games-orchard/index.ts` - Added soul-saving game to registry as new first game  
+- `src/app/hooks/useGameAgent.ts` - Added save-their-soul game type and stranger quote field
+- `src/app/agentConfigs/chatSupervisor/gameHostAgent.ts` - Added 3 a.m. bus stop scenarios, tools, and game rules
+
 ## Instructions for Future AI Agents
 
 When working on this codebase:

@@ -19,10 +19,9 @@ interface GameControlProps {
   startTimer?: () => void;
   gameState?: any;
   playSound?: (soundId: string) => void;
-  isPTTUserSpeaking?: boolean;
 }
 
-function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
+function SaveTheirSoulGame(props: Partial<GameControlProps>) {
   const {
     endGame,
     updateMessage,
@@ -30,10 +29,10 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
     startTimer,
     sendPlayerText: _sendPlayerText,
     gameState,
-    isPTTUserSpeaking: nativeIsPTTUserSpeaking,
   } = props;
   const [hostFinishedSpeaking, setHostFinishedSpeaking] = useState(false);
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState(false);
+  const [currentTranscriptionText, setCurrentTranscriptionText] = useState("");
   const pttStartTimeRef = useRef<number>(0);
 
   // Push-to-talk functionality
@@ -48,6 +47,30 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
   // Real-time transcription display
   const { transcriptItems } = useTranscript();
 
+  // Monitor transcription items - only capture user speech during PTT
+  useEffect(() => {
+    if (!isPTTUserSpeaking) {
+      return;
+    }
+
+    // Find items that appeared since PTT started AND are marked as user role
+    const userItemsSincePTT = transcriptItems
+      .filter(
+        (item) =>
+          item.title &&
+          item.title.trim() !== "" &&
+          item.role === "user" &&
+          item.createdAtMs > pttStartTimeRef.current
+      )
+      .sort((a, b) => b.createdAtMs - a.createdAtMs);
+
+    if (userItemsSincePTT.length > 0) {
+      const latestUserText = userItemsSincePTT[0].title;
+      console.log("User speech during PTT:", latestUserText);
+      setCurrentTranscriptionText(latestUserText || "");
+    }
+  }, [transcriptItems, isPTTUserSpeaking]);
+
   // Get latest host and user messages for speech bubble
   const getLatestTranscripts = useCallback(() => {
     const hostItems = transcriptItems
@@ -59,11 +82,7 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
 
     const userItems = transcriptItems
       .filter(
-        (item) =>
-          item.role === "user" &&
-          item.title &&
-          item.title.trim() !== "" &&
-          item.title.trim() !== "[inaudible]"
+        (item) => item.role === "user" && item.title && item.title.trim() !== ""
       )
       .sort((a, b) => b.createdAtMs - a.createdAtMs);
 
@@ -80,47 +99,34 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
     sendPlayerText: _sendAgentText,
     isGameActive: _isGameActive,
   } = useGameAgent({
-    gameType: "attract-the-turkey",
+    gameType: "save-their-soul",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
-      
-      // Display turkey emojis in console
-      console.log("🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃");
-      console.log("🦃🦃🦃 TURKEY GAME IS ON! 🦃🦃🦃");
-      console.log("🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃🦃");
-      
       updateMessage?.(
-        "A bashful turkey lurks beyond the trees! Listen to the setup and prepare your seductive gobbles!"
+        "Welcome to the desolate 3 a.m. bus stop! The stranger looks lost in their phone..."
       );
 
-      // Start timer after host finishes speaking (estimated 12 seconds for turkey scenario)
+      // Start timer after scene setup (estimated 12 seconds)
       setTimeout(() => {
         setHostFinishedSpeaking(true);
         startTimer?.();
         updateMessage?.(
-          "Time to gobble! You have 30 seconds to make those gobbles irresistibly thicc!"
+          "Time to save their soul! Approach the stranger and convert them to your religion!"
         );
       }, 12000);
     },
     onGameFinish: (result: GameFinishResult) => {
-      console.log(
-        "🎮 AttractTheTurkey onGameFinish called with result:",
-        result
-      );
+      console.log("🎮 SaveTheirSoul onGameFinish called with result:", result);
 
       // Use the actual result values, handle undefined properly
       const success = result.success === true; // Ensure boolean
       const score = result.score || 0;
-
+      
       let message: string;
       if (success) {
-        message =
-          result.message ||
-          "The turkey prances out and nuzzles your knee! Gobble on, legend!";
+        message = result.message || "Another glorious soul saved! Stock price rising! Confetti cannons fire, and a celestial saxophone riff plays!";
       } else {
-        message =
-          result.message ||
-          "The turkey wants nothing to do with you. Gobble off, loser.";
+        message = result.message || "Congrats, heathen—eternal hold music for you. The bus splashes you with gutter water as it speeds off.";
       }
 
       console.log("🎮 Processed values:", { success, score, message });
@@ -136,7 +142,7 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
   // Start the game when component mounts (user has already clicked START GAME)
   useEffect(() => {
     updateMessage?.(
-      "Welcome to Attract the Turkey! Thanksgiving is 3 days away and you need protein..."
+      "Welcome to Save Their Soul! The flickering neon light casts shadows on the cracked pavement..."
     );
 
     // Start the game after a brief delay
@@ -154,6 +160,7 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
     interrupt();
     pttStartTimeRef.current = Date.now(); // Mark when PTT started
     setIsPTTUserSpeaking(true);
+    setCurrentTranscriptionText(""); // Clear previous text
     await pushToTalkStartNative();
     console.log("PTT started at:", pttStartTimeRef.current);
   }, [
@@ -169,30 +176,36 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
 
     setIsPTTUserSpeaking(false);
     await pushToTalkStopNative();
-  }, [sessionStatus, isPTTUserSpeaking, pushToTalkStopNative]);
+    console.log("PTT stopped. Final text:", currentTranscriptionText);
+  }, [
+    sessionStatus,
+    isPTTUserSpeaking,
+    pushToTalkStopNative,
+    currentTranscriptionText,
+  ]);
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-amber-100 via-orange-200 to-yellow-300">
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mt-16">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-br from-gray-900 via-purple-900 to-black">
+      <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg shadow-lg p-6 max-w-4xl w-full mt-16 border-4 border-purple-600">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-            🦃🍂 Attract the Turkey
+          <h2 className="text-2xl font-bold mb-4 text-center text-purple-200">
+            🙏✨ Save Their Soul
           </h2>
-          <div className="text-lg font-semibold text-gray-800 p-3 bg-gray-100 rounded-lg">
+          <div className="text-lg font-semibold text-purple-200 p-3 bg-purple-900 rounded-lg border-2 border-purple-500">
             Time: {gameState?.timeRemaining || 30}s
           </div>
         </div>
-        {/* Speech Bubble - Centered and Prominent */}
-        <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 mb-4 min-h-[200px] flex flex-col justify-center">
-          {/* Host/Narrator Speech Bubble */}
+        {/* Speech Bubble - 3 a.m. bus stop theme */}
+        <div className="bg-gradient-to-br from-gray-700 to-gray-800 border-4 border-purple-500 rounded-lg p-6 mb-4 min-h-[200px] flex flex-col justify-center">
+          {/* Host/Stranger Speech Bubble */}
           {latestHost && (
             <div className="mb-4">
               <div className="flex justify-start">
-                <div className="bg-amber-100 border-2 border-amber-300 rounded-2xl rounded-bl-none p-4 max-w-md text-black">
-                  <div className="text-sm text-amber-800 font-medium mb-1">
-                    🎭 Game Host:
+                <div className="bg-gradient-to-br from-gray-600 to-gray-700 border-3 border-gray-500 rounded-2xl rounded-bl-none p-4 max-w-md text-white shadow-lg">
+                  <div className="text-sm text-gray-300 font-medium mb-1">
+                    😞 Lost Stranger:
                   </div>
-                  <div className="text-amber-900 text-lg">{latestHost}</div>
+                  <div className="text-gray-100 text-lg font-bold">{latestHost}</div>
                 </div>
               </div>
             </div>
@@ -202,16 +215,14 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
           {(latestUser || isPTTUserSpeaking) && (
             <div className="mb-2">
               <div className="flex justify-end">
-                <div className="bg-orange-100 border-2 border-orange-300 rounded-2xl rounded-br-none p-4 max-w-md text-black">
-                  <div className="text-sm text-orange-800 font-medium mb-1">
-                    🧍 You (Turkey Whisperer):
+                <div className="bg-gradient-to-br from-purple-600 to-purple-700 border-3 border-purple-500 rounded-2xl rounded-br-none p-4 max-w-md text-white shadow-lg">
+                  <div className="text-sm text-purple-200 font-medium mb-1">
+                    🙏 You (Missionary):
                   </div>
-                  <div className="text-orange-900 text-lg">
-                    {isPTTUserSpeaking || nativeIsPTTUserSpeaking
-                      ? "🎤 Gobbling seductively..."
-                      : latestUser.startsWith("Hello! I'm ready to play")
-                      ? "Press mic to gobble at the turkey"
-                      : latestUser}
+                  <div className="text-purple-100 text-lg font-semibold">
+                    {isPTTUserSpeaking
+                      ? currentTranscriptionText || "🎤 Spreading the good word..."
+                      : latestUser || "Press mic to save their soul"}
                   </div>
                 </div>
               </div>
@@ -220,8 +231,8 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
 
           {/* No conversation yet */}
           {!latestHost && !latestUser && !isPTTUserSpeaking && (
-            <div className="text-center text-gray-500 text-lg">
-              The turkey hunt will appear here...
+            <div className="text-center text-purple-300 text-lg font-medium">
+              The neon light flickers... pigeons judge from above... your moment approaches...
             </div>
           )}
         </div>
@@ -233,10 +244,10 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
         sessionStatus === "CONNECTED" &&
         isWebRTCReady && (
           <div className="fixed bottom-6 right-6 z-10">
-            <div className="bg-amber-50 border-2 border-amber-200 rounded-full p-4 shadow-lg">
+            <div className="bg-gradient-to-br from-purple-100 to-purple-200 border-4 border-purple-500 rounded-full p-4 shadow-xl">
               <div className="text-center">
-                <div className="text-xs text-amber-800 mb-1">
-                  Hold to Gobble
+                <div className="text-xs text-purple-800 mb-1 font-bold">
+                  Hold to Preach
                 </div>
                 <button
                   onMouseDown={handleTalkButtonDown}
@@ -244,14 +255,14 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
                   onMouseLeave={handleTalkButtonUp}
                   onTouchStart={handleTalkButtonDown}
                   onTouchEnd={handleTalkButtonUp}
-                  className={`w-16 h-16 rounded-full border-4 border-amber-400 transition-all duration-150 ${
+                  className={`w-16 h-16 rounded-full border-4 border-purple-600 transition-all duration-150 ${
                     isPTTUserSpeaking
                       ? "bg-red-500 scale-110 shadow-lg"
-                      : "bg-amber-200 hover:bg-amber-300"
+                      : "bg-purple-400 hover:bg-purple-500"
                   }`}
                 >
                   <div className="text-5xl">
-                    {isPTTUserSpeaking ? "🔴" : "🦃"}
+                    {isPTTUserSpeaking ? "🔴" : "🙏"}
                   </div>
                 </button>
               </div>
@@ -259,26 +270,28 @@ function AttractTheTurkeyGame(props: Partial<GameControlProps>) {
           </div>
         )}
 
-      {/* Decorative elements - Thanksgiving/turkey themed */}
-      <div className="flex justify-center space-x-3 text-lg opacity-30 mt-4">
-        <span>🦃</span>
-        <span>🍂</span>
-        <span>🌾</span>
-        <span>🥧</span>
+      {/* Decorative elements - 3 a.m. bus stop themed */}
+      <div className="flex justify-center space-x-3 text-2xl opacity-40 mt-4">
+        <span>🚏</span>
+        <span>🌙</span>
+        <span>📱</span>
+        <span>🕐</span>
+        <span>🙏</span>
+        <span>✨</span>
       </div>
     </div>
   );
 }
 
-export default function AttractTheTurkeyGameComponent(props: GameProps) {
+export default function SaveTheirSoulGameComponent(props: GameProps) {
   return (
     <BaseGame
-      title="Attract the Turkey"
-      instructions="Thanksgiving is 3 days away! Squat in the leaves and gobble seductively to lure a bashful wild turkey with your irresistible vocal charisma."
+      title="Save Their Soul"
+      instructions="A forlorn stranger slumps on a wobbly bus-stop bench at 3 a.m., scrolling doom-posts on a cracked phone. Armed with nothing but your holy elevator pitch, you must convert them to your highly questionable religion!"
       duration={30}
       {...props}
     >
-      <AttractTheTurkeyGame isPTTUserSpeaking={props.isPTTUserSpeaking} />
+      <SaveTheirSoulGame />
     </BaseGame>
   );
 }

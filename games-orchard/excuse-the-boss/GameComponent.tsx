@@ -83,6 +83,9 @@ function ExcuseTheBossGame(props: Partial<GameControlProps>) {
     gameType: "excuse-the-boss",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
+      console.log("📞📞📞📞📞📞📞📞📞📞📞📞📞📞📞📞📞📞📞📞");
+      console.log("📞📞📞 EXCUSE THE BOSS GAME IS ON! 📞📞📞");
+      console.log("📞📞📞📞📞📞📞📞📞📞📞📞📞📞📞📞📞📞📞📞");
       updateMessage?.(
         "RING RING! Your boss is calling! You're half-dressed with cereal milk on your chin..."
       );

@@ -78,6 +78,9 @@ function AdviseTheChildGame(props: Partial<GameControlProps>) {
     gameType: "advise-the-child",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
+      console.log("👶👶👶👶👶👶👶👶👶👶👶👶👶👶👶👶👶👶👶👶");
+      console.log("👶👶👶 ADVISE THE CHILD GAME IS ON! 👶👶👶");
+      console.log("👶👶👶👶👶👶👶👶👶👶👶👶👶👶👶👶👶👶👶👶");
       updateMessage?.(
         "The AI host is presenting your scenario. Listen carefully and give your best advice!"
       );

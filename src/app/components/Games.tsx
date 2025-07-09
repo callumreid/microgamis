@@ -90,6 +90,11 @@ export default function Games() {
       if (gameState === "playing") {
         audioRef.current.pause();
       } else {
+
+        console.log("🔥🎵🚀🎶✨🔥🎵🚀🎶✨🔥🎵🚀🎶✨🔥🎵🚀🎶✨🔥🎵🚀🎶✨");
+        console.log("🔥🎵🚀 DROP THE REAL QOTD BACKEND IN!!! 🚀🎵🔥");
+        console.log("🔥🎵🚀 https://suno.com/song/75a92eac-0bcb-4e86-96f2-3c1ef80fbc36 🚀🎵🔥");
+        console.log("🔥🎵🚀🎶✨🔥🎵🚀🎶✨🔥🎵🚀🎶✨🔥🎵🚀🎶✨🔥🎵🚀🎶✨");
         audioRef.current.play().catch((error) => {
           console.log("Audio play failed:", error);
         });
@@ -632,7 +637,7 @@ export default function Games() {
     <div className="h-screen">
       {/* Background Music */}
       <audio ref={audioRef} loop preload="auto" className="hidden">
-        <source src="/bg-music-full.mp3" type="audio/mpeg" />
+        <source src="https://suno.com/song/75a92eac-0bcb-4e86-96f2-3c1ef80fbc36" type="audio/mpeg" />
       </audio>
 
       {/* PTT Animation */}

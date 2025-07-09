@@ -102,6 +102,9 @@ function SaveTheirSoulGame(props: Partial<GameControlProps>) {
     gameType: "save-their-soul",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
+      console.log("🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏");
+      console.log("🙏🙏🙏 SAVE THEIR SOUL GAME IS ON! 🙏🙏🙏");
+      console.log("🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏");
       updateMessage?.(
         "Welcome to the desolate 3 a.m. bus stop! The stranger looks lost in their phone..."
       );

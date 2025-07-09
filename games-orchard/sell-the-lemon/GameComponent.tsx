@@ -79,6 +79,9 @@ function SellTheLemonGame(props: Partial<GameControlProps>) {
     gameType: "sell-the-lemon",
     onGameStart: (scenario: GameScenario) => {
       console.log("Game started with scenario:", scenario);
+      console.log("🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋");
+      console.log("🍋🍋🍋 SELL THE LEMON GAME IS ON! 🍋🍋🍋");
+      console.log("🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋🍋");
       updateMessage?.(
         "The AI host is setting up your scenario. Listen carefully and prepare to make your pitch!"
       );

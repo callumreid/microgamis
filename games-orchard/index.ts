@@ -29,11 +29,15 @@ import AttractTheTurkeyGame, {
 import ExcuseTheBossGame, {
   metadata as excuseTheBossMetadata,
 } from "./excuse-the-boss";
+import PitchStartupGame, {
+  metadata as pitchStartupMetadata,
+} from "./pitch-startup";
 
 // Minimal export for build - no actual games imported
 
 // Game registry mapping
 export const implementedGames = {
+  "pitch-startup": PitchStartupGame,
   "excuse-the-boss": ExcuseTheBossGame,
   "attract-the-turkey": AttractTheTurkeyGame,
   "pwn-the-bully": PwnTheBullyGame,
@@ -48,6 +52,7 @@ export const implementedGames = {
 
 // Implemented game metadata
 export const implementedGameMetadata: GameMetadata[] = [
+  pitchStartupMetadata,
   excuseTheBossMetadata,
   attractTheTurkeyMetadata,
   pwnTheBullyMetadata,

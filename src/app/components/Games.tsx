@@ -16,6 +16,16 @@ const MicKey = Capacitor.isNativePlatform()
   ? registerPlugin<any>("MicKey")
   : undefined;
 
+// Fisher-Yates shuffle algorithm to randomize array
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 export default function Games() {
   const [gameState, setGameState] = useState<
     "landing" | "spinning" | "playing" | "orchard" | "transition"
@@ -26,9 +36,8 @@ export default function Games() {
 
   // Multi-game sequence state
   const [currentGameIndex, setCurrentGameIndex] = useState(0);
-  const [implementedGames] = useState<GameMetadata[]>(() =>
-    getImplementedGames()
-  );
+  const [shuffledGames, setShuffledGames] = useState<GameMetadata[]>([]);
+  const [gamesPlayedInSession, setGamesPlayedInSession] = useState(0);
   const [currentTransitionVideo, setCurrentTransitionVideo] = useState(0);
   const transitionVideos = [
     "/bg-video.mp4",
@@ -137,10 +146,16 @@ export default function Games() {
 
   // Initialize game sequence
   useEffect(() => {
+    const implementedGames = getImplementedGames();
     if (implementedGames.length === 0) {
       console.warn("No implemented games found!");
       return;
     }
+
+    // Shuffle the implemented games
+    const shuffled = shuffleArray(implementedGames);
+    setShuffledGames(shuffled);
+    console.log("Shuffled game order:", shuffled.map(g => g.name));
 
     // Check for specific game in URL hash
     const gameId = window.location.hash.replace("#", "");
@@ -154,13 +169,13 @@ export default function Games() {
       }
     }
 
-    // Default to first implemented game for the sequence
-    const firstGame = implementedGames[0];
+    // Default to first game in shuffled sequence
+    const firstGame = shuffled[0];
     setSelectedGame(firstGame);
     const component = getGameById(firstGame.id);
     setGameComponent(() => component);
     setCurrentGameIndex(0);
-  }, [implementedGames]);
+  }, []); // Only run once on mount
 
   // PTT handlers
   const handleTalkButtonDown = useCallback(async () => {
@@ -242,8 +257,8 @@ export default function Games() {
     setShowOverlay(true);
 
     // Reset to first game
-    if (implementedGames.length > 0) {
-      const firstGame = implementedGames[0];
+    if (shuffledGames.length > 0) {
+      const firstGame = shuffledGames[0];
       setSelectedGame(firstGame);
       const component = getGameById(firstGame.id);
       setGameComponent(() => component);
@@ -271,10 +286,14 @@ export default function Games() {
   const handleGameEnd = (_result: any) => {
     console.log("Game ended:", _result, "Current index:", currentGameIndex);
 
+    // Increment games played counter
+    const newGamesPlayed = gamesPlayedInSession + 1;
+    setGamesPlayedInSession(newGamesPlayed);
+
     // Wait for BaseGame banner to finish (6 seconds) before starting transition
     setTimeout(() => {
       // Check if there's a next game in the sequence
-      if (currentGameIndex < implementedGames.length - 1) {
+      if (currentGameIndex < shuffledGames.length - 1) {
         // Cycle to next transition video
         setCurrentTransitionVideo(
           (prev) => (prev + 1) % transitionVideos.length
@@ -292,7 +311,7 @@ export default function Games() {
         // After 8 seconds, start next game
         setTimeout(() => {
           const nextIndex = currentGameIndex + 1;
-          const nextGame = implementedGames[nextIndex];
+          const nextGame = shuffledGames[nextIndex];
 
           setCurrentGameIndex(nextIndex);
           setSelectedGame(nextGame);
@@ -303,10 +322,37 @@ export default function Games() {
           setGameState("playing");
         }, 8000);
       } else {
-        // All games completed, return to landing
+        // All games completed, reshuffle for next round
+        console.log("All games played! Reshuffling for next round...");
+        
+        // Get implemented games and reshuffle
+        const implementedGames = getImplementedGames();
+        const newShuffled = shuffleArray(implementedGames);
+        setShuffledGames(newShuffled);
+        console.log("New shuffled game order:", newShuffled.map(g => g.name));
+        
+        // Start transition to first game of new round
+        setCurrentTransitionVideo(
+          (prev) => (prev + 1) % transitionVideos.length
+        );
+        setGameState("transition");
+        
+        if (videoRef.current) {
+          videoRef.current.currentTime = 0;
+          videoRef.current.play();
+        }
+        
+        // After 8 seconds, start first game of new round
         setTimeout(() => {
-          handleBackToLanding();
-        }, 3000);
+          const firstGame = newShuffled[0];
+          setCurrentGameIndex(0);
+          setSelectedGame(firstGame);
+          
+          const component = getGameById(firstGame.id);
+          setGameComponent(() => component);
+          
+          setGameState("playing");
+        }, 8000);
       }
     }, 6000); // Wait for BaseGame banner to complete
   };
@@ -625,8 +671,8 @@ export default function Games() {
           Next Game Loading...
         </h1>
         <div className="text-xl opacity-90 text-center">
-          {currentGameIndex < implementedGames.length - 1 && (
-            <p>Up Next: {implementedGames[currentGameIndex + 1]?.name}</p>
+          {currentGameIndex < shuffledGames.length - 1 && (
+            <p>Up Next: {shuffledGames[currentGameIndex + 1]?.name}</p>
           )}
         </div>
       </div>

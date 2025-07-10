@@ -2,6 +2,34 @@
 
 ## [Unreleased] - Initial Setup
 
+### Recent Changes - 2025-01-10 (Random Game Order Implementation)
+
+#### Added
+- **Random Game Order**: Games now play in random order instead of always the same sequence
+  - Fisher-Yates shuffle algorithm implemented for true randomization
+  - Games won't repeat until all games have been played once in the session
+  - After all games are played, the order reshuffles automatically for continuous play
+  - Console logs display the new shuffled order for debugging
+
+#### Enhanced
+- **Game Sequence System**: Updated game flow to support random ordering
+  - Added `shuffledGames` state to maintain randomized order
+  - Added `gamesPlayedInSession` counter to track progress
+  - Modified `handleGameEnd` to reshuffle after all games played instead of returning to landing
+  - Removed fixed `implementedGames` array in favor of dynamic shuffling
+
+#### Technical Implementation Details
+- **Shuffle Algorithm**: Uses Fisher-Yates shuffle for unbiased randomization
+- **State Management**: 
+  - `shuffledGames`: Maintains the current randomized game order
+  - `currentGameIndex`: Tracks position in the shuffled sequence
+  - `gamesPlayedInSession`: Counts total games played across all rounds
+- **Auto-Reshuffle**: When all games complete, automatically reshuffles and continues seamlessly
+- **No Repeats**: Ensures each game plays exactly once before any game repeats
+
+#### Files Modified
+- `src/app/components/Games.tsx` - Added shuffle logic and updated game sequence handling
+
 ### Added
 - Project rebranded from OpenAI Realtime Agents to Microgamis
 - This changelog to track all modifications for AI agent context

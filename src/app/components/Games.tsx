@@ -10,6 +10,8 @@ import {
 import { GameMetadata } from "../../../games-orchard/types";
 import { useGameSession } from "../providers/GameSessionProvider";
 import PTTAnimation from "./PTTAnimation";
+import { externalGames, isExternalGame, getExternalGame } from "../config/externalGames";
+import ExternalGameLoader from "./ExternalGameLoader";
 
 // Fire TV mic key plugin
 const MicKey = Capacitor.isNativePlatform()
@@ -18,11 +20,12 @@ const MicKey = Capacitor.isNativePlatform()
 
 export default function Games() {
   const [gameState, setGameState] = useState<
-    "landing" | "spinning" | "playing" | "orchard" | "transition"
+    "landing" | "spinning" | "playing" | "orchard" | "transition" | "external"
   >("landing");
   const [selectedGame, setSelectedGame] = useState<GameMetadata | null>(null);
   const [GameComponent, setGameComponent] =
     useState<React.ComponentType<any> | null>(null);
+  const [selectedExternalGame, setSelectedExternalGame] = useState<string | null>(null);
 
   // Multi-game sequence state
   const [currentGameIndex, setCurrentGameIndex] = useState(0);
@@ -137,14 +140,17 @@ export default function Games() {
 
   // Initialize game sequence
   useEffect(() => {
-    if (implementedGames.length === 0) {
-      console.warn("No implemented games found!");
-      return;
-    }
-
     // Check for specific game in URL hash
     const gameId = window.location.hash.replace("#", "");
     if (gameId) {
+      // Check if it's an external game
+      if (isExternalGame(gameId)) {
+        setSelectedExternalGame(gameId);
+        setGameState("external");
+        return;
+      }
+      
+      // Check if it's an internal game
       const game = allPlannedGames.find((g) => g.id === gameId);
       if (game && isGameImplemented(game.id)) {
         setSelectedGame(game);
@@ -155,11 +161,15 @@ export default function Games() {
     }
 
     // Default to first implemented game for the sequence
-    const firstGame = implementedGames[0];
-    setSelectedGame(firstGame);
-    const component = getGameById(firstGame.id);
-    setGameComponent(() => component);
-    setCurrentGameIndex(0);
+    if (implementedGames.length > 0) {
+      const firstGame = implementedGames[0];
+      setSelectedGame(firstGame);
+      const component = getGameById(firstGame.id);
+      setGameComponent(() => component);
+      setCurrentGameIndex(0);
+    } else {
+      console.warn("No implemented games found!");
+    }
   }, [implementedGames]);
 
   // PTT handlers
@@ -250,22 +260,35 @@ export default function Games() {
     }
   };
 
+  const handleBackFromExternalGame = () => {
+    setSelectedExternalGame(null);
+    setGameState("orchard");
+  };
+
   const _handleVisitOrchard = () => {
     setGameState("orchard");
   };
 
-  const handleSelectGameFromOrchard = (game: GameMetadata) => {
-    setSelectedGame(game);
-
-    // Load component if implemented
-    if (isGameImplemented(game.id)) {
-      const component = getGameById(game.id);
-      setGameComponent(() => component);
+  const handleSelectGameFromOrchard = (game: GameMetadata | { id: string }) => {
+    // Check if it's an external game
+    if (isExternalGame(game.id)) {
+      setSelectedExternalGame(game.id);
+      setGameState("external");
     } else {
-      setGameComponent(null);
-    }
+      // Handle internal game
+      const gameMetadata = game as GameMetadata;
+      setSelectedGame(gameMetadata);
 
-    setGameState("playing");
+      // Load component if implemented
+      if (isGameImplemented(gameMetadata.id)) {
+        const component = getGameById(gameMetadata.id);
+        setGameComponent(() => component);
+      } else {
+        setGameComponent(null);
+      }
+
+      setGameState("playing");
+    }
   };
 
   const handleGameEnd = (_result: any) => {
@@ -480,27 +503,44 @@ export default function Games() {
     </div>
   );
 
-  const renderOrchard = () => (
-    <div className="h-full bg-gradient-to-br from-orange-600 to-amber-600 text-white p-8 overflow-y-auto">
-      {/* <button
-        onClick={handleBackToLanding}
-        className="absolute top-4 left-4 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg font-medium transition-colors z-10"
-      >
-        ← Back to Games
-      </button> */}
+  const renderOrchard = () => {
+    // Combine internal games with external games
+    const allGames = [
+      ...allPlannedGames,
+      ...Object.values(externalGames).map(game => ({
+        id: game.id,
+        name: game.name,
+        description: game.description,
+        category: game.category as any,
+        difficulty: game.difficulty,
+        requiresVoice: game.requiresVoice,
+        requiresAudio: game.requiresAudio,
+        estimatedDuration: game.estimatedDuration,
+        isExternal: true,
+      })),
+    ];
 
-      <div className="text-center mb-8 pt-16">
-        <h1 className="text-6xl font-bold mb-4">🌳 The Orchard 🌳</h1>
-        <p className="text-xl opacity-90">Choose your microgame adventure!</p>
-      </div>
+    return (
+      <div className="h-full bg-gradient-to-br from-orange-600 to-amber-600 text-white p-8 overflow-y-auto">
+        {/* <button
+          onClick={handleBackToLanding}
+          className="absolute top-4 left-4 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg font-medium transition-colors z-10"
+        >
+          ← Back to Games
+        </button> */}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
-        {allPlannedGames.map((game) => (
+        <div className="text-center mb-8 pt-16">
+          <h1 className="text-6xl font-bold mb-4">🌳 The Orchard 🌳</h1>
+          <p className="text-xl opacity-90">Choose your microgame adventure!</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
+          {allGames.map((game) => (
           <div
             key={game.id}
             onClick={() => handleSelectGameFromOrchard(game)}
             className={`bg-white bg-opacity-20 rounded-lg p-6 cursor-pointer transition-all transform hover:scale-105 hover:bg-opacity-30 ${
-              isGameImplemented(game.id)
+              (game as any).isExternal || isGameImplemented(game.id)
                 ? "border-2 border-green-400"
                 : "border-2 border-gray-400 opacity-75"
             }`}
@@ -533,9 +573,9 @@ export default function Games() {
               </div>
 
               <div className="mt-4">
-                {isGameImplemented(game.id) ? (
+                {(game as any).isExternal || isGameImplemented(game.id) ? (
                   <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                    ✓ Ready to Play
+                    {(game as any).isExternal ? "🌐 Play Now" : "✓ Ready to Play"}
                   </span>
                 ) : (
                   <span className="bg-gray-500 text-white px-3 py-1 rounded-full text-xs font-bold">
@@ -548,7 +588,8 @@ export default function Games() {
         ))}
       </div>
     </div>
-  );
+    );
+  };
 
   const renderGamePlay = () => (
     <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-red-600 to-pink-600 text-white p-8">
@@ -633,6 +674,19 @@ export default function Games() {
     </div>
   );
 
+  const renderExternalGame = () => {
+    if (!selectedExternalGame) return null;
+    const externalGame = getExternalGame(selectedExternalGame);
+    if (!externalGame) return null;
+
+    return (
+      <ExternalGameLoader
+        game={externalGame}
+        onBack={handleBackFromExternalGame}
+      />
+    );
+  };
+
   return (
     <div className="h-screen">
       {/* Background Music */}
@@ -648,6 +702,7 @@ export default function Games() {
       {gameState === "orchard" && renderOrchard()}
       {gameState === "playing" && renderGamePlay()}
       {gameState === "transition" && renderTransition()}
+      {gameState === "external" && renderExternalGame()}
     </div>
   );
 }
